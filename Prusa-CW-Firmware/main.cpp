@@ -160,6 +160,27 @@ long ams_counter;
 #define MAGIC_SIZE 6
 const char magic[MAGIC_SIZE] = "CURWA";
 
+static void motor_configuration();
+static void read_config(unsigned int address);
+static void fan_tacho3();
+static void print_time1();
+static void menu_move();
+static void machine_running();
+static void button_press();
+static void tDownComplete();
+static void start_drying();
+static void stop_curing_drying();
+static void start_curing();
+static void start_washing();
+static void tUpComplete();
+static void fan_pwm_control();
+static void fan_heater_rpm();
+static void preheat();
+static void lcd_time_print();
+static void therm1_read();
+
+
+
 void setupTimer0() { //timmer for fan pwm
   noInterrupts();
   OCR0A = 0xAF;
