@@ -46,8 +46,8 @@
 #define COVER_OPEN_PIN				MCP3 //11//12
 
 // FANs
-#define FAN1_PIN				13//6
-#define FAN2_PIN				11//6
+#define FAN1_PWM_PIN				13//6
+#define FAN2_PWM_PIN				11//6
 
 #define FAN_HEAT_PIN				MCP11 //11	// HEATER_PIN
 
@@ -118,6 +118,9 @@
 // FANs
 #define FAN1_PIN				MCP12//6
 #define FAN2_PIN				MCP13//6
+
+#define FAN1_PWM_PIN        13
+#define FAN2_PWM_PIN        11
 
 #define FAN_HEAT_PIN				MCP11 //11	// HEATER_PIN
 

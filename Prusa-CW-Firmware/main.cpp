@@ -43,7 +43,7 @@ enum menu_state {
   ERROR
 };
 
-String FW_VERSION = "2.0.7";
+String FW_VERSION = "2.0.8";
 
 menu_state state = MENU;
 
@@ -325,8 +325,8 @@ void setup() {
   digitalWrite(LCD_PWM_PIN, HIGH);
   pinMode(BEEPER, OUTPUT);
 
-  pinMode(FAN1_PIN, OUTPUT);
-  pinMode(FAN2_PIN, OUTPUT);
+  pinMode(FAN1_PWM_PIN, OUTPUT);
+  pinMode(FAN2_PWM_PIN, OUTPUT);
 
   //pinMode(1, INPUT_PULLUP);
   //pinMode(2, INPUT_PULLUP);
