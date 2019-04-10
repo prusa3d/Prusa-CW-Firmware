@@ -5,6 +5,7 @@
 #include "config.h"
 #include "Countimer.h"
 #include "thermistor.h"
+#include <avr/wdt.h>
 
 Countimer tDown;
 Countimer tUp;
@@ -257,6 +258,7 @@ void run_heater() {
 
   outputchip.digitalWrite(FAN_HEAT_PIN, HIGH); // enable driver
   heater_running = true;
+  wdt_enable(WDTO_4S);
 
 }
 
@@ -264,6 +266,7 @@ void stop_heater() {
 
   outputchip.digitalWrite(FAN_HEAT_PIN, LOW); // disable driver
   heater_running = false;
+  wdt_disable();
 
 }
 
@@ -558,6 +561,7 @@ void lcd_blink(void) {
 }
 
 void loop() {
+  wdt_reset(); 
   tDown.run();
   tUp.run();
 
@@ -570,6 +574,8 @@ void loop() {
     }
     stop_heater(); // turn off heat fan
     stop_motor(); // turn off motor
+    fan1_duty = FAN1_MENU_SPEED;
+    fan2_duty = FAN2_MENU_SPEED;
   }
 
   if (state == MENU) {
