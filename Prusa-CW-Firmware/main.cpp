@@ -7,16 +7,17 @@
 #include "thermistor.h"
 #include <avr/wdt.h>
 #include <avr/pgmspace.h>
+#include "version.h"
 
-typedef char Serial_num_t[17]; //!< Null terminated string for serial number
+typedef char Serial_num_t[20]; //!< Null terminated string for serial number
 
 struct Scrooling_item
 {
-   const char caption[];
+   const char *caption;
    bool visible;
 };
 
-typedef Scrooling_item Scrooling_items[7];
+typedef Scrooling_item Scrooling_items[8];
 
 Countimer tDown;
 Countimer tUp;
@@ -27,7 +28,32 @@ Trinamic_TMC2130 myStepper(CS_PIN);
 
 MCP outputchip(0, 8);
 
-LiquidCrystal lcd(LCD_PINS_RS, LCD_PINS_ENABLE, LCD_PINS_D4, LCD_PINS_D5, LCD_PINS_D6, LCD_PINS_D7);
+class PrusaLcd : public LiquidCrystal
+{
+public:
+    using LiquidCrystal::LiquidCrystal;
+
+    //! Print n characters from null terminated string c
+    //! if there are not enough characters, prints ' ' for remaining n.
+    void printClear(const char *c, uint_least8_t n)
+    {
+        for (uint_least8_t i = 0; i < n; ++i)
+        {
+            if (*c)
+            {
+                print(*c);
+                ++c;
+            }
+            else
+            {
+                print(' ');
+            }
+        }
+    }
+
+};
+
+PrusaLcd lcd(LCD_PINS_RS, LCD_PINS_ENABLE, LCD_PINS_D4, LCD_PINS_D5, LCD_PINS_D6, LCD_PINS_D7);
 
 enum menu_state {
   MENU,
@@ -55,13 +81,14 @@ enum menu_state {
   ERROR
 };
 
-String FW_VERSION = "2.0.9";
+#define FW_VERSION  "2.0.9"
 
 menu_state state = MENU;
 
 long lastJob = 0;
 
-byte menu_position = 0;
+static byte menu_position = 0;
+static byte menu_offset = 0;
 byte max_menu_position = 0;
 bool redraw_menu = true;
 bool redraw_ms = true;
@@ -295,15 +322,6 @@ void stop_heater() {
 
 }
 
-void print_sn(){
-  Serial_num_t sn;
-  get_serial_num(sn);
-  lcd.setCursor(1, 1);
-  lcd.print("SN:");
-  lcd.setCursor(4, 1);
-  lcd.print(sn);
-}
-
 void speed_configuration() {
 
   if (curing_mode == true) {
@@ -484,12 +502,11 @@ void generic_menu(byte num, ...) {
 static void scrolling_list(const Scrooling_items &items)
 {
     uint_least8_t visible_items = 0;
-    static uint_least8_t offset = 0;
     for(auto item : items)
     {
         if(item.visible) ++visible_items;
     }
-    if (offset > (visible_items - 4)) offset = 0;
+    if (menu_offset > (visible_items - 4)) menu_offset = 0;
 
 
     if (rotary_diff > 128)
@@ -498,9 +515,9 @@ static void scrolling_list(const Scrooling_items &items)
         {
             ++menu_position;
         }
-        else if (offset < (visible_items - 4))
+        else if (menu_offset < (visible_items - 4))
         {
-            ++offset;
+            ++menu_offset;
         }
     }
     else if (rotary_diff < 128)
@@ -509,18 +526,18 @@ static void scrolling_list(const Scrooling_items &items)
         {
             --menu_position;
         }
-        else if (offset)
+        else if (menu_offset)
         {
-            --offset;
+            --menu_offset;
         }
     }
     {
-        uint_least8_t j = offset;
+        uint_least8_t j = menu_offset;
         for (uint_least8_t line = 0; line < 4; ++line)
         {
             while(!items[j].visible) ++j;
             lcd.setCursor(1, line);
-            lcd.print(items[j].caption);
+            lcd.printClear(items[j].caption, 19);
             ++j;
         }
     }
@@ -892,30 +909,24 @@ void menu_move() {
       break;
 
     case INFO:
-      lcd.setCursor(1, 0);
-      lcd.print("FW version: ");
-      lcd.setCursor(13, 0);
-      lcd.print(FW_VERSION);
-      print_sn();
+      {
+        Serial_num_t sn;
+        get_serial_num(sn);
+        Scrooling_items items =
+        {
+            {"FW version: "  FW_VERSION, true},
+            {"FAN1 failure", fan1_error},
+            {"FAN2 failure", fan2_error},
+            {"HEATER failure", heater_failure},
+            {sn, true},
+            {"Build: " FW_BUILDNR, true},
+            {FW_HASH, true},
+            {FW_LOCAL_CHANGES ? "Workspace dirty" : "Workspace clean", true}
+        };
+        scrolling_list(items);
 
-    if((fan1_error == true) && (fan2_error == false)){      
-        lcd.setCursor(1, 2);
-        lcd.print("FAN1 failure");      
-    }
-    if((fan1_error == false) && (fan2_error == true)){      
-        lcd.setCursor(1, 2);
-        lcd.print("FAN2 failure");      
-    }
-    if((fan1_error == true) && (fan2_error == true)){      
-        lcd.setCursor(1, 2);
-        lcd.print("FAN1 & FAN2 failure");      
-    }
-      if (heater_failure == true) {
-        lcd.setCursor(1, 3);
-        lcd.print("HEATER failure");
+        break;
       }
-      break;
-
     case RUN_MENU:
       generic_menu(3, paused ? "Continue" : "Pause", "Stop", "Back");
       break;
@@ -1476,6 +1487,7 @@ void button_press() {
     default:
       break;
   }
+  menu_offset = 0;
   menu_position = 0;
   redraw_menu = true;
   rotary_diff = 128;
@@ -2148,8 +2160,10 @@ void preheat() {
 void get_serial_num(Serial_num_t &sn)
 {
     uint16_t snAddress = 0x7fe0;
-
-    for (uint_least8_t i = 0; i < 16; ++i)
+    sn[0] = 'S';
+    sn[1] = 'N';
+    sn[2] = ':';
+    for (uint_least8_t i = 3; i < 19; ++i)
     {
         sn[i] = pgm_read_byte(snAddress++);
     }
