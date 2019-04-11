@@ -8,6 +8,7 @@
 #include <avr/wdt.h>
 #include <avr/pgmspace.h>
 #include "version.h"
+#include <USBCore.h>
 
 typedef char Serial_num_t[20]; //!< Null terminated string for serial number
 
@@ -82,6 +83,8 @@ enum menu_state {
 };
 
 #define FW_VERSION  "2.0.9"
+volatile uint16_t *const bootKeyPtr = (volatile uint16_t *)(RAMEND-1);
+
 
 menu_state state = MENU;
 
@@ -667,7 +670,11 @@ void lcd_blink(void) {
 }
 
 void loop() {
-  wdt_reset(); 
+
+  if ( *bootKeyPtr != MAGIC_KEY)
+  {
+    wdt_reset();
+  }
   tDown.run();
   tUp.run();
 
@@ -2188,6 +2195,5 @@ void get_key_from_boot(void) ATTR_INIT_SECTION(3);
 //! Refer to the avr-libc manual for more information on the initialization sections.
 void get_key_from_boot(void)
 {
-    volatile uint16_t *const bootKeyPtr = (volatile uint16_t *)(RAMEND-1);
     bootKeyPtrVal = *bootKeyPtr;
 }
