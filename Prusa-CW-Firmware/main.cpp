@@ -165,6 +165,8 @@ volatile int divider = 0;
 long ams_counter;
 long ams_fan_counter;
 
+static volatile uint16_t bootKeyPtrVal __attribute__ ((section (".noinit")));
+
 
 #define EEPROM_OFFSET 128
 #define MAGIC_SIZE 6
@@ -192,6 +194,7 @@ static void preheat();
 static void lcd_time_print();
 static void therm1_read();
 static void get_serial_num(Serial_num_t &sn);
+static uint8_t get_reset_flags();
 
 
 
@@ -2076,4 +2079,25 @@ void get_serial_num(Serial_num_t &sn)
     }
 
     sn[sizeof(Serial_num_t) - 1] = 0;
+}
+
+//! @brief Get reset flags
+//! @return value of MCU Status Register - MCUSR as it was backed up by bootloader
+static uint8_t get_reset_flags()
+{
+    return bootKeyPtrVal;
+}
+
+#define ATTR_INIT_SECTION(SectionIndex) __attribute__ ((used, naked, section (".init" #SectionIndex )))
+void get_key_from_boot(void) ATTR_INIT_SECTION(3);
+
+//! @brief Save the value of the boot key memory before it is overwritten
+//!
+//! Do not call this function, it is placed in one of the initialization sections,
+//! which executes automatically before the main function of the application.
+//! Refer to the avr-libc manual for more information on the initialization sections.
+void get_key_from_boot(void)
+{
+    volatile uint16_t *const bootKeyPtr = (volatile uint16_t *)(RAMEND-1);
+    bootKeyPtrVal = *bootKeyPtr;
 }
