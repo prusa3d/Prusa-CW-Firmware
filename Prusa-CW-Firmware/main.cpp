@@ -6,6 +6,9 @@
 #include "Countimer.h"
 #include "thermistor.h"
 #include <avr/wdt.h>
+#include <avr/pgmspace.h>
+
+typedef char Serial_num_t[17]; //!< Null terminated string for serial number
 
 Countimer tDown;
 Countimer tUp;
@@ -188,6 +191,7 @@ static void fan_rpm();
 static void preheat();
 static void lcd_time_print();
 static void therm1_read();
+static void get_serial_num(Serial_num_t &sn);
 
 
 
@@ -2058,4 +2062,18 @@ void preheat() {
       tUp.setCounter(0, 0, 0, tUp.COUNT_UP, tUpComplete);
     }
   }
+}
+
+//! @brief Get serial number
+//! @param[out] sn null terminated string containing serial number
+void get_serial_num(Serial_num_t &sn)
+{
+    uint16_t snAddress = 0x7fe0;
+
+    for (uint_least8_t i = 0; i < 16; ++i)
+    {
+        sn[i] = pgm_read_byte(snAddress++);
+    }
+
+    sn[sizeof(Serial_num_t) - 1] = 0;
 }
