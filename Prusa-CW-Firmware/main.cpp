@@ -295,6 +295,15 @@ void stop_heater() {
 
 }
 
+void print_sn(){
+  Serial_num_t sn;
+  get_serial_num(sn);
+  lcd.setCursor(1, 1);
+  lcd.print("SN:");
+  lcd.setCursor(4, 1);
+  lcd.print(sn);
+}
+
 void speed_configuration() {
 
   if (curing_mode == true) {
@@ -887,15 +896,20 @@ void menu_move() {
       lcd.print("FW version: ");
       lcd.setCursor(13, 0);
       lcd.print(FW_VERSION);
+      print_sn();
 
-      if (fan1_error == true) {
-        lcd.setCursor(1, 1);
-        lcd.print("FAN1 failure");
-      }
-      if (fan2_error == true) {
+    if((fan1_error == true) && (fan2_error == false)){      
         lcd.setCursor(1, 2);
-        lcd.print("FAN2 failure");
-      }
+        lcd.print("FAN1 failure");      
+    }
+    if((fan1_error == false) && (fan2_error == true)){      
+        lcd.setCursor(1, 2);
+        lcd.print("FAN2 failure");      
+    }
+    if((fan1_error == true) && (fan2_error == true)){      
+        lcd.setCursor(1, 2);
+        lcd.print("FAN1 & FAN2 failure");      
+    }
       if (heater_failure == true) {
         lcd.setCursor(1, 3);
         lcd.print("HEATER failure");
