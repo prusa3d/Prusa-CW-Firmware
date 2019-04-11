@@ -165,7 +165,7 @@ volatile int divider = 0;
 long ams_counter;
 long ams_fan_counter;
 
-volatile uint16_t bootKeyPtrVal __attribute__ ((section (".noinit")));
+static volatile uint16_t bootKeyPtrVal __attribute__ ((section (".noinit")));
 
 
 #define EEPROM_OFFSET 128
