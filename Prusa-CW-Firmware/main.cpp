@@ -10,6 +10,14 @@
 
 typedef char Serial_num_t[17]; //!< Null terminated string for serial number
 
+struct Scrooling_item
+{
+   const char caption[];
+   bool visible;
+};
+
+typedef Scrooling_item Scrooling_items[7];
+
 Countimer tDown;
 Countimer tUp;
 
@@ -195,6 +203,7 @@ static void lcd_time_print();
 static void therm1_read();
 static void get_serial_num(Serial_num_t &sn);
 static uint8_t get_reset_flags();
+static void scrolling_list(const Scrooling_items &items);
 
 
 
@@ -424,6 +433,19 @@ void read_config(unsigned int address) {
 }
 
 
+static void print_menu_cursor()
+{
+    lcd.setCursor(0, menu_position);
+    lcd.print(">");
+
+    for (int i = 0; i <= 3; i++) {
+      if ( i != menu_position) {
+        lcd.setCursor(0, i);
+        lcd.print(" ");
+      }
+    }
+}
+
 void generic_menu(byte num, ...) {
   va_list argList;
   va_start(argList, num);
@@ -444,16 +466,56 @@ void generic_menu(byte num, ...) {
       menu_position--;
     }
   }
+  print_menu_cursor();
+}
 
-  lcd.setCursor(0, menu_position);
-  lcd.print(">");
-
-  for (int i = 0; i <= 3; i++) {
-    if ( i != menu_position) {
-      lcd.setCursor(0, i);
-      lcd.print(" ");
+//! @brief Print scrolling list
+//! @param[in] items
+//! Prints visible items only,
+static void scrolling_list(const Scrooling_items &items)
+{
+    uint_least8_t visible_items = 0;
+    static uint_least8_t offset = 0;
+    for(auto item : items)
+    {
+        if(item.visible) ++visible_items;
     }
-  }
+    if (offset > (visible_items - 4)) offset = 0;
+
+
+    if (rotary_diff > 128)
+    {
+        if (menu_position < max_menu_position)
+        {
+            ++menu_position;
+        }
+        else if (offset < (visible_items - 4))
+        {
+            ++offset;
+        }
+    }
+    else if (rotary_diff < 128)
+    {
+        if (menu_position)
+        {
+            --menu_position;
+        }
+        else if (offset)
+        {
+            --offset;
+        }
+    }
+    {
+        uint_least8_t j = offset;
+        for (uint_least8_t line = 0; line < 4; ++line)
+        {
+            while(!items[j].visible) ++j;
+            lcd.setCursor(1, line);
+            lcd.print(items[j].caption);
+            ++j;
+        }
+    }
+    print_menu_cursor();
 }
 
 
