@@ -44,7 +44,7 @@ enum menu_state {
   ERROR
 };
 
-String FW_VERSION = "2.0.8";
+String FW_VERSION = "2.0.9";
 
 menu_state state = MENU;
 
@@ -93,12 +93,17 @@ long fan3_tacho_count;
 bool fan1_on = false;
 bool fan2_on = false;
 
+long fan1_tacho_last_count;
+long fan2_tacho_last_count;
 long fan3_tacho_last_count;
 
 unsigned long fan1_previous_millis = 0;
 unsigned long fan2_previous_millis = 0;
 
 bool heater_error = false;
+bool heater_failure = false;
+bool fan1_error = false;
+bool fan2_error = false;
 
 // constants won't change:
 int fan_frequency = 70; //Hz
@@ -155,6 +160,7 @@ bool therm_read = false;
 volatile int divider = 0;
 
 long ams_counter;
+long ams_fan_counter;
 
 
 #define EEPROM_OFFSET 128
@@ -163,6 +169,8 @@ const char magic[MAGIC_SIZE] = "CURWA";
 
 static void motor_configuration();
 static void read_config(unsigned int address);
+static void fan_tacho1();
+static void fan_tacho2();
 static void fan_tacho3();
 static void print_time1();
 static void menu_move();
@@ -176,6 +184,7 @@ static void start_washing();
 static void tUpComplete();
 static void fan_pwm_control();
 static void fan_heater_rpm();
+static void fan_rpm();
 static void preheat();
 static void lcd_time_print();
 static void therm1_read();
@@ -331,12 +340,12 @@ void setup() {
   pinMode(FAN1_PWM_PIN, OUTPUT);
   pinMode(FAN2_PWM_PIN, OUTPUT);
 
-  //pinMode(1, INPUT_PULLUP);
-  //pinMode(2, INPUT_PULLUP);
+  pinMode(1, INPUT_PULLUP);
+  pinMode(2, INPUT_PULLUP);
   pinMode(0, INPUT_PULLUP);
 
-  //attachInterrupt(2, fan_tacho1, RISING);
-  //attachInterrupt(1, fan_tacho2, RISING);
+  attachInterrupt(2, fan_tacho1, RISING);
+  attachInterrupt(1, fan_tacho2, RISING);
   attachInterrupt(3, fan_tacho3, RISING);
 
   fan1_duty = FAN1_MENU_SPEED;
@@ -382,6 +391,7 @@ void write_config(unsigned int address) {
   EEPROM.put(address++, target_temp_celsius);
   EEPROM.put(address++, target_temp_fahrenheit);
   EEPROM.put(address++, SI_unit_system);
+  EEPROM.put(address++, heater_failure);
 }
 
 
@@ -402,6 +412,7 @@ void read_config(unsigned int address) {
     EEPROM.get(address++, target_temp_celsius);
     EEPROM.get(address++, target_temp_fahrenheit);
     EEPROM.get(address++, SI_unit_system);
+    EEPROM.get(address++, heater_failure);
   }
 }
 
@@ -670,18 +681,33 @@ void menu_move() {
   switch (state) {
     case MENU:
 
-      switch (curing_machine_mode) {
+       switch (curing_machine_mode) {
         case 2:
-          generic_menu(4, curing_mode ? "Start drying" : "Start washing", "Run-time", "Rotation speed", "Settings");
+          if ((fan1_error || fan2_error || heater_failure) == false) {
+            generic_menu(4, curing_mode ? "Start drying" : "Start washing", "Run-time", "Rotation speed", "Settings     ");
+          }
+          else {
+            generic_menu(4, curing_mode ? "Start drying" : "Start washing", "Run-time", "Rotation speed", "Settings ->!!");
+          }
           state = MENU;
           break;
         case 1:
-          generic_menu(4, curing_mode ? "Start curing" : "Start washing", "Run-time", "Rotation speed", "Settings");
+          if ((fan1_error || fan2_error || heater_failure) == false) {
+            generic_menu(4, curing_mode ? "Start curing" : "Start washing", "Run-time", "Rotation speed", "Settings     ");
+          }
+          else {
+            generic_menu(4, curing_mode ? "Start curing" : "Start washing", "Run-time", "Rotation speed", "Settings ->!!");
+          }
           state = MENU;
           break;
         case 0:
         default:
-          generic_menu(4, curing_mode ? "Start drying/curing" : "Start washing", "Run-time", "Rotation speed", "Settings");
+          if ((fan1_error || fan2_error || heater_failure) == false) {
+            generic_menu(4, curing_mode ? "Start drying/curing" : "Start washing", "Run-time", "Rotation speed", "Settings     ");
+          }
+          else {
+            generic_menu(4, curing_mode ? "Start drying/curing" : "Start washing", "Run-time", "Rotation speed", "Settings ->!!");
+          }
           state = MENU;
           break;
       }
@@ -731,7 +757,12 @@ void menu_move() {
       break;
 
     case SETTINGS:
-      generic_menu(4, "Drying & Curing", "Sound settings", "Information", "Back");
+      if ((fan1_error || fan2_error || heater_failure) == false) {
+        generic_menu(4, "Drying & Curing", "Sound settings", "Information     ", "Back");
+      }
+      else {
+        generic_menu(4, "Drying & Curing", "Sound settings", "Information ->!!", "Back");
+      }
       break;
 
     case DRYING_CURING:
@@ -788,6 +819,18 @@ void menu_move() {
       lcd.setCursor(13, 0);
       lcd.print(FW_VERSION);
 
+      if (fan1_error == true) {
+        lcd.setCursor(1, 1);
+        lcd.print("FAN1 failure");
+      }
+      if (fan2_error == true) {
+        lcd.setCursor(1, 2);
+        lcd.print("FAN2 failure");
+      }
+      if (heater_failure == true) {
+        lcd.setCursor(1, 3);
+        lcd.print("HEATER failure");
+      }
       break;
 
     case RUN_MENU:
@@ -1446,6 +1489,7 @@ SIGNAL(TIMER0_COMPA_vect) //1ms timer
   {
     ams_counter = 0;
   }
+  fan_rpm();
 }
 
 void tDownComplete()
@@ -1547,7 +1591,7 @@ void start_washing() {
       }
       if (outputchip.digitalRead(WASH_DETECT_PIN) == LOW) { //Gastro Pen check
         lcd.setCursor(1, 0);
-        lcd.print("Gastro Pen is out");
+        lcd.print("IPA tank removed");
         running_count = 0;
         paused = true;
         tDown.pause();
@@ -1602,7 +1646,7 @@ void start_washing() {
     }
     if (outputchip.digitalRead(WASH_DETECT_PIN) == HIGH) { //Gastro Pen check
       lcd.setCursor(1, 0);
-      lcd.print("Gastro Pen is out");
+      lcd.print("IPA tank removed");
       running_count = 0;
       paused = true;
       tDown.pause();
@@ -1927,16 +1971,58 @@ void fan_heater_rpm() {
   ams_counter ++;
   if (ams_counter >= 1000) {
 
-    if (fan3_tacho_count <= fan3_tacho_last_count )
+    if (fan3_tacho_count <= fan3_tacho_last_count ) {
       if (heater_running) {
         heater_error = true;
+        heater_failure = true;
       }
+    }
+    else {
+      heater_error = false;
+      heater_failure = false;
+    }
+    write_config(EEPROM.length() - EEPROM_OFFSET);
     fan3_tacho_last_count = fan3_tacho_count;
 
     ams_counter = 0;
     if (fan3_tacho_count >= 10000) {
       fan3_tacho_count = 0;
       fan3_tacho_last_count = 0;
+    }
+  }
+}
+
+void fan_rpm() {
+  ams_fan_counter ++;
+  if (ams_fan_counter >= 100) {
+
+    if (fan1_tacho_count <= fan1_tacho_last_count ) {
+      if (fan1_duty > 0) {
+        fan1_error = true;        
+      }
+    }
+    else {
+      fan1_error = false;
+    }
+    if (fan2_tacho_count <= fan2_tacho_last_count ) {
+      if (fan2_duty > 0) {
+        fan2_error = true;        
+      }
+    }
+    else {
+      fan2_error = false;
+    }
+    fan1_tacho_last_count = fan1_tacho_count;
+    fan2_tacho_last_count = fan2_tacho_count;
+
+    ams_fan_counter = 0;
+    if (fan1_tacho_count >= 10000) {
+      fan1_tacho_count = 0;
+      fan1_tacho_last_count = 0;
+    }
+    if (fan2_tacho_count >= 10000) {
+      fan2_tacho_count = 0;
+      fan2_tacho_last_count = 0;
     }
   }
 }
