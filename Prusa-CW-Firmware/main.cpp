@@ -1,4 +1,4 @@
-#include <LiquidCrystal.h>
+#include "Main.h"
 #include <EEPROM.h>
 #include "Trinamic_TMC2130.h"
 #include "MCP23S17.h"
@@ -7,9 +7,13 @@
 #include "thermistor.h"
 #include <avr/wdt.h>
 #include <avr/pgmspace.h>
+#include "version.h"
 #include <USBCore.h>
+#include "PrusaLcd.h"
+#include "MenuList.h"
 
-typedef char Serial_num_t[17]; //!< Null terminated string for serial number
+typedef char Serial_num_t[20]; //!< Null terminated string for serial number
+
 
 Countimer tDown;
 Countimer tUp;
@@ -20,7 +24,8 @@ Trinamic_TMC2130 myStepper(CS_PIN);
 
 MCP outputchip(0, 8);
 
-LiquidCrystal lcd(LCD_PINS_RS, LCD_PINS_ENABLE, LCD_PINS_D4, LCD_PINS_D5, LCD_PINS_D6, LCD_PINS_D7);
+
+PrusaLcd lcd(LCD_PINS_RS, LCD_PINS_ENABLE, LCD_PINS_D4, LCD_PINS_D5, LCD_PINS_D6, LCD_PINS_D7);
 
 enum menu_state {
   MENU,
@@ -48,15 +53,15 @@ enum menu_state {
   ERROR
 };
 
+#define FW_VERSION  "2.0.9"
 volatile uint16_t *const bootKeyPtr = (volatile uint16_t *)(RAMEND-1);
 
-String FW_VERSION = "2.0.9";
 
 menu_state state = MENU;
 
 long lastJob = 0;
 
-byte menu_position = 0;
+uint8_t menu_position = 0;
 byte max_menu_position = 0;
 bool redraw_menu = true;
 bool redraw_ms = true;
@@ -64,7 +69,7 @@ bool speed_up = false;
 bool pinda_therm = 0; // 0 - 100K thermistor - ATC Semitec 104GT-2/ 1 - PINDA thermistor
 
 bool button_released = false;
-volatile byte rotary_diff = 128;
+volatile uint8_t rotary_diff = 128;
 
 byte washing_speed = 10;
 byte curing_speed = 1;
@@ -289,15 +294,6 @@ void stop_heater() {
 
 }
 
-void print_sn(){
-  Serial_num_t sn;
-  get_serial_num(sn);
-  lcd.setCursor(1, 1);
-  lcd.print("SN:");
-  lcd.setCursor(4, 1);
-  lcd.print(sn);
-}
-
 void speed_configuration() {
 
   if (curing_mode == true) {
@@ -436,6 +432,19 @@ void read_config(unsigned int address) {
 }
 
 
+void print_menu_cursor()
+{
+    lcd.setCursor(0, menu_position);
+    lcd.print(">");
+
+    for (int i = 0; i <= 3; i++) {
+      if ( i != menu_position) {
+        lcd.setCursor(0, i);
+        lcd.print(" ");
+      }
+    }
+}
+
 void generic_menu(byte num, ...) {
   va_list argList;
   va_start(argList, num);
@@ -456,17 +465,9 @@ void generic_menu(byte num, ...) {
       menu_position--;
     }
   }
-
-  lcd.setCursor(0, menu_position);
-  lcd.print(">");
-
-  for (int i = 0; i <= 3; i++) {
-    if ( i != menu_position) {
-      lcd.setCursor(0, i);
-      lcd.print(" ");
-    }
-  }
+  print_menu_cursor();
 }
+
 
 
 void generic_value(const char *label, byte *value, byte min, byte max, const char *units, bool conversion) {
@@ -837,30 +838,24 @@ void menu_move() {
       break;
 
     case INFO:
-      lcd.setCursor(1, 0);
-      lcd.print("FW version: ");
-      lcd.setCursor(13, 0);
-      lcd.print(FW_VERSION);
-      print_sn();
+      {
+        Serial_num_t sn;
+        get_serial_num(sn);
+        Scrolling_items items =
+        {
+            {"FW version: "  FW_VERSION, true},
+            {"FAN1 failure", fan1_error},
+            {"FAN2 failure", fan2_error},
+            {"HEATER failure", heater_failure},
+            {sn, true},
+            {"Build: " FW_BUILDNR, true},
+            {FW_HASH, true},
+            {FW_LOCAL_CHANGES ? "Workspace dirty" : "Workspace clean", true}
+        };
+        scrolling_list(items);
 
-    if((fan1_error == true) && (fan2_error == false)){      
-        lcd.setCursor(1, 2);
-        lcd.print("FAN1 failure");      
-    }
-    if((fan1_error == false) && (fan2_error == true)){      
-        lcd.setCursor(1, 2);
-        lcd.print("FAN2 failure");      
-    }
-    if((fan1_error == true) && (fan2_error == true)){      
-        lcd.setCursor(1, 2);
-        lcd.print("FAN1 & FAN2 failure");      
-    }
-      if (heater_failure == true) {
-        lcd.setCursor(1, 3);
-        lcd.print("HEATER failure");
+        break;
       }
-      break;
-
     case RUN_MENU:
       generic_menu(3, paused ? "Continue" : "Pause", "Stop", "Back");
       break;
@@ -1421,6 +1416,7 @@ void button_press() {
     default:
       break;
   }
+  scrolling_list_reset();
   menu_position = 0;
   redraw_menu = true;
   rotary_diff = 128;
@@ -2093,8 +2089,10 @@ void preheat() {
 void get_serial_num(Serial_num_t &sn)
 {
     uint16_t snAddress = 0x7fe0;
-
-    for (uint_least8_t i = 0; i < 16; ++i)
+    sn[0] = 'S';
+    sn[1] = 'N';
+    sn[2] = ':';
+    for (uint_least8_t i = 3; i < 19; ++i)
     {
         sn[i] = pgm_read_byte(snAddress++);
     }

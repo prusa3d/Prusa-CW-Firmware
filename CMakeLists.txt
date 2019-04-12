@@ -59,6 +59,7 @@ add_executable(
 	Prusa-CW-Firmware/MCP23S17.cpp
 	Prusa-CW-Firmware/thermistor.cpp
 	Prusa-CW-Firmware/Trinamic_TMC2130.cpp
+	Prusa-CW-Firmware/MenuList.cpp
 	libraries/LiquidCrystal.cpp
 	libraries/SPI.cpp
 	core/WInterrupts.c
