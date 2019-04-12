@@ -571,7 +571,7 @@ static void scrolling_list(const Scrooling_items &items)
     {
         // (visible_index < num_items) allows visible_index to become equal num_items,
         // but such item is not shown nor accessed in next step.
-        while((!items[visible_index].visible) && (visible_index < num_items)) ++visible_index;
+        while((visible_index < num_items) && (!items[visible_index].visible)) ++visible_index;
 
         lcd.setCursor(cursor_columns, line);
 
