@@ -1,4 +1,4 @@
-#include <LiquidCrystal.h>
+#include "Main.h"
 #include <EEPROM.h>
 #include "Trinamic_TMC2130.h"
 #include "MCP23S17.h"
@@ -9,16 +9,11 @@
 #include <avr/pgmspace.h>
 #include "version.h"
 #include <USBCore.h>
+#include "PrusaLcd.h"
+#include "MenuList.h"
 
 typedef char Serial_num_t[20]; //!< Null terminated string for serial number
 
-struct Scrooling_item
-{
-   const char *caption;
-   bool visible;
-};
-
-typedef Scrooling_item Scrooling_items[8];
 
 Countimer tDown;
 Countimer tUp;
@@ -29,30 +24,6 @@ Trinamic_TMC2130 myStepper(CS_PIN);
 
 MCP outputchip(0, 8);
 
-class PrusaLcd : public LiquidCrystal
-{
-public:
-    using LiquidCrystal::LiquidCrystal;
-
-    //! Print n characters from null terminated string c
-    //! if there are not enough characters, prints ' ' for remaining n.
-    void printClear(const char *c, uint_least8_t n)
-    {
-        for (uint_least8_t i = 0; i < n; ++i)
-        {
-            if (*c)
-            {
-                print(*c);
-                ++c;
-            }
-            else
-            {
-                print(' ');
-            }
-        }
-    }
-
-};
 
 PrusaLcd lcd(LCD_PINS_RS, LCD_PINS_ENABLE, LCD_PINS_D4, LCD_PINS_D5, LCD_PINS_D6, LCD_PINS_D7);
 
@@ -90,8 +61,7 @@ menu_state state = MENU;
 
 long lastJob = 0;
 
-static byte menu_position = 0;
-static byte menu_offset = 0;
+uint8_t menu_position = 0;
 byte max_menu_position = 0;
 bool redraw_menu = true;
 bool redraw_ms = true;
@@ -99,7 +69,7 @@ bool speed_up = false;
 bool pinda_therm = 0; // 0 - 100K thermistor - ATC Semitec 104GT-2/ 1 - PINDA thermistor
 
 bool button_released = false;
-volatile byte rotary_diff = 128;
+volatile uint8_t rotary_diff = 128;
 
 byte washing_speed = 10;
 byte curing_speed = 1;
@@ -233,7 +203,6 @@ static void lcd_time_print();
 static void therm1_read();
 static void get_serial_num(Serial_num_t &sn);
 static uint8_t get_reset_flags();
-static void scrolling_list(const Scrooling_items &items);
 
 
 
@@ -463,7 +432,7 @@ void read_config(unsigned int address) {
 }
 
 
-static void print_menu_cursor()
+void print_menu_cursor()
 {
     lcd.setCursor(0, menu_position);
     lcd.print(">");
@@ -499,91 +468,6 @@ void generic_menu(byte num, ...) {
   print_menu_cursor();
 }
 
-
-static uint_least8_t count_visible(const Scrooling_items &items)
-{
-    uint_least8_t visible_items = 0;
-    for(auto item : items)
-    {
-        if(item.visible) ++visible_items;
-    }
-
-    return visible_items;
-}
-
-static uint_least8_t first_visible(const Scrooling_items &items, uint_least8_t pos)
-{
-    uint_least8_t first_visible = 0;
-    const uint_least8_t num_items = sizeof(Scrooling_items)/sizeof(Scrooling_item);
-
-    for (uint_least8_t i = 0; i < pos; ++i)
-    {
-        while ((first_visible < (num_items - 2)) && !items[first_visible].visible)
-        {
-            ++first_visible;
-        }
-        ++first_visible;
-    }
-    return first_visible;
-}
-
-//! @brief Print scrolling list
-//! @param[in] items
-//!
-//! Prints visible items only.
-static void scrolling_list(const Scrooling_items &items)
-{
-    const uint_least8_t visible_items = count_visible(items);
-    const int rows = 4;
-    const uint_least8_t columns = 20;
-    const uint_least8_t cursor_columns = 1;
-
-    if (menu_offset > (visible_items - rows)) menu_offset = 0;
-
-
-    if (rotary_diff > 128)
-    {
-        if ((menu_position < (rows - 1)) && (menu_position < visible_items - 1))
-        {
-            ++menu_position;
-        }
-        else if (menu_offset < (visible_items - rows))
-        {
-            ++menu_offset;
-        }
-    }
-    else if (rotary_diff < 128)
-    {
-        if (menu_position)
-        {
-            --menu_position;
-        }
-        else if (menu_offset)
-        {
-            --menu_offset;
-        }
-    }
-
-    uint_least8_t visible_index = first_visible(items, menu_offset);
-    const uint_least8_t num_items = sizeof(Scrooling_items)/sizeof(Scrooling_item);
-
-    for (uint_least8_t line = 0; line < rows; ++line)
-    {
-        // (visible_index < num_items) allows visible_index to become equal num_items,
-        // but such item is not shown nor accessed in next step.
-        while((visible_index < num_items) && (!items[visible_index].visible)) ++visible_index;
-
-        lcd.setCursor(cursor_columns, line);
-
-        if (visible_index < num_items)
-        {
-            lcd.printClear(items[visible_index].caption, columns - cursor_columns);
-        }
-        ++visible_index;
-    }
-
-    print_menu_cursor();
-}
 
 
 void generic_value(const char *label, byte *value, byte min, byte max, const char *units, bool conversion) {
@@ -957,7 +841,7 @@ void menu_move() {
       {
         Serial_num_t sn;
         get_serial_num(sn);
-        Scrooling_items items =
+        Scrolling_items items =
         {
             {"FW version: "  FW_VERSION, true},
             {"FAN1 failure", fan1_error},
@@ -1532,7 +1416,7 @@ void button_press() {
     default:
       break;
   }
-  menu_offset = 0;
+  scrolling_list_reset();
   menu_position = 0;
   redraw_menu = true;
   rotary_diff = 128;
