@@ -37,7 +37,7 @@ enum menu_state {
   TIME_DRYING,
   TIME_WASHING,
   SETTINGS,
-  DRYING_CURING,
+  ADVANCED_SETTINGS,
   PREHEAT,
   PREHEAT_ENABLE,
   TARGET_TEMP,
@@ -53,7 +53,7 @@ enum menu_state {
   ERROR
 };
 
-#define FW_VERSION  "2.0.9"
+#define FW_VERSION  "2.1.0"
 volatile uint16_t *const bootKeyPtr = (volatile uint16_t *)(RAMEND-1);
 
 
@@ -172,6 +172,28 @@ volatile int divider = 0;
 
 long ams_counter;
 long ams_fan_counter;
+
+byte Back[8] = {
+  B00100,
+  B01110,
+  B11111,
+  B00100,
+  B11100,
+  B00000,
+  B00000,
+  B00000
+};
+
+byte Right[8] = {
+  B00000,
+  B00100,
+  B00010,
+  B11111,
+  B00010,
+  B00100,
+  B00000,
+  B00000
+};
 
 static volatile uint16_t bootKeyPtrVal __attribute__ ((section (".noinit")));
 
@@ -388,6 +410,9 @@ void setup() {
   tUp.setInterval(print_time1, 1000);
   //pinMode(FAN_HEAT_PIN, OUTPUT);
   stop_heater();
+
+  lcd.createChar(0, Back);
+  lcd.createChar(1, Right);
 }
 
 
@@ -465,10 +490,18 @@ void generic_menu(byte num, ...) {
       menu_position--;
     }
   }
-  print_menu_cursor();
+  print_menu_cursor();  
 }
 
+void lcd_print_back(){
+  lcd.setCursor(19, 0);
+  lcd.write(byte(0));
+}
 
+void lcd_print_right(int a){
+  lcd.setCursor(19, a);
+  lcd.write(byte(1));
+}
 
 void generic_value(const char *label, byte *value, byte min, byte max, const char *units, bool conversion) {
   lcd.setCursor(1, 0);
@@ -592,7 +625,6 @@ void lcd_blink(void) {
 }
 
 void loop() {
-
   if ( *bootKeyPtr != MAGIC_KEY)
   {
     wdt_reset();
@@ -708,12 +740,15 @@ void menu_move() {
        switch (curing_machine_mode) {
         case 2:
           if ((fan1_error || fan2_error || heater_failure) == false) {
-            generic_menu(4, curing_mode ? "Start drying" : "Start washing", "Run-time", "Rotation speed", "Settings     ");
+            generic_menu(4, curing_mode ? "Start drying" : "Start washing", "Run-time", "Rotation speed ", "Settings     ");
           }
           else {
-            generic_menu(4, curing_mode ? "Start drying" : "Start washing", "Run-time", "Rotation speed", "Settings ->!!");
+            generic_menu(4, curing_mode ? "Start drying" : "Start washing", "Run-time", "Rotation speed ", "Settings ->!!");
           }
           state = MENU;
+          lcd_print_right(1);
+          lcd_print_right(2);
+          lcd_print_right(3);
           break;
         case 1:
           if ((fan1_error || fan2_error || heater_failure) == false) {
@@ -723,6 +758,9 @@ void menu_move() {
             generic_menu(4, curing_mode ? "Start curing" : "Start washing", "Run-time", "Rotation speed", "Settings ->!!");
           }
           state = MENU;
+          lcd_print_right(1);
+          lcd_print_right(2);
+          lcd_print_right(3);
           break;
         case 0:
         default:
@@ -733,6 +771,9 @@ void menu_move() {
             generic_menu(4, curing_mode ? "Start drying/curing" : "Start washing", "Run-time", "Rotation speed", "Settings ->!!");
           }
           state = MENU;
+          lcd_print_right(1);
+          lcd_print_right(2);
+          lcd_print_right(3);
           break;
       }
 
@@ -740,9 +781,12 @@ void menu_move() {
 
     case SPEED_STATE:
 
-      generic_menu(3, "Curing speed", "Washing speed", "Back");
+      generic_menu(3, "Back", "Curing speed", "Washing speed");
+      lcd_print_back();
+      lcd_print_right(1);
+      lcd_print_right(2);  
 
-      break;
+      break;          
 
     case SPEED_CURING:
 
@@ -758,7 +802,11 @@ void menu_move() {
 
     case TIME:
 
-      generic_menu(4, "Curing run-time", "Drying run-time", "Washing run-time", "Back");
+      generic_menu(4, "Back", "Curing run-time", "Drying run-time", "Washing run-time");
+      lcd_print_back();
+      lcd_print_right(1);
+      lcd_print_right(2);  
+      lcd_print_right(3);
 
       break;
 
@@ -782,29 +830,40 @@ void menu_move() {
 
     case SETTINGS:
       if ((fan1_error || fan2_error || heater_failure) == false) {
-        generic_menu(4, "Advanced settings", "Sound settings", "Information     ", "Back");
+        generic_menu(4, "Back", "Sound settings", "Information     ", "Advanced settings");
       }
       else {
-        generic_menu(4, "Advanced settings", "Sound settings", "Information ->!!", "Back");
+        generic_menu(4, "Back", "Sound settings", "Information ->!!", "Advanced settings");
       }
+      lcd_print_back();
+      lcd_print_right(1);
+      lcd_print_right(2);
+      lcd_print_right(3);
       break;
 
-    case DRYING_CURING:
-      generic_menu(4, "Run mode", "Preheat", "Unit system", "Back");
+    case ADVANCED_SETTINGS:
+      generic_menu(4, "Back", "Run mode", "Preheat", "Unit system");
+      lcd_print_back();
+      lcd_print_right(1);
+      lcd_print_right(2);
+      lcd_print_right(3);
       break;
 
     case PREHEAT:
       if (heat_to_target_temp) {
-        generic_menu(3, "Preheat enable", "Target temp", "Back");
+        generic_menu(3, "Back", "Preheat enabled", "Target temp" );
       }
       else {
-        generic_menu(3, "Preheat disable", "Target temp", "Back");
+        generic_menu(3, "Back", "Preheat disabled", "Target temp" );
       }
+      lcd_print_back();
+      lcd_print_right(1);
+      lcd_print_right(2);      
       break;
 
     case PREHEAT_ENABLE:
 
-      generic_items("Preheat enable", &heat_to_target_temp, 2, "disable >", "< enable");
+      generic_items("Preheat", &heat_to_target_temp, 2, "disable >", "< enable");
 
       break;
 
@@ -826,7 +885,10 @@ void menu_move() {
       break;
 
     case SOUND_SETTINGS:
-      generic_menu(3, "Sound response", "Finish beep", "Back");
+      generic_menu(3, "Back", "Sound response", "Finish beep" );
+      lcd_print_back();
+      lcd_print_right(1);
+      lcd_print_right(2);      
       break;
 
     case SOUND:
@@ -852,7 +914,7 @@ void menu_move() {
             {FW_HASH, true},
             {FW_LOCAL_CHANGES ? "Workspace dirty" : "Workspace clean", true}
         };
-        scrolling_list(items);
+        scrolling_list(items);        
 
         break;
       }
@@ -1198,7 +1260,7 @@ void button_press() {
     case SETTINGS:
       switch (menu_position) {
         case 0:
-          state = DRYING_CURING;
+          state = MENU;
           break;
 
         case 1:
@@ -1210,7 +1272,7 @@ void button_press() {
           break;
 
         default:
-          state = MENU;
+          state = ADVANCED_SETTINGS;
           break;
       }
       break;
@@ -1218,35 +1280,35 @@ void button_press() {
     case SOUND_SETTINGS:
       switch (menu_position) {
         case 0:
-          state = SOUND;
+          state = SETTINGS;
           break;
 
         case 1:
-          state = BEEP;
+          state = SOUND;
           break;
 
         default:
-          state = SETTINGS;
+          state = BEEP;
           break;
       }
       break;
 
-    case DRYING_CURING:
+    case ADVANCED_SETTINGS:
       switch (menu_position) {
         case 0:
-          state = RUN_MODE;
+          state = SETTINGS;
           break;
 
         case 1:
-          state = PREHEAT;
+          state = RUN_MODE;
           break;
 
         case 2:
-          state = UNIT_SYSTEM;
+          state = PREHEAT;
           break;
 
         default:
-          state = SETTINGS;
+          state = UNIT_SYSTEM;
           break;
       }
       break;
@@ -1254,15 +1316,15 @@ void button_press() {
     case PREHEAT:
       switch (menu_position) {
         case 0:
-          state = PREHEAT_ENABLE;
+          state = ADVANCED_SETTINGS;
           break;
 
         case 1:
-          state = TARGET_TEMP;
+          state = PREHEAT_ENABLE;
           break;
 
         default:
-          state = DRYING_CURING;
+          state = TARGET_TEMP;
           break;
       }
       break;
@@ -1270,15 +1332,15 @@ void button_press() {
     case SPEED_STATE:
       switch (menu_position) {
         case 0:
-          state = SPEED_CURING;
+          state = MENU;
           break;
 
         case 1:
-          state = SPEED_WASHING;
+          state = SPEED_CURING;
           break;
 
         default:
-          state = MENU;
+          state = SPEED_WASHING;
           break;
       }
       break;
@@ -1296,19 +1358,19 @@ void button_press() {
     case TIME:
       switch (menu_position) {
         case 0:
-          state = TIME_CURING;
+          state = MENU;
           break;
 
         case 1:
-          state = TIME_DRYING;
+          state = TIME_CURING;
           break;
 
         case 2:
-          state = TIME_WASHING;
+          state = TIME_DRYING;
           break;
 
         default:
-          state = MENU;
+          state = TIME_WASHING;
           break;
       }
       break;
@@ -1337,7 +1399,7 @@ void button_press() {
       break;
     case RUN_MODE:
       write_config(EEPROM.length() - EEPROM_OFFSET);
-      state = DRYING_CURING;
+      state = ADVANCED_SETTINGS;
       break;
     case PREHEAT_ENABLE:
       write_config(EEPROM.length() - EEPROM_OFFSET);
@@ -1349,7 +1411,7 @@ void button_press() {
       break;
     case UNIT_SYSTEM:
       write_config(EEPROM.length() - EEPROM_OFFSET);
-      state = DRYING_CURING;
+      state = ADVANCED_SETTINGS;
       break;
 
     case CONFIRM:
@@ -1558,7 +1620,7 @@ void start_drying() {
     if (!heat_to_target_temp) {
       tDown.pause();
     }
-    else {
+    else {      
       tUp.pause();
     }
   }
@@ -1604,20 +1666,7 @@ void start_washing() {
       paused = true;
       tDown.pause();
       stop_motor();
-      //cover_open = true;
-      if (!cover_open) {
-        if (sound_response) {
-          warning_beep();
-        }
-        redraw_menu = true;
-        cover_open = true;
-      }
-    }
-    else {
-      if (cover_open) {
-        redraw_menu = true;
-        cover_open = false;
-      }
+     
       if (outputchip.digitalRead(WASH_DETECT_PIN) == LOW) { //Gastro Pen check
         lcd.setCursor(1, 0);
         lcd.print("IPA tank removed");
