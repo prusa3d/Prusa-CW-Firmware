@@ -782,10 +782,10 @@ void menu_move() {
 
     case SETTINGS:
       if ((fan1_error || fan2_error || heater_failure) == false) {
-        generic_menu(4, "Drying & Curing", "Sound settings", "Information     ", "Back");
+        generic_menu(4, "Advanced settings", "Sound settings", "Information     ", "Back");
       }
       else {
-        generic_menu(4, "Drying & Curing", "Sound settings", "Information ->!!", "Back");
+        generic_menu(4, "Advanced settings", "Sound settings", "Information ->!!", "Back");
       }
       break;
 
@@ -804,25 +804,25 @@ void menu_move() {
 
     case PREHEAT_ENABLE:
 
-      generic_items("Preheat enable", &heat_to_target_temp, 2, "disable", "enable");
+      generic_items("Preheat enable", &heat_to_target_temp, 2, "disable >", "< enable");
 
       break;
 
     case TARGET_TEMP:
       if (SI_unit_system) {
-        generic_value("Target temp", &target_temp_celsius, 30, 50, "\xDF" "C", 0);
+        generic_value("Target temp", &target_temp_celsius, 20, 40, "\xDF" "C", 0);
       }
       else {
-        generic_value("Target temp", &target_temp_celsius, 30, 50, "\xDF" "F", 1);
+        generic_value("Target temp", &target_temp_celsius, 20, 40, "\xDF" "F", 1);
       }
       break;
 
     case UNIT_SYSTEM:
-      generic_items("Unit system", &SI_unit_system, 2, "IMPERIAL/ US", "SI");
+      generic_items("Unit system", &SI_unit_system, 2, "IMPERIAL/ US >", "< SI");
       break;
 
     case RUN_MODE:
-      generic_items("Run mode", &curing_machine_mode, 3, "Drying & Curing", "Curing", "Drying");
+      generic_items("Run mode", &curing_machine_mode, 3, "Drying & Curing >", "< Curing >", "< Drying");
       break;
 
     case SOUND_SETTINGS:
@@ -830,11 +830,11 @@ void menu_move() {
       break;
 
     case SOUND:
-      generic_items("Sound response", &sound_response, 2, "no", "yes");
+      generic_items("Sound response", &sound_response, 2, "no >", "< yes");
       break;
 
     case BEEP:
-      generic_items("Finish beep", &finish_beep_mode, 3, "none", "once", "continuous");
+      generic_items("Finish beep", &finish_beep_mode, 3, "none >", "< once > ", "< continuous");
       break;
 
     case INFO:
@@ -862,8 +862,13 @@ void menu_move() {
 
     case RUNNING:
       lcd.setCursor(1, 0);
-      if (curing_mode) {
-        lcd.print(cover_open ? "The cover is open!" : (paused ? "Paused..." : drying_mode ? "Drying" : "Curing"));
+       if (curing_mode) {
+        if (!heat_to_target_temp) {
+          lcd.print(cover_open ? "The cover is open!" : (paused ? "Paused..." : drying_mode ? "Drying" : "Curing"));
+        }
+        else {
+          lcd.print(cover_open ? "The cover is open!" : (paused ? "Paused..." : drying_mode ? "Heating" : "Curing"));
+        }
       }
       else {
         lcd.print(cover_open ? "Open cover!" : (paused ? "Paused..." : "Washing"));
@@ -1698,7 +1703,8 @@ void start_washing() {
     } else {
       menu_position = 0;
       stop_motor();
-
+      fan1_duty = FAN1_MENU_SPEED;
+      fan2_duty = FAN2_MENU_SPEED;
       stop_heater(); // turn off heat fan
       redraw_menu = true;
       rotary_diff = 128;
@@ -1793,12 +1799,22 @@ void lcd_time_print() {
     if (!paused) {
       if (curing_mode) { //curing or drying mode
         if (running_count > 1) {
-          lcd.setCursor(5 + running_count, 0);
-          lcd.print(".");
-          lcd.setCursor(14, 2);
-          lcd.print("  ");
-          lcd.setCursor(5, 2);
-          lcd.print("  ");
+          if (!heat_to_target_temp) {
+            lcd.setCursor(5 + running_count, 0);
+            lcd.print(".");
+            lcd.setCursor(14, 2);
+            lcd.print("  ");
+            lcd.setCursor(5, 2);
+            lcd.print("  ");
+          }
+          else {
+            lcd.setCursor(6 + running_count, 0);
+            lcd.print(".");
+            lcd.setCursor(14, 2);
+            lcd.print("  ");
+            lcd.setCursor(5, 2);
+            lcd.print("  ");
+          }
         }
         if (outputchip.digitalRead(COVER_OPEN_PIN) == LOW) {
           if (SI_unit_system) {
