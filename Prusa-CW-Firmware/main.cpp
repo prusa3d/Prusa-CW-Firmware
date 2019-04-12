@@ -499,26 +499,55 @@ void generic_menu(byte num, ...) {
   print_menu_cursor();
 }
 
-//! @brief Print scrolling list
-//! @param[in] items
-//! Prints visible items only,
-static void scrolling_list(const Scrooling_items &items)
+
+static uint_least8_t count_visible(const Scrooling_items &items)
 {
     uint_least8_t visible_items = 0;
     for(auto item : items)
     {
         if(item.visible) ++visible_items;
     }
-    if (menu_offset > (visible_items - 4)) menu_offset = 0;
+
+    return visible_items;
+}
+
+static uint_least8_t first_visible(const Scrooling_items &items, uint_least8_t pos)
+{
+    uint_least8_t first_visible = 0;
+    const uint_least8_t num_items = sizeof(Scrooling_items)/sizeof(Scrooling_item);
+
+    for (uint_least8_t i = 0; i < pos; ++i)
+    {
+        while ((first_visible < (num_items - 2)) && !items[first_visible].visible)
+        {
+            ++first_visible;
+        }
+        ++first_visible;
+    }
+    return first_visible;
+}
+
+//! @brief Print scrolling list
+//! @param[in] items
+//!
+//! Prints visible items only.
+static void scrolling_list(const Scrooling_items &items)
+{
+    const uint_least8_t visible_items = count_visible(items);
+    const int rows = 4;
+    const uint_least8_t columns = 20;
+    const uint_least8_t cursor_columns = 1;
+
+    if (menu_offset > (visible_items - rows)) menu_offset = 0;
 
 
     if (rotary_diff > 128)
     {
-        if (menu_position < max_menu_position)
+        if ((menu_position < (rows - 1)) && (menu_position < visible_items))
         {
             ++menu_position;
         }
-        else if (menu_offset < (visible_items - 4))
+        else if (menu_offset < (visible_items - rows))
         {
             ++menu_offset;
         }
@@ -534,16 +563,25 @@ static void scrolling_list(const Scrooling_items &items)
             --menu_offset;
         }
     }
+
+    uint_least8_t visible_index = first_visible(items, menu_offset);
+    const uint_least8_t num_items = sizeof(Scrooling_items)/sizeof(Scrooling_item);
+
+    for (uint_least8_t line = 0; line < rows; ++line)
     {
-        uint_least8_t j = menu_offset;
-        for (uint_least8_t line = 0; line < 4; ++line)
+        // (visible_index < num_items) allows visible_index to become equal num_items,
+        // but such item is not shown nor accessed in next step.
+        while((!items[visible_index].visible) && (visible_index < num_items)) ++visible_index;
+
+        lcd.setCursor(cursor_columns, line);
+
+        if (visible_index < num_items)
         {
-            while(!items[j].visible) ++j;
-            lcd.setCursor(1, line);
-            lcd.printClear(items[j].caption, 19);
-            ++j;
+            lcd.printClear(items[visible_index].caption, columns - cursor_columns);
         }
+        ++visible_index;
     }
+
     print_menu_cursor();
 }
 
