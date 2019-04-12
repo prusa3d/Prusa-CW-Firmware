@@ -543,7 +543,7 @@ static void scrolling_list(const Scrooling_items &items)
 
     if (rotary_diff > 128)
     {
-        if ((menu_position < (rows - 1)) && (menu_position < visible_items))
+        if ((menu_position < (rows - 1)) && (menu_position < visible_items - 1))
         {
             ++menu_position;
         }
