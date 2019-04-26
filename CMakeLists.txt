@@ -60,7 +60,7 @@ add_executable(
 	Prusa-CW-Firmware/thermistor.cpp
 	Prusa-CW-Firmware/Trinamic_TMC2130.cpp
 	Prusa-CW-Firmware/MenuList.cpp
-	libraries/LiquidCrystal.cpp
+	Prusa-CW-Firmware/LiquidCrystal_Prusa.cpp
 	libraries/SPI.cpp
 	core/WInterrupts.c
 	core/hooks.c

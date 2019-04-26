@@ -5,12 +5,13 @@
 #ifndef PRUSALCD_H
 #define PRUSALCD_H
 
-#include <LiquidCrystal.h>
+//#include <LiquidCrystal.h>
+#include "LiquidCrystal_Prusa.h"
 
-class PrusaLcd : public LiquidCrystal
+class PrusaLcd : public LiquidCrystal_Prusa
 {
 public:
-    using LiquidCrystal::LiquidCrystal;
+    using LiquidCrystal_Prusa::LiquidCrystal_Prusa;
 
     //! Print n characters from null terminated string c
     //! if there are not enough characters, prints ' ' for remaining n.

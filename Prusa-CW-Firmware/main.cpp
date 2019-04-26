@@ -11,6 +11,7 @@
 #include <USBCore.h>
 #include "PrusaLcd.h"
 #include "MenuList.h"
+//#include "LiquidCrystal_Prusa.h"
 
 typedef char Serial_num_t[20]; //!< Null terminated string for serial number
 
@@ -53,8 +54,8 @@ enum menu_state {
   ERROR
 };
 
-#define FW_VERSION  "2.1.0"
-volatile uint16_t *const bootKeyPtr = (volatile uint16_t *)(RAMEND-1);
+#define FW_VERSION  "2.1.1"
+volatile uint16_t *const bootKeyPtr = (volatile uint16_t *)(RAMEND - 1);
 
 
 menu_state state = MENU;
@@ -62,11 +63,14 @@ menu_state state = MENU;
 long lastJob = 0;
 
 uint8_t menu_position = 0;
+uint8_t last_menu_position = 0;
 byte max_menu_position = 0;
 bool redraw_menu = true;
 bool redraw_ms = true;
 bool speed_up = false;
 bool pinda_therm = 0; // 0 - 100K thermistor - ATC Semitec 104GT-2/ 1 - PINDA thermistor
+
+unsigned long time_now = 0;
 
 bool button_released = false;
 volatile uint8_t rotary_diff = 128;
@@ -141,6 +145,8 @@ unsigned long us_last = 0;
 unsigned long last_remain = 0;
 unsigned long last_millis = 0;
 unsigned int last_seconds = 0;
+unsigned long led_time_now = 0;
+unsigned long LED_delay = 1000;
 bool motor_running = false;
 bool heater_running = false;
 bool curing_mode = false;
@@ -150,6 +156,7 @@ bool paused = false;
 bool cover_open = false;
 bool gastro_pan = false;
 bool paused_time = false;
+bool led_start = false;
 int var_speed = 0;
 int running_count = 0;
 
@@ -171,7 +178,14 @@ bool therm_read = false;
 volatile int divider = 0;
 
 long ams_counter;
+long ms_counter;
 long ams_fan_counter;
+
+long button_timer = 0;
+long long_press_time = 1000;
+bool button_active = false;
+bool long_press_active = false;
+bool long_press = false;
 
 byte Back[8] = {
   B00100,
@@ -208,7 +222,7 @@ static void fan_tacho1();
 static void fan_tacho2();
 static void fan_tacho3();
 static void print_time1();
-static void menu_move();
+static void menu_move(bool sound_echo);
 static void machine_running();
 static void button_press();
 static void tDownComplete();
@@ -391,7 +405,7 @@ void setup() {
   outputchip.digitalWrite(LED_RELE_PIN, LOW); // turn off led
   pinMode(LED_PWM_PIN, OUTPUT);
   digitalWrite(LED_PWM_PIN, LOW);
-  
+
 
   // stepper driver init
   myStepper.init();
@@ -413,6 +427,8 @@ void setup() {
 
   lcd.createChar(0, Back);
   lcd.createChar(1, Right);
+  redraw_menu = true;
+  menu_move(true);
 }
 
 
@@ -456,18 +472,17 @@ void read_config(unsigned int address) {
   }
 }
 
-
 void print_menu_cursor()
 {
-    lcd.setCursor(0, menu_position);
-    lcd.print(">");
+  lcd.setCursor(0, menu_position);
+  lcd.print(">");
 
-    for (int i = 0; i <= 3; i++) {
-      if ( i != menu_position) {
-        lcd.setCursor(0, i);
-        lcd.print(" ");
-      }
+  for (int i = 0; i <= 3; i++) {
+    if ( i != menu_position) {
+      lcd.setCursor(0, i);
+      lcd.print(" ");
     }
+  }
 }
 
 void generic_menu(byte num, ...) {
@@ -490,15 +505,19 @@ void generic_menu(byte num, ...) {
       menu_position--;
     }
   }
-  print_menu_cursor();  
+  print_menu_cursor();
 }
 
-void lcd_print_back(){
+void lcd_print_back() {
+  lcd.setCursor(19, 0);
+  lcd.print(" ");
   lcd.setCursor(19, 0);
   lcd.write(byte(0));
 }
 
-void lcd_print_right(int a){
+void lcd_print_right(int a) {
+  lcd.setCursor(19, a);
+  lcd.print(" ");
   lcd.setCursor(19, a);
   lcd.write(byte(1));
 }
@@ -662,7 +681,7 @@ void loop() {
     }
   }
 
-  if (heater_error) {    
+  if (heater_error) {
     lcd.setCursor(1, 0);
     lcd.print("Heater fan error...");
     lcd.setCursor(1, 2);
@@ -700,32 +719,65 @@ void loop() {
     }
   }
   // rotary "click" is 4 "micro steps"
-  if (rotary_diff <= 124 || rotary_diff >= 132 || redraw_menu) {
-    menu_move();
+  if (rotary_diff <= 124 || rotary_diff >= 132 || redraw_menu) { //124, 132
+    menu_move(true);
   }
 
   if (state == RUNNING || state == RUN_MENU) {
     machine_running();
   }
 
-  if (outputchip.digitalRead(BTN_ENC) == HIGH) { // released button
-    button_released = true;
+  if (outputchip.digitalRead(BTN_ENC) == LOW) {
+    if (button_active == false) {
+      button_active = true;
+      button_timer = millis();
+    }
+    if ((millis() - button_timer > long_press_time) && (long_press_active == false)) {
+      long_press_active = true;
+      if (state == MENU || state == SETTINGS || state == ADVANCED_SETTINGS || state == PREHEAT || state == SOUND_SETTINGS || state == TIME || state == SPEED_STATE) {
+        state = RUN_MODE;
+        long_press = true;
+        redraw_menu = true;
+        menu_move(true);
+        if (sound_response) {
+          echo();
+        }
+      }
+    }
+  } else {
+    if (button_active == true) {
+      if (long_press_active == true) {
+        long_press_active = false;
+      } else {
+        if (!heater_error) {
+          button_press();
+        }
+      }
+      button_active = false;
+    }
   }
 
-  if (outputchip.digitalRead(BTN_ENC) == LOW && button_released) { // button presset
-
-    button_released = false;
-
-    if (!heater_error) {
-      button_press();
+  if (millis() > time_now + 5500) {
+    last_menu_position = menu_position;
+    time_now = millis();
+    lcd.reinit();
+    lcd.createChar(0, Back);
+    lcd.createChar(1, Right);
+    redraw_menu = true;
+    menu_move(false);
+    menu_position = last_menu_position;
+    if (state == MENU || state == SETTINGS || state == ADVANCED_SETTINGS || state == PREHEAT || state == SOUND_SETTINGS || state == TIME || state == SPEED_STATE) {
+      print_menu_cursor();
     }
   }
 }
 
-void menu_move() {
+void menu_move(bool sound_echo) {
   if (!redraw_menu) {
-    if (sound_response) {
-      echo();
+    if (sound_echo) {
+      if (sound_response) {
+        echo();
+      }
     }
   }
   else {
@@ -737,43 +789,43 @@ void menu_move() {
   switch (state) {
     case MENU:
 
-       switch (curing_machine_mode) {
+      switch (curing_machine_mode) {
         case 2:
           if ((fan1_error || fan2_error || heater_failure) == false) {
-            generic_menu(4, curing_mode ? "Start drying" : "Start washing", "Run-time", "Rotation speed ", "Settings     ");
+            generic_menu(4, curing_mode ? "Start drying       " : "Start washing      ", "Run-time", "Rotation speed", "Settings          ");
           }
           else {
-            generic_menu(4, curing_mode ? "Start drying" : "Start washing", "Run-time", "Rotation speed ", "Settings ->!!");
+            generic_menu(4, curing_mode ? "Start drying       " : "Start washing      ", "Run-time", "Rotation speed ", "Settings ->!!");
           }
-          state = MENU;
           lcd_print_right(1);
           lcd_print_right(2);
           lcd_print_right(3);
+          state = MENU;
           break;
         case 1:
           if ((fan1_error || fan2_error || heater_failure) == false) {
-            generic_menu(4, curing_mode ? "Start curing" : "Start washing", "Run-time", "Rotation speed", "Settings     ");
+            generic_menu(4, curing_mode ? "Start curing       " : "Start washing      ", "Run-time", "Rotation speed", "Settings          ");
           }
           else {
-            generic_menu(4, curing_mode ? "Start curing" : "Start washing", "Run-time", "Rotation speed", "Settings ->!!");
+            generic_menu(4, curing_mode ? "Start curing       " : "Start washing      ", "Run-time", "Rotation speed", "Settings ->!!");
           }
-          state = MENU;
           lcd_print_right(1);
           lcd_print_right(2);
           lcd_print_right(3);
+          state = MENU;
           break;
         case 0:
         default:
           if ((fan1_error || fan2_error || heater_failure) == false) {
-            generic_menu(4, curing_mode ? "Start drying/curing" : "Start washing", "Run-time", "Rotation speed", "Settings     ");
+            generic_menu(4, curing_mode ? "Start drying/curing" : "Start washing", "Run-time", "Rotation speed", "Settings          ");
           }
           else {
             generic_menu(4, curing_mode ? "Start drying/curing" : "Start washing", "Run-time", "Rotation speed", "Settings ->!!");
           }
-          state = MENU;
           lcd_print_right(1);
           lcd_print_right(2);
           lcd_print_right(3);
+          state = MENU;
           break;
       }
 
@@ -781,12 +833,12 @@ void menu_move() {
 
     case SPEED_STATE:
 
-      generic_menu(3, "Back", "Curing speed", "Washing speed");
+      generic_menu(3, "Back              ", "Curing speed", "Washing speed");
       lcd_print_back();
       lcd_print_right(1);
-      lcd_print_right(2);  
+      lcd_print_right(2);
 
-      break;          
+      break;
 
     case SPEED_CURING:
 
@@ -802,10 +854,10 @@ void menu_move() {
 
     case TIME:
 
-      generic_menu(4, "Back", "Curing run-time", "Drying run-time", "Washing run-time");
+      generic_menu(4, "Back              ", "Curing run-time", "Drying run-time", "Washing run-time");
       lcd_print_back();
       lcd_print_right(1);
-      lcd_print_right(2);  
+      lcd_print_right(2);
       lcd_print_right(3);
 
       break;
@@ -830,10 +882,10 @@ void menu_move() {
 
     case SETTINGS:
       if ((fan1_error || fan2_error || heater_failure) == false) {
-        generic_menu(4, "Back", "Sound settings", "Information     ", "Advanced settings");
+        generic_menu(4, "Back              ", "Sound settings", "Information     ", "Advanced settings");
       }
       else {
-        generic_menu(4, "Back", "Sound settings", "Information ->!!", "Advanced settings");
+        generic_menu(4, "Back              ", "Sound settings", "Information ->!!", "Advanced settings");
       }
       lcd_print_back();
       lcd_print_right(1);
@@ -842,7 +894,7 @@ void menu_move() {
       break;
 
     case ADVANCED_SETTINGS:
-      generic_menu(4, "Back", "Run mode", "Preheat", "Unit system");
+      generic_menu(4, "Back              ", "Run mode", "Preheat", "Unit system");
       lcd_print_back();
       lcd_print_right(1);
       lcd_print_right(2);
@@ -851,14 +903,14 @@ void menu_move() {
 
     case PREHEAT:
       if (heat_to_target_temp) {
-        generic_menu(3, "Back", "Preheat enabled", "Target temp" );
+        generic_menu(3, "Back              ", "Preheat enabled", "Target temp" );
       }
       else {
-        generic_menu(3, "Back", "Preheat disabled", "Target temp" );
+        generic_menu(3, "Back              ", "Preheat disabled", "Target temp" );
       }
       lcd_print_back();
       lcd_print_right(1);
-      lcd_print_right(2);      
+      lcd_print_right(2);
       break;
 
     case PREHEAT_ENABLE:
@@ -885,10 +937,10 @@ void menu_move() {
       break;
 
     case SOUND_SETTINGS:
-      generic_menu(3, "Back", "Sound response", "Finish beep" );
+      generic_menu(3, "Back              ", "Sound response", "Finish beep" );
       lcd_print_back();
       lcd_print_right(1);
-      lcd_print_right(2);      
+      lcd_print_right(2);
       break;
 
     case SOUND:
@@ -905,108 +957,132 @@ void menu_move() {
         get_serial_num(sn);
         Scrolling_items items =
         {
-            {"FW version: "  FW_VERSION, true},
-            {"FAN1 failure", fan1_error},
-            {"FAN2 failure", fan2_error},
-            {"HEATER failure", heater_failure},
-            {sn, true},
-            {"Build: " FW_BUILDNR, true},
-            {FW_HASH, true},
-            {FW_LOCAL_CHANGES ? "Workspace dirty" : "Workspace clean", true}
+          {"FW version: "  FW_VERSION, true},
+          {"FAN1 failure", fan1_error},
+          {"FAN2 failure", fan2_error},
+          {"HEATER failure", heater_failure},
+          {sn, true},
+          {"Build: " FW_BUILDNR, true},
+          {FW_HASH, true},
+          {FW_LOCAL_CHANGES ? "Workspace dirty" : "Workspace clean", true}
         };
-        scrolling_list(items);        
+        scrolling_list(items);
 
         break;
       }
     case RUN_MENU:
-      generic_menu(3, paused ? "Continue" : "Pause", "Stop", "Back");
+      if (!curing_mode && paused_time) {
+        generic_menu(3, paused ? "IPA tank removed" : "Pause", "Stop", "Back");
+      }
+      else {
+        generic_menu(3, paused ? "Continue" : "Pause", "Stop", "Back");
+      }
       break;
 
     case RUNNING:
       lcd.setCursor(1, 0);
-       if (curing_mode) {
-        if (!heat_to_target_temp) {
-          lcd.print(cover_open ? "The cover is open!" : (paused ? "Paused..." : drying_mode ? "Drying" : "Curing"));
+      if (curing_mode) {
+        if (paused) {
+          if (!heat_to_target_temp) {
+            lcd.print(paused ? "Paused..." : drying_mode ? "Drying" : "Curing");
+          }
+          else {
+            lcd.print(paused ? "Paused..." : drying_mode ? "Heating" : "Curing");
+          }
         }
         else {
-          lcd.print(cover_open ? "The cover is open!" : (paused ? "Paused..." : drying_mode ? "Heating" : "Curing"));
+          if (!heat_to_target_temp) {
+            lcd.print(cover_open ? "The cover is open!" : drying_mode ? "Drying" : "Curing");
+          }
+          else {
+            lcd.print(cover_open ? "The cover is open!" : drying_mode ? "Heating" : "Curing");
+          }
         }
+
       }
       else {
         lcd.print(cover_open ? "Open cover!" : (paused ? "Paused..." : "Washing"));
       }
-      if (rotary_diff > 128) {
-        if (tDown.getCurrentMinutes() <= 9) {
-          byte mins = tDown.getCurrentMinutes();
-          byte secs = tDown.getCurrentSeconds();
-          lcd.setCursor(14, 2);
-          lcd.print(">>");
-          lcd.setCursor(14, 2);
-          if (paused || cover_open) {
-            delay(100);
+      if (curing_mode && drying_mode && heat_to_target_temp) {
+        lcd.setCursor(14, 2);
+        lcd.print(" ");
+        lcd.setCursor(5, 2);
+        lcd.print(" ");
+      }
+      else {
+        if (rotary_diff > 128) {
+          if (tDown.getCurrentMinutes() <= 9) {
+            byte mins = tDown.getCurrentMinutes();
+            byte secs = tDown.getCurrentSeconds();
             lcd.setCursor(14, 2);
-            lcd.print("  ");
-            lcd.setCursor(5, 2);
-            lcd.print("  ");
-          }
+            lcd.print(">>");
+            lcd.setCursor(14, 2);
+            if (paused || cover_open) {
+              delay(100);
+              lcd.setCursor(14, 2);
+              lcd.print("  ");
+              lcd.setCursor(5, 2);
+              lcd.print("  ");
+            }
 
-          if (secs <= 30) {
-            tDown.setCounter(0, mins, secs + 30, tDown.COUNT_DOWN, tDownComplete);
-            running_count = 0;
+            if (secs <= 30) {
+              tDown.setCounter(0, mins, secs + 30, tDown.COUNT_DOWN, tDownComplete);
+              running_count = 0;
+            }
+            else {
+              tDown.setCounter(0, mins + 1, 30 - (60 - secs), tDown.COUNT_DOWN, tDownComplete);
+              running_count = 0;
+            }
           }
           else {
-            tDown.setCounter(0, mins + 1, 30 - (60 - secs), tDown.COUNT_DOWN, tDownComplete);
+            lcd.setCursor(14, 2);
+            lcd.print("X");
             running_count = 0;
-          }
-        }
-        else {
-          lcd.setCursor(14, 2);
-          lcd.print("X");
-          running_count = 0;
-          lcd.setCursor(14, 2);
-          if (paused || cover_open) {
-            delay(100);
             lcd.setCursor(14, 2);
-            lcd.print("  ");
-            lcd.setCursor(5, 2);
-            lcd.print("  ");
+            if (paused || cover_open) {
+              delay(100);
+              lcd.setCursor(14, 2);
+              lcd.print("  ");
+              lcd.setCursor(5, 2);
+              lcd.print("  ");
+            }
           }
-        }
-      } else if (rotary_diff < 128) {
-        if (tDown.getCurrentSeconds() >= 30 || tDown.getCurrentMinutes() >= 1) {
-          byte mins = tDown.getCurrentMinutes();
-          byte secs = tDown.getCurrentSeconds();
-          lcd.setCursor(5, 2);
-          lcd.print("<<");
-          lcd.setCursor(5, 2);
-          if (paused || cover_open) {
-            delay(100);
-            lcd.setCursor(14, 2);
-            lcd.print("  ");
+        } else if (rotary_diff < 128) {
+          if (tDown.getCurrentSeconds() >= 30 || tDown.getCurrentMinutes() >= 1) {
+            byte mins = tDown.getCurrentMinutes();
+            byte secs = tDown.getCurrentSeconds();
             lcd.setCursor(5, 2);
-            lcd.print("  ");
-          }
+            lcd.print("<<");
+            lcd.setCursor(5, 2);
+            if (paused || cover_open) {
+              delay(100);
+              lcd.setCursor(14, 2);
+              lcd.print("  ");
+              lcd.setCursor(5, 2);
+              lcd.print("  ");
+            }
 
-          if (secs >= 30) {
-            tDown.setCounter(0, mins, secs - 30, tDown.COUNT_DOWN, tDownComplete);
-            running_count = 0;
+            if (secs >= 30) {
+              tDown.setCounter(0, mins, secs - 30, tDown.COUNT_DOWN, tDownComplete);
+              running_count = 0;
+            }
+            else {
+              tDown.setCounter(0, mins - 1, 60 - (30 - secs), tDown.COUNT_DOWN, tDownComplete);
+              running_count = 0;
+            }
           }
           else {
-            tDown.setCounter(0, mins - 1, 60 - (30 - secs), tDown.COUNT_DOWN, tDownComplete);
-            running_count = 0;
-          }
-        }
-        else {
-          lcd.setCursor(5, 2);
-          lcd.print("X");
-          running_count = 0;
-          lcd.setCursor(5, 2);
-          if (paused || cover_open) {
-            delay(100);
-            lcd.setCursor(14, 2);
-            lcd.print("  ");
             lcd.setCursor(5, 2);
-            lcd.print("  ");
+            lcd.print("X");
+            running_count = 0;
+            lcd.setCursor(5, 2);
+            if (paused || cover_open) {
+              delay(100);
+              lcd.setCursor(14, 2);
+              lcd.print("  ");
+              lcd.setCursor(5, 2);
+              lcd.print("  ");
+            }
           }
         }
       }
@@ -1032,8 +1108,10 @@ void machine_running() {
     if (outputchip.digitalRead(COVER_OPEN_PIN) == HIGH) { //cover check
 
       if (!cover_open) {
-        lcd.setCursor(1, 0);
-        lcd.print("The cover is open! ");
+        if (!paused) {
+          lcd.setCursor(1, 0);
+          lcd.print("The cover is open! ");
+        }
         running_count = 0;
         redraw_menu = true;
         cover_open = true;
@@ -1057,7 +1135,6 @@ void machine_running() {
       run_motor();
       unsigned long us_now = millis();
       remain -= us_now - us_last ;
-      paused_time = false;
       us_last = us_now;
     }
     switch (curing_machine_mode) {
@@ -1121,6 +1198,7 @@ void machine_running() {
               tDown.setCounter(0, remain, 0, tDown.COUNT_DOWN, tDownComplete);
               tDown.start();
               redraw_menu = true;
+              menu_move(true);
             }
             if (tDown.isCounterCompleted() == false) {
               start_curing();
@@ -1142,6 +1220,7 @@ void machine_running() {
               tDown.setCounter(0, remain, 0, tDown.COUNT_DOWN, tDownComplete);
               tDown.start();
               redraw_menu = true;
+              menu_move(true);
             }
             if (tDown.isCounterCompleted() == false) {
               start_curing();
@@ -1193,6 +1272,7 @@ void button_press() {
 
                 outputchip.digitalWrite(LED_RELE_PIN, LOW); //turn off LED
                 digitalWrite(LED_PWM_PIN, LOW);
+                drying_mode = true;
                 break;
               case 1: // Curing
                 remain = curing_run_time;
@@ -1201,6 +1281,7 @@ void button_press() {
 
                 fan1_duty = FAN1_CURING_SPEED;
                 fan2_duty = FAN2_CURING_SPEED;
+                drying_mode = false;
 
                 break;
               case 0: // Drying and curing
@@ -1224,6 +1305,7 @@ void button_press() {
                 break;
             }
           } else { // washing_mode
+            drying_mode = false;
             motor_configuration();
             run_motor();
             speed_configuration();
@@ -1237,18 +1319,23 @@ void button_press() {
 
           us_last = millis();
 
+          menu_position = 0;
           state = RUNNING;
+          menu_move(true);
           break;
 
         case 1:
+          menu_position = 0;
           state = TIME;
           break;
 
         case 2:
+          menu_position = 0;
           state = SPEED_STATE;
           break;
 
         case 3:
+          menu_position = 0;
           state = SETTINGS;
           break;
 
@@ -1260,18 +1347,22 @@ void button_press() {
     case SETTINGS:
       switch (menu_position) {
         case 0:
+          menu_position = 3;
           state = MENU;
           break;
 
         case 1:
+          menu_position = 0;
           state = SOUND_SETTINGS;
           break;
 
         case 2:
+          menu_position = 0;
           state = INFO;
           break;
 
         default:
+          menu_position = 0;
           state = ADVANCED_SETTINGS;
           break;
       }
@@ -1280,14 +1371,17 @@ void button_press() {
     case SOUND_SETTINGS:
       switch (menu_position) {
         case 0:
+          menu_position = 1;
           state = SETTINGS;
           break;
 
         case 1:
+          menu_position = 0;
           state = SOUND;
           break;
 
         default:
+          menu_position = 0;
           state = BEEP;
           break;
       }
@@ -1296,18 +1390,22 @@ void button_press() {
     case ADVANCED_SETTINGS:
       switch (menu_position) {
         case 0:
+          menu_position = 3;
           state = SETTINGS;
           break;
 
         case 1:
+          menu_position = 0;
           state = RUN_MODE;
           break;
 
         case 2:
+          menu_position = 0;
           state = PREHEAT;
           break;
 
         default:
+          menu_position = 0;
           state = UNIT_SYSTEM;
           break;
       }
@@ -1316,14 +1414,17 @@ void button_press() {
     case PREHEAT:
       switch (menu_position) {
         case 0:
+          menu_position = 2;
           state = ADVANCED_SETTINGS;
           break;
 
         case 1:
+          menu_position = 0;
           state = PREHEAT_ENABLE;
           break;
 
         default:
+          menu_position = 0;
           state = TARGET_TEMP;
           break;
       }
@@ -1332,14 +1433,17 @@ void button_press() {
     case SPEED_STATE:
       switch (menu_position) {
         case 0:
+          menu_position = 2;
           state = MENU;
           break;
 
         case 1:
+          menu_position = 1;
           state = SPEED_CURING;
           break;
 
         default:
+          menu_position = 2;
           state = SPEED_WASHING;
           break;
       }
@@ -1358,100 +1462,142 @@ void button_press() {
     case TIME:
       switch (menu_position) {
         case 0:
+          menu_position = 1;
           state = MENU;
           break;
 
         case 1:
+          menu_position = 0;
           state = TIME_CURING;
           break;
 
         case 2:
+          menu_position = 0;
           state = TIME_DRYING;
           break;
 
         default:
+          menu_position = 0;
           state = TIME_WASHING;
           break;
       }
       break;
     case BEEP:
       write_config(EEPROM.length() - EEPROM_OFFSET);
+      menu_position = 2;
       state = SOUND_SETTINGS;
       break;
     case SOUND:
       write_config(EEPROM.length() - EEPROM_OFFSET);
+      menu_position = 1;
       state = SOUND_SETTINGS;
       break;
     case TIME_CURING:
       write_config(EEPROM.length() - EEPROM_OFFSET);
+      menu_position = 1;
       state = TIME;
       break;
     case TIME_DRYING:
       write_config(EEPROM.length() - EEPROM_OFFSET);
+      menu_position = 2;
       state = TIME;
       break;
     case TIME_WASHING:
       write_config(EEPROM.length() - EEPROM_OFFSET);
+      menu_position = 3;
       state = TIME;
       break;
     case INFO:
+      menu_position = 2;
       state = SETTINGS;
       break;
     case RUN_MODE:
       write_config(EEPROM.length() - EEPROM_OFFSET);
-      state = ADVANCED_SETTINGS;
+      if (!long_press) {
+        menu_position = 1;
+        state = ADVANCED_SETTINGS;
+      }
+      else {
+        long_press = false;
+        menu_position = 0;
+        state = MENU;
+      }
       break;
     case PREHEAT_ENABLE:
       write_config(EEPROM.length() - EEPROM_OFFSET);
+      menu_position = 1;
       state = PREHEAT;
       break;
     case TARGET_TEMP:
       write_config(EEPROM.length() - EEPROM_OFFSET);
+      menu_position = 2;
       state = PREHEAT;
       break;
     case UNIT_SYSTEM:
       write_config(EEPROM.length() - EEPROM_OFFSET);
+      menu_position = 3;
       state = ADVANCED_SETTINGS;
       break;
 
     case CONFIRM:
+      menu_position = 0;
       state = MENU;
       break;
 
     case RUN_MENU:
       switch (menu_position) {
         case 0:
-          paused ^= 1;
-          if (paused) {
-            stop_motor();
-            running_count = 0;
-            stop_heater(); // turn off heat fan
-            fan1_duty = FAN1_MENU_SPEED;
-            fan2_duty = FAN2_MENU_SPEED;
-          } else {
-            run_motor();
-            speed_configuration();
-            running_count = 0;             
+          if (curing_mode) { //curing mode
+            paused ^= 1;
+            if (paused) {
+              stop_motor();
+              running_count = 0;
+              stop_heater(); // turn off heat fan
+              fan1_duty = FAN1_MENU_SPEED;
+              fan2_duty = FAN2_MENU_SPEED;
+            } else {
+              run_motor();
+              speed_configuration();
+              running_count = 0;
 
-            if (curing_mode) {
+
               if (!heat_to_target_temp) {
-              fan1_duty = FAN1_CURING_SPEED;
-              fan2_duty = FAN2_CURING_SPEED;
+                fan1_duty = FAN1_CURING_SPEED;
+                fan2_duty = FAN2_CURING_SPEED;
+              }
+              else {
+                fan1_duty = FAN1_PREHEAT_SPEED;
+                fan2_duty = FAN2_PREHEAT_SPEED;
+              }
             }
-            else{
-              fan1_duty = FAN1_PREHEAT_SPEED;
-                  fan2_duty = FAN2_PREHEAT_SPEED;
-            }
-            }
-            else {
-              fan1_duty = FAN1_WASHING_SPEED;
-              fan2_duty = FAN2_WASHING_SPEED;
-            }
+            menu_position = 0;
             state = RUNNING;
+          }
+          else { //washing mode
+            if (!gastro_pan) {
+              paused ^= 1;
+              if (paused) {
+                stop_motor();
+                running_count = 0;
+                stop_heater(); // turn off heat fan
+                fan1_duty = FAN1_MENU_SPEED;
+                fan2_duty = FAN2_MENU_SPEED;
+              } else {
+                run_motor();
+                speed_configuration();
+                running_count = 0;
+
+                fan1_duty = FAN1_WASHING_SPEED;
+                fan2_duty = FAN2_WASHING_SPEED;
+              }
+              menu_position = 0;
+              state = RUNNING;
+            }
           }
           break;
 
         case 1:
+          menu_position = 0;
           state = MENU;
           running_count = 0;
           stop_motor();
@@ -1468,6 +1614,7 @@ void button_press() {
 
         case 2:
           running_count = 0;
+          menu_position = 0;
           state = RUNNING;
           break;
 
@@ -1477,6 +1624,7 @@ void button_press() {
       break;
 
     case RUNNING:
+      menu_position = 0;
       state = RUN_MENU;
       break;
 
@@ -1484,10 +1632,11 @@ void button_press() {
       break;
   }
   scrolling_list_reset();
-  menu_position = 0;
+
   redraw_menu = true;
   rotary_diff = 128;
-  delay(475);
+  menu_move(true);
+  //delay(475);
 }
 
 ISR(TIMER3_COMPA_vect) { // timmer for stepper move
@@ -1567,7 +1716,7 @@ void read_encoder()
 
 SIGNAL(TIMER0_COMPA_vect) //1ms timer
 {
-
+  ms_counter++;
   if (!heater_error) {
     read_encoder();
   }
@@ -1581,6 +1730,16 @@ SIGNAL(TIMER0_COMPA_vect) //1ms timer
     ams_counter = 0;
   }
   fan_rpm();
+  if (ms_counter >= 4000) {
+
+    //lcd.begin_noclear(20, 4);
+    //redraw_menu = true;
+    //menu_move(true);
+    ms_counter = 0;
+  }
+  else {
+    redraw_menu = false;
+  }
 }
 
 void tDownComplete()
@@ -1607,7 +1766,6 @@ void print_time2()
 }
 
 void start_drying() {
-
   if (cover_open == false && paused == false) {
     if (heat_to_target_temp) {
       preheat(); // turn on heat fan
@@ -1618,17 +1776,33 @@ void start_drying() {
   }
   if (cover_open == true || paused == true) {
     if (!heat_to_target_temp) {
+      if (!paused_time) {
+        paused_time = true;
+      }
       tDown.pause();
     }
-    else {      
+    else {
+      if (!paused_time) {
+        paused_time = true;
+      }
       tUp.pause();
     }
   }
   else {
     if (!heat_to_target_temp) {
+      if (paused_time) {
+        paused_time = false;
+        redraw_menu = true;
+        menu_move(true);
+      }
       tDown.start();
     }
     else {
+      if (paused_time) {
+        paused_time = false;
+        redraw_menu = true;
+        menu_move(true);
+      }
       tUp.start();
     }
   }
@@ -1636,27 +1810,42 @@ void start_drying() {
 }
 
 void start_curing() {
-
   stop_heater(); // turn off heat fan
   if (cover_open == false && paused == false) {
-    outputchip.digitalWrite(LED_RELE_PIN, HIGH); // turn LED on
-    digitalWrite(LED_PWM_PIN, HIGH);
+    if (!led_start) {
+      led_start = true;
+      led_time_now = millis();
+    }
+    if (millis() > led_time_now + LED_delay) {
+      outputchip.digitalWrite(LED_RELE_PIN, HIGH); // turn LED on
+      digitalWrite(LED_PWM_PIN, HIGH);
+    }
   }
   else {
-    outputchip.digitalWrite(LED_RELE_PIN, LOW); // turn LED off
-    digitalWrite(LED_PWM_PIN, LOW);
+    if (led_start) {
+      outputchip.digitalWrite(LED_RELE_PIN, LOW); // turn LED off
+      digitalWrite(LED_PWM_PIN, LOW);
+      led_start = false;
+    }
   }
   if (cover_open == true || paused == true) {
+    if (!paused_time) {
+      paused_time = true;
+    }
     tDown.pause();
   }
   else {
+    if (paused_time) {
+      paused_time = false;
+      redraw_menu = true;
+      menu_move(true);
+    }
     tDown.start();
   }
   lcd_time_print();
 }
 
 void start_washing() {
-
   if (pinda_therm == 1) {
     if (outputchip.digitalRead(COVER_OPEN_PIN) == LOW) { //Cover open check
 
@@ -1666,19 +1855,28 @@ void start_washing() {
       paused = true;
       tDown.pause();
       stop_motor();
-     
+
       if (outputchip.digitalRead(WASH_DETECT_PIN) == LOW) { //Gastro Pen check
         lcd.setCursor(1, 0);
         lcd.print("IPA tank removed");
         running_count = 0;
         paused = true;
+        if (!paused_time) {
+          paused_time = true;
+          redraw_menu = true;
+          menu_move(true);
+        }
         tDown.pause();
         stop_motor();
         gastro_pan = true;
       }
       else {
+        if (paused_time) {
+          paused_time = false;
+        }
         if (gastro_pan) {
           redraw_menu = true;
+          menu_move(true);
           gastro_pan = false;
         }
       }
@@ -1717,7 +1915,7 @@ void start_washing() {
       }
     }
   }
-  else {    
+  else {
     if (cover_open) {
       redraw_menu = true;
       cover_open = false;
@@ -1727,13 +1925,24 @@ void start_washing() {
       lcd.print("IPA tank removed");
       running_count = 0;
       paused = true;
+      if (!paused_time) {
+        paused_time = true;
+      }
       tDown.pause();
       stop_motor();
-      gastro_pan = true;
+      if (!gastro_pan) {
+        redraw_menu = true;
+        menu_move(true);
+        gastro_pan = true;
+      }
     }
     else {
+      if (paused_time) {
+        paused_time = false;
+      }
       if (gastro_pan) {
         redraw_menu = true;
+        menu_move(true);
         gastro_pan = false;
       }
     }
@@ -1773,13 +1982,13 @@ void start_washing() {
           state = MENU;
           break;
       }
-    }    
+      menu_move(true);
+    }
   }
 }
 
 void stop_curing_drying() {
   menu_position = 0;
-
   outputchip.digitalWrite(LED_RELE_PIN, LOW); // turn off led
   digitalWrite(LED_PWM_PIN, LOW);
   stop_motor();
@@ -1804,6 +2013,7 @@ void stop_curing_drying() {
       state = MENU;
       break;
   }
+  menu_move(true);
 }
 
 void lcd_time_print() {
@@ -1825,14 +2035,12 @@ void lcd_time_print() {
   }
 
   if (state == RUNNING && (secs != last_seconds || redraw_ms)) {
-    therm_read != therm_read;
 
+    therm_read != therm_read;
     therm1_read();
     //therm2_read();
-
     redraw_ms = false;
     last_seconds = secs;
-
 
     lcd.setCursor(8, 2);
 
@@ -1845,24 +2053,21 @@ void lcd_time_print() {
       lcd.print(0);
     }
     lcd.print(secs);
-    if (!paused) {
-      if (curing_mode) { //curing or drying mode
-        if (running_count > 1) {
+    if (!paused && !paused_time) {
+      lcd.setCursor(19, 1);
+      lcd.print(" ");
+      int first_position;
+
+      if (curing_mode) {
+        if (!drying_mode) {
+          first_position = 7;
+        }
+        if (drying_mode) {
           if (!heat_to_target_temp) {
-            lcd.setCursor(5 + running_count, 0);
-            lcd.print(".");
-            lcd.setCursor(14, 2);
-            lcd.print("  ");
-            lcd.setCursor(5, 2);
-            lcd.print("  ");
+            first_position = 7;
           }
           else {
-            lcd.setCursor(6 + running_count, 0);
-            lcd.print(".");
-            lcd.setCursor(14, 2);
-            lcd.print("  ");
-            lcd.setCursor(5, 2);
-            lcd.print("  ");
+            first_position = 8;
           }
         }
         if (outputchip.digitalRead(COVER_OPEN_PIN) == LOW) {
@@ -1884,21 +2089,58 @@ void lcd_time_print() {
           }
         }
       }
-      else { //washing mode
-        if (running_count > 1) {
-          lcd.setCursor(6 + running_count, 0);
-          lcd.print(".");
-          lcd.setCursor(14, 2);
-          lcd.print("  ");
-          lcd.setCursor(5, 2);
-          lcd.print("  ");
-        }
+
+      if (!curing_mode) {
+        first_position = 8;
       }
-      if (running_count > 4) {
-        running_count = 0;
-        redraw_menu = true;
+
+      if (running_count == 0) {
+        lcd.setCursor(first_position, 0);
+        lcd.print(" ");
+        lcd.setCursor(first_position + 1, 0);
+        lcd.print(" ");
+        lcd.setCursor(first_position + 2, 0);
+        lcd.print(" ");
       }
-      running_count++;
+      if (running_count == 1) {
+        lcd.setCursor(first_position, 0);
+        lcd.print(".");
+        lcd.setCursor(first_position + 1, 0);
+        lcd.print(" ");
+        lcd.setCursor(first_position + 2, 0);
+        lcd.print(" ");
+      }
+      if (running_count == 2) {
+        lcd.setCursor(first_position, 0);
+        lcd.print(".");
+        lcd.setCursor(first_position + 1, 0);
+        lcd.print(".");
+        lcd.setCursor(first_position + 2, 0);
+        lcd.print(" ");
+        lcd.setCursor(14, 2);
+        lcd.print("  ");
+        lcd.setCursor(5, 2);
+        lcd.print("  ");
+      }
+      if (running_count == 3) {
+        lcd.setCursor(first_position, 0);
+        lcd.print(".");
+        lcd.setCursor(first_position + 1, 0);
+        lcd.print(".");
+        lcd.setCursor(first_position + 2, 0);
+        lcd.print(".");
+      }
+
+    }
+    running_count++;
+
+    if (running_count > 4) {
+      lcd.setCursor(14, 2);
+      lcd.print("  ");
+      lcd.setCursor(5, 2);
+      lcd.print("  ");
+      running_count = 0;
+      redraw_menu = true;
     }
   }
 }
@@ -1951,10 +2193,10 @@ void fan_pwm_control() {
   //rev 0.4 - inverted PWM FAN1, FAN2
   unsigned long currentMillis = millis();
   if (fan1_duty > 0) {
-   
+
     if (!fan1_on) {
       fan1_on = true;
-      
+
       outputchip.digitalWrite(FAN1_PIN, HIGH);
     }
 
@@ -1973,11 +2215,11 @@ void fan_pwm_control() {
       }
     }
   }
-  else {    
+  else {
     if (fan1_on) {
       fan1_on = false;
       outputchip.digitalWrite(FAN1_PIN, LOW);
-      PORTC = PORTC & 0x7F; //OUTPUT FAN1 LOW      
+      PORTC = PORTC & 0x7F; //OUTPUT FAN1 LOW
     }
   }
   if (fan2_duty > 0) {
@@ -2087,7 +2329,7 @@ void fan_rpm() {
 
     if (fan1_tacho_count <= fan1_tacho_last_count ) {
       if (fan1_duty > 0) {
-        fan1_error = true;        
+        fan1_error = true;
       }
     }
     else {
@@ -2095,7 +2337,7 @@ void fan_rpm() {
     }
     if (fan2_tacho_count <= fan2_tacho_last_count ) {
       if (fan2_duty > 0) {
-        fan2_error = true;        
+        fan2_error = true;
       }
     }
     else {
@@ -2117,13 +2359,13 @@ void fan_rpm() {
 }
 
 void fan_tacho1() {
-  fan1_tacho_count++;  
+  fan1_tacho_count++;
 }
 void fan_tacho2() {
-  fan2_tacho_count++;  
+  fan2_tacho_count++;
 }
 void fan_tacho3() {
-  fan3_tacho_count++;  
+  fan3_tacho_count++;
 }
 
 void preheat() {
@@ -2153,23 +2395,23 @@ void preheat() {
 //! @param[out] sn null terminated string containing serial number
 void get_serial_num(Serial_num_t &sn)
 {
-    uint16_t snAddress = 0x7fe0;
-    sn[0] = 'S';
-    sn[1] = 'N';
-    sn[2] = ':';
-    for (uint_least8_t i = 3; i < 19; ++i)
-    {
-        sn[i] = pgm_read_byte(snAddress++);
-    }
+  uint16_t snAddress = 0x7fe0;
+  sn[0] = 'S';
+  sn[1] = 'N';
+  sn[2] = ':';
+  for (uint_least8_t i = 3; i < 19; ++i)
+  {
+    sn[i] = pgm_read_byte(snAddress++);
+  }
 
-    sn[sizeof(Serial_num_t) - 1] = 0;
+  sn[sizeof(Serial_num_t) - 1] = 0;
 }
 
 //! @brief Get reset flags
 //! @return value of MCU Status Register - MCUSR as it was backed up by bootloader
 static uint8_t get_reset_flags()
 {
-    return bootKeyPtrVal;
+  return bootKeyPtrVal;
 }
 
 #define ATTR_INIT_SECTION(SectionIndex) __attribute__ ((used, naked, section (".init" #SectionIndex )))
@@ -2182,5 +2424,5 @@ void get_key_from_boot(void) ATTR_INIT_SECTION(3);
 //! Refer to the avr-libc manual for more information on the initialization sections.
 void get_key_from_boot(void)
 {
-    bootKeyPtrVal = *bootKeyPtr;
+  bootKeyPtrVal = *bootKeyPtr;
 }
