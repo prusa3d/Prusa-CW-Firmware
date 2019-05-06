@@ -13,7 +13,7 @@ struct Scrolling_item
 
 typedef Scrolling_item Scrolling_items[8];
 
-void scrolling_list(const Scrolling_items &items);
+void scrolling_list(const Scrolling_items &items, bool print_arrows);
 void scrolling_list_reset();
 
 #endif /* MENULIST_H */
