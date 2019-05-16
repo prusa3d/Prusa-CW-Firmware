@@ -74,7 +74,10 @@
 // Constructor to instantiate an instance of MCP to a specific chip (address)
 
 MCP::MCP(uint8_t address, uint8_t ss) {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wtype-limits"
   _address     = constrain(address, 0, 7);
+#pragma GCC diagnostic pop
   _ss          = ss;
   _modeCache   = 0xFFFF;                // Default I/O mode is all input, 0xFFFF
   _outputCache = 0x0000;                // Default output state is all off, 0x0000
