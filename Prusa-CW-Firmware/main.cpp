@@ -2603,12 +2603,14 @@ void get_serial_num(Serial_num_t &sn)
   sn[sizeof(Serial_num_t) - 1] = 0;
 }
 
+#if 0
 //! @brief Get reset flags
 //! @return value of MCU Status Register - MCUSR as it was backed up by bootloader
 static uint8_t get_reset_flags()
 {
   return bootKeyPtrVal;
 }
+#endif
 
 #define ATTR_INIT_SECTION(SectionIndex) __attribute__ ((used, naked, section (".init" #SectionIndex )))
 void get_key_from_boot(void) ATTR_INIT_SECTION(3);
