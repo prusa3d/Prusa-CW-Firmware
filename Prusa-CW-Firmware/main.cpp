@@ -2228,7 +2228,6 @@ void lcd_time_print() {
 
   if (state == RUNNING && (secs != last_seconds || redraw_ms)) {
 
-    therm_read != therm_read;
     therm1_read();
     //therm2_read();
     redraw_ms = false;
