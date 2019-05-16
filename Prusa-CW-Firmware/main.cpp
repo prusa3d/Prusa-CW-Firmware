@@ -182,8 +182,8 @@ long ams_counter;
 long ms_counter;
 long ams_fan_counter;
 
-long button_timer = 0;
-long long_press_time = 1000;
+unsigned long button_timer = 0;
+const unsigned long long_press_time = 1000;
 bool button_active = false;
 bool long_press_active = false;
 bool long_press = false;
