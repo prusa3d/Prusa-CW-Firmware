@@ -711,8 +711,6 @@ uint8_t Trinamic_TMC2130::set_toff(uint8_t value)
 // alter coolconf
 uint8_t Trinamic_TMC2130::alter_COOLCONF(uint32_t data, uint32_t mask)
 {
-  uint32_t newData;
-
   _coolconf = ( _coolconf & ~mask ) | ( data & mask );
 
   write_REG( TMC_REG_COOLCONF, _coolconf );
@@ -802,8 +800,6 @@ uint8_t Trinamic_TMC2130::set_DCCTRL(uint16_t dc_time, uint16_t dc_sg)
 // alter pwmconf
 uint8_t Trinamic_TMC2130::alter_PWMCONF(uint32_t data, uint32_t mask)
 {
-  uint32_t newData;
-
   _pwmconf = ( _pwmconf & ~mask ) | ( data & mask );
 
   write_REG( TMC_REG_PWMCONF, _pwmconf );
