@@ -253,7 +253,6 @@ static void preheat();
 static void lcd_time_print();
 static void therm1_read();
 static void get_serial_num(Serial_num_t &sn);
-static uint8_t get_reset_flags();
 
 
 
