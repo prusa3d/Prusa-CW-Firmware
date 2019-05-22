@@ -13,6 +13,8 @@
 #include "MenuList.h"
 //#include "LiquidCrystal_Prusa.h"
 
+using Ter = PrusaLcd::Terminator;
+
 typedef char Serial_num_t[20]; //!< Null terminated string for serial number
 
 
@@ -263,8 +265,6 @@ static void lcd_time_print();
 static void therm1_read();
 static void get_serial_num(Serial_num_t &sn);
 static uint8_t get_reset_flags();
-
-
 
 void setupTimer0() { //timmer for fan pwm
   noInterrupts();
@@ -958,11 +958,11 @@ void menu_move(bool sound_echo) {
       {
         Scrolling_items items =
         {
-          {"Back", true},
-          {"Curing", true},
-          {"Drying", true},
-          {"Washing", true},
-          {"Resin preheat", true},
+          {"Back", true, Ter::back},
+          {"Curing", true, Ter::right},
+          {"Drying", true, Ter::right},
+          {"Washing", true, Ter::right},
+          {"Resin preheat", true, Ter::right},
         };
         menu_position = scrolling_list(items); //TODO true
 
@@ -996,28 +996,28 @@ void menu_move(bool sound_echo) {
       if ((fan1_error || fan2_error || heater_failure) == false) {
         Scrolling_items items =
         {
-          {"Back", true},
-          {"Rotation speed", true},
-          {"Run mode", true},
-          {"Preheat", true},
-          {"Sound", true},
-          {"Fans", true},
-          {"Information", true},
-          {"Unit system", true},
+          {"Back", true, Ter::back},
+          {"Rotation speed", true, Ter::right},
+          {"Run mode", true, Ter::right},
+          {"Preheat", true, Ter::right},
+          {"Sound", true, Ter::right},
+          {"Fans", true, Ter::right},
+          {"Information", true, Ter::right},
+          {"Unit system", true, Ter::right},
         };
         menu_position = scrolling_list(items); //TODO true
       }
       else {
         Scrolling_items items =
         {
-          {"Back", true},
-          {"Rotation speed", true},
-          {"Run mode", true},
-          {"Preheat", true},
-          {"Sound", true},
-          {"Fans", true},
-          {"Information ->!!", true},
-          {"Unit system", true},
+          {"Back", true, Ter::back},
+          {"Rotation speed", true, Ter::right},
+          {"Run mode", true, Ter::right},
+          {"Preheat", true, Ter::right},
+          {"Sound", true, Ter::right},
+          {"Fans", true, Ter::right},
+          {"Information ->!!", true, Ter::right},
+          {"Unit system", true, Ter::right},
         };
         menu_position = scrolling_list(items); //TODO true
       }
@@ -1096,11 +1096,11 @@ void menu_move(bool sound_echo) {
       {
         Scrolling_items items =
         {
-          {"Back", true},
-          {"FAN1 curing", true},
-          {"FAN1 drying", true},
-          {"FAN2 curing", true},
-          {"FAN2 drying", true},
+          {"Back", true, Ter::back},
+          {"FAN1 curing", true, Ter::right},
+          {"FAN1 drying", true, Ter::right},
+          {"FAN2 curing", true, Ter::right},
+          {"FAN2 drying", true, Ter::right},
         };
         menu_position = scrolling_list(items); //TODO true
 
@@ -1137,14 +1137,14 @@ void menu_move(bool sound_echo) {
         get_serial_num(sn);
         Scrolling_items items =
         {
-          {"FW version: "  FW_VERSION, true},
-          {"FAN1 failure", fan1_error},
-          {"FAN2 failure", fan2_error},
-          {"HEATER failure", heater_failure},
-          {sn, true},
-          {"Build: " FW_BUILDNR, true},
-          {FW_HASH, true},
-          {FW_LOCAL_CHANGES ? "Workspace dirty" : "Workspace clean", true}
+          {"FW version: "  FW_VERSION, true, Ter::none},
+          {"FAN1 failure", fan1_error, Ter::none},
+          {"FAN2 failure", fan2_error, Ter::none},
+          {"HEATER failure", heater_failure, Ter::none},
+          {sn, true, Ter::none},
+          {"Build: " FW_BUILDNR, true, Ter::none},
+          {FW_HASH, true, Ter::none},
+          {FW_LOCAL_CHANGES ? "Workspace dirty" : "Workspace clean", true, Ter::none}
         };
         menu_position = scrolling_list(items);
 

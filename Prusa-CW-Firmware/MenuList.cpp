@@ -87,7 +87,7 @@ uint_least8_t scrolling_list(const Scrolling_items &items)
 
         if (visible_index < num_items)
         {
-            lcd.printClear(items[visible_index].caption, columns - cursor_columns);
+            lcd.printClear(items[visible_index].caption, columns - cursor_columns, items[visible_index].last_symbol);
         }
         ++visible_index;
     }

@@ -5,12 +5,14 @@
 #ifndef MENULIST_H
 #define MENULIST_H
 
+#include "PrusaLcd.h"
 #include <stdint.h>
 
 struct Scrolling_item
 {
    const char *caption;
    bool visible;
+   PrusaLcd::Terminator last_symbol;
 };
 
 typedef Scrolling_item Scrolling_items[8];
