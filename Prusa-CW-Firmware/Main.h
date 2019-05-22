@@ -11,7 +11,7 @@ extern uint8_t menu_position;
 extern volatile uint8_t rotary_diff;
 extern PrusaLcd lcd;
 
-void print_menu_cursor();
+void print_menu_cursor(uint8_t line);
 
 
 #endif /* CW_MAIN_H */

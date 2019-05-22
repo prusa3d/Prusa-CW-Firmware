@@ -90,7 +90,7 @@ void scrolling_list(const Scrolling_items &items)
         ++visible_index;
     }
 
-    print_menu_cursor();
+    print_menu_cursor(cursor_position);
 }
 
 void scrolling_list_reset()

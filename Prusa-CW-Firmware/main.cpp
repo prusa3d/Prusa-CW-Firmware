@@ -530,13 +530,13 @@ void PID() {
   }
 }
 
-void print_menu_cursor()
+void print_menu_cursor(uint8_t line)
 {
-  lcd.setCursor(0, menu_position);
+  lcd.setCursor(0, line);
   lcd.print(">");
 
   for (int i = 0; i <= 3; i++) {
-    if ( i != menu_position) {
+    if ( i != line) {
       lcd.setCursor(0, i);
       lcd.print(" ");
     }
@@ -579,7 +579,7 @@ void generic_menu(byte num, ...) {
       menu_position--;
     }
   }
-  print_menu_cursor();
+  print_menu_cursor(menu_position);
 }
 
 void lcd_print_back() {
@@ -848,7 +848,7 @@ void loop() {
 
     if (state == MENU || state == ADVANCED_SETTINGS || state == PREHEAT || state == SOUND_SETTINGS || state == SPEED_STATE) {
       menu_position = last_menu_position;
-      print_menu_cursor();
+      print_menu_cursor(menu_position);
     }
     if (state == SETTINGS || state == FANS || state == TIME) {
       // TODO cursor_position = last_menu_position;
