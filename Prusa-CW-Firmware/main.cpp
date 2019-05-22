@@ -964,7 +964,7 @@ void menu_move(bool sound_echo) {
           {"Washing", true},
           {"Resin preheat", true},
         };
-        scrolling_list(items); //TODO true
+        menu_position = scrolling_list(items); //TODO true
 
         break;
       }
@@ -1005,7 +1005,7 @@ void menu_move(bool sound_echo) {
           {"Information", true},
           {"Unit system", true},
         };
-        scrolling_list(items); //TODO true
+        menu_position = scrolling_list(items); //TODO true
       }
       else {
         Scrolling_items items =
@@ -1019,7 +1019,7 @@ void menu_move(bool sound_echo) {
           {"Information ->!!", true},
           {"Unit system", true},
         };
-        scrolling_list(items); //TODO true
+        menu_position = scrolling_list(items); //TODO true
       }
       break;
 
@@ -1102,7 +1102,7 @@ void menu_move(bool sound_echo) {
           {"FAN2 curing", true},
           {"FAN2 drying", true},
         };
-        scrolling_list(items); //TODO true
+        menu_position = scrolling_list(items); //TODO true
 
         break;
       }
@@ -1146,7 +1146,7 @@ void menu_move(bool sound_echo) {
           {FW_HASH, true},
           {FW_LOCAL_CHANGES ? "Workspace dirty" : "Workspace clean", true}
         };
-        scrolling_list(items);
+        menu_position = scrolling_list(items);
 
         break;
       }
