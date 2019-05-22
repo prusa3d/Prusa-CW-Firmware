@@ -543,6 +543,8 @@ void print_menu_cursor()
   }
 }
 
+//TODO
+#if 0
 void print_scrolling_menu_cursor()
 {
   lcd.setCursor(0, cursor_position);
@@ -555,6 +557,7 @@ void print_scrolling_menu_cursor()
     }
   }
 }
+#endif
 
 void generic_menu(byte num, ...) {
   va_list argList;
@@ -833,7 +836,7 @@ void loop() {
       last_menu_position = menu_position;
     }
     if (state == SETTINGS || state == FANS || state == TIME) {
-      last_menu_position = cursor_position;
+      // TODO last_menu_position = cursor_position;
     }
 
     time_now = millis();
@@ -848,8 +851,8 @@ void loop() {
       print_menu_cursor();
     }
     if (state == SETTINGS || state == FANS || state == TIME) {
-      cursor_position = last_menu_position;
-      print_scrolling_menu_cursor();
+      // TODO cursor_position = last_menu_position;
+      // TODO print_scrolling_menu_cursor();
     }
   }
 
@@ -961,7 +964,7 @@ void menu_move(bool sound_echo) {
           {"Washing", true},
           {"Resin preheat", true},
         };
-        scrolling_list(items, true);
+        scrolling_list(items); //TODO true
 
         break;
       }
@@ -1002,7 +1005,7 @@ void menu_move(bool sound_echo) {
           {"Information", true},
           {"Unit system", true},
         };
-        scrolling_list(items, true);
+        scrolling_list(items); //TODO true
       }
       else {
         Scrolling_items items =
@@ -1016,7 +1019,7 @@ void menu_move(bool sound_echo) {
           {"Information ->!!", true},
           {"Unit system", true},
         };
-        scrolling_list(items, true);
+        scrolling_list(items); //TODO true
       }
       break;
 
@@ -1099,7 +1102,7 @@ void menu_move(bool sound_echo) {
           {"FAN2 curing", true},
           {"FAN2 drying", true},
         };
-        scrolling_list(items, true);
+        scrolling_list(items); //TODO true
 
         break;
       }
