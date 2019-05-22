@@ -266,6 +266,11 @@ static void therm1_read();
 static void get_serial_num(Serial_num_t &sn);
 static uint8_t get_reset_flags();
 
+static inline bool is_error()
+{
+    return (fan1_error || fan2_error || heater_failure);
+}
+
 void setupTimer0() { //timmer for fan pwm
   noInterrupts();
   OCR0A = 0xAF;
@@ -865,36 +870,24 @@ void menu_move(bool sound_echo) {
 
       switch (curing_machine_mode) {
         case 3:
-          if ((fan1_error || fan2_error || heater_failure) == false) {
-            generic_menu(3, curing_mode ? "Start resin preheat" : "Start washing      ", "Run-time", "Settings          ");
-          }
-          else {
-            generic_menu(3, curing_mode ? "Start resin preheat" : "Start washing      ", "Run-time", "Settings ->!!");
-          }
+          generic_menu(3, curing_mode ? "Start resin preheat" : "Start washing      ", "Run-time",
+                  is_error() ? "Settings ->!!" : "Settings          ");
           lcd_print_right(1);
           lcd_print_right(2);
 
           state = MENU;
           break;
         case 2:
-          if ((fan1_error || fan2_error || heater_failure) == false) {
-            generic_menu(3, curing_mode ? "Start drying       " : "Start washing      ", "Run-time", "Settings          ");
-          }
-          else {
-            generic_menu(3, curing_mode ? "Start drying       " : "Start washing      ", "Run-time", "Settings ->!!");
-          }
+          generic_menu(3, curing_mode ? "Start drying       " : "Start washing      ", "Run-time",
+                  is_error() ? "Settings ->!!" : "Settings          ");
           lcd_print_right(1);
           lcd_print_right(2);
 
           state = MENU;
           break;
         case 1:
-          if ((fan1_error || fan2_error || heater_failure) == false) {
-            generic_menu(3, curing_mode ? "Start curing       " : "Start washing      ", "Run-time", "Settings          ");
-          }
-          else {
-            generic_menu(3, curing_mode ? "Start curing       " : "Start washing      ", "Run-time", "Settings ->!!");
-          }
+          generic_menu(3, curing_mode ? "Start curing       " : "Start washing      ", "Run-time",
+                  is_error() ? "Settings ->!!" : "Settings          ");
           lcd_print_right(1);
           lcd_print_right(2);
 
@@ -902,12 +895,8 @@ void menu_move(bool sound_echo) {
           break;
         case 0:
         default:
-          if ((fan1_error || fan2_error || heater_failure) == false) {
-            generic_menu(3, curing_mode ? "Start drying/curing" : "Start washing", "Run-time", "Settings          ");
-          }
-          else {
-            generic_menu(3, curing_mode ? "Start drying/curing" : "Start washing", "Run-time", "Settings ->!!");
-          }
+          generic_menu(3, curing_mode ? "Start drying/curing" : "Start washing", "Run-time",
+                  is_error() ? "Settings ->!!" : "Settings          ");
           lcd_print_right(1);
           lcd_print_right(2);
 
@@ -977,36 +966,21 @@ void menu_move(bool sound_echo) {
       break;
 
     case SETTINGS:
-      if ((fan1_error || fan2_error || heater_failure) == false) {
-        Scrolling_items items =
-        {
-          {"Back", true, Ter::back},
-          {"Rotation speed", true, Ter::right},
-          {"Run mode", true, Ter::right},
-          {"Preheat", true, Ter::right},
-          {"Sound", true, Ter::right},
-          {"Fans", true, Ter::right},
-          {"Information", true, Ter::right},
-          {"Unit system", true, Ter::right},
-        };
-        menu_position = scrolling_list(items);
-      }
-      else {
-        Scrolling_items items =
-        {
-          {"Back", true, Ter::back},
-          {"Rotation speed", true, Ter::right},
-          {"Run mode", true, Ter::right},
-          {"Preheat", true, Ter::right},
-          {"Sound", true, Ter::right},
-          {"Fans", true, Ter::right},
-          {"Information ->!!", true, Ter::right},
-          {"Unit system", true, Ter::right},
-        };
-        menu_position = scrolling_list(items);
-      }
+    {
+      Scrolling_items items =
+      {
+        {"Back", true, Ter::back},
+        {"Rotation speed", true, Ter::right},
+        {"Run mode", true, Ter::right},
+        {"Preheat", true, Ter::right},
+        {"Sound", true, Ter::right},
+        {"Fans", true, Ter::right},
+        {is_error() ? "Information ->!!" : "Information", true, Ter::right},
+        {"Unit system", true, Ter::right},
+      };
+      menu_position = scrolling_list(items);
       break;
-
+    }
     case ADVANCED_SETTINGS:
       generic_menu(4, "Back              ", "Run mode", "Preheat", "Unit system");
       lcd_print_back();
@@ -2874,4 +2848,3 @@ void get_key_from_boot(void)
 {
   bootKeyPtrVal = *bootKeyPtr;
 }
-
