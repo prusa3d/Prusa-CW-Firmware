@@ -543,22 +543,6 @@ void print_menu_cursor(uint8_t line)
   }
 }
 
-//TODO
-#if 0
-void print_scrolling_menu_cursor()
-{
-  lcd.setCursor(0, cursor_position);
-  lcd.print(">");
-
-  for (int i = 0; i <= 3; i++) {
-    if ( i != cursor_position) {
-      lcd.setCursor(0, i);
-      lcd.print(" ");
-    }
-  }
-}
-#endif
-
 void generic_menu(byte num, ...) {
   va_list argList;
   va_start(argList, num);
@@ -964,7 +948,7 @@ void menu_move(bool sound_echo) {
           {"Washing", true, Ter::right},
           {"Resin preheat", true, Ter::right},
         };
-        menu_position = scrolling_list(items); //TODO true
+        menu_position = scrolling_list(items);
 
         break;
       }
@@ -1005,7 +989,7 @@ void menu_move(bool sound_echo) {
           {"Information", true, Ter::right},
           {"Unit system", true, Ter::right},
         };
-        menu_position = scrolling_list(items); //TODO true
+        menu_position = scrolling_list(items);
       }
       else {
         Scrolling_items items =
@@ -1019,7 +1003,7 @@ void menu_move(bool sound_echo) {
           {"Information ->!!", true, Ter::right},
           {"Unit system", true, Ter::right},
         };
-        menu_position = scrolling_list(items); //TODO true
+        menu_position = scrolling_list(items);
       }
       break;
 
@@ -1102,7 +1086,7 @@ void menu_move(bool sound_echo) {
           {"FAN2 curing", true, Ter::right},
           {"FAN2 drying", true, Ter::right},
         };
-        menu_position = scrolling_list(items); //TODO true
+        menu_position = scrolling_list(items);
 
         break;
       }
