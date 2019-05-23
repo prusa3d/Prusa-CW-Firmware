@@ -825,7 +825,6 @@ void loop() {
       last_menu_position = menu_position;
     }
     if (state == SETTINGS || state == FANS || state == TIME) {
-      // TODO last_menu_position = cursor_position;
     }
 
     time_now = millis();
@@ -840,8 +839,6 @@ void loop() {
       print_menu_cursor(menu_position);
     }
     if (state == SETTINGS || state == FANS || state == TIME) {
-      // TODO cursor_position = last_menu_position;
-      // TODO print_scrolling_menu_cursor();
     }
   }
 
