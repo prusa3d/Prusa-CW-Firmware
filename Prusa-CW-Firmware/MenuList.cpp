@@ -6,6 +6,8 @@
 #include "Main.h"
 #include <stdint.h>
 
+static const int rows = 4;
+
 static uint8_t menu_offset = 0;
 static uint8_t cursor_position = 0;
 
@@ -44,7 +46,6 @@ static uint_least8_t first_visible(const Scrolling_items &items, uint_least8_t p
 uint_least8_t scrolling_list(const Scrolling_items &items)
 {
     const uint_least8_t visible_items = count_visible(items);
-    const int rows = 4;
     const uint_least8_t columns = 20;
     const uint_least8_t cursor_columns = 1;
 
@@ -96,8 +97,15 @@ uint_least8_t scrolling_list(const Scrolling_items &items)
     return (cursor_position + menu_offset);
 }
 
-void scrolling_list_reset()
+void scrolling_list_set(uint8_t index)
 {
-    menu_offset = 0;
-    cursor_position = 0;
+    if (index >= rows)
+    {
+        menu_offset = index - (rows - 1);
+        index -= menu_offset;
+    } else
+    {
+        menu_offset = 0;
+    }
+    cursor_position = index;
 }

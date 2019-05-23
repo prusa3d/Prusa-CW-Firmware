@@ -1634,7 +1634,7 @@ void button_press() {
     case SOUND_SETTINGS:
       switch (menu_position) {
         case 0:
-          menu_position = 1;
+          menu_position = 4;
           state = SETTINGS;
           break;
 
@@ -1653,7 +1653,7 @@ void button_press() {
     case FANS:
       switch (menu_position) {
         case 0:
-          menu_position = 1;
+          menu_position = 5;
           state = SETTINGS;
           break;
 
@@ -1680,21 +1680,25 @@ void button_press() {
       break;
 
     case FAN1_CURING:
+      menu_position = 1;
       write_config(EEPROM.length() - EEPROM_OFFSET);
       state = FANS;
       break;
 
     case FAN1_DRYING:
+      menu_position = 2;
       write_config(EEPROM.length() - EEPROM_OFFSET);
       state = FANS;
       break;
 
     case FAN2_CURING:
+      menu_position = 3;
       write_config(EEPROM.length() - EEPROM_OFFSET);
       state = FANS;
       break;
 
     case FAN2_DRYING:
+      menu_position = 4;
       write_config(EEPROM.length() - EEPROM_OFFSET);
       state = FANS;
       break;
@@ -1726,7 +1730,7 @@ void button_press() {
     case PREHEAT:
       switch (menu_position) {
         case 0:
-          menu_position = 2;
+          menu_position = 3;
           state = SETTINGS;
           break;
 
@@ -1750,7 +1754,7 @@ void button_press() {
     case SPEED_STATE:
       switch (menu_position) {
         case 0:
-          menu_position = 2;
+          menu_position = 1;
           state = SETTINGS;
           break;
 
@@ -1816,32 +1820,32 @@ void button_press() {
       break;
     case TIME_CURING:
       write_config(EEPROM.length() - EEPROM_OFFSET);
-      menu_position = 0;
+      menu_position = 1;
       state = TIME;
       break;
     case TIME_DRYING:
       write_config(EEPROM.length() - EEPROM_OFFSET);
-      menu_position = 0;
+      menu_position = 2;
       state = TIME;
       break;
     case TIME_WASHING:
       write_config(EEPROM.length() - EEPROM_OFFSET);
-      menu_position = 0;
+      menu_position = 3;
       state = TIME;
       break;
     case TIME_RESIN_PREHEAT:
       write_config(EEPROM.length() - EEPROM_OFFSET);
-      menu_position = 0;
+      menu_position = 4;
       state = TIME;
       break;
     case INFO:
-      menu_position = 2;
+      menu_position = 6;
       state = SETTINGS;
       break;
     case RUN_MODE:
       write_config(EEPROM.length() - EEPROM_OFFSET);
       if (!long_press) {
-        menu_position = 1;
+        menu_position = 2;
         state = SETTINGS;
       }
       else {
@@ -1868,7 +1872,7 @@ void button_press() {
       break;
     case UNIT_SYSTEM:
       write_config(EEPROM.length() - EEPROM_OFFSET);
-      menu_position = 3;
+      menu_position = 7;
       state = SETTINGS;
       break;
 
@@ -1966,7 +1970,7 @@ void button_press() {
     default:
       break;
   }
-  scrolling_list_reset();
+  scrolling_list_set(menu_position);
 
   redraw_menu = true;
   rotary_diff = 128;

@@ -18,6 +18,6 @@ struct Scrolling_item
 typedef Scrolling_item Scrolling_items[8];
 
 uint_least8_t scrolling_list(const Scrolling_items &items);
-void scrolling_list_reset();
+void scrolling_list_set(uint8_t index);
 
 #endif /* MENULIST_H */
