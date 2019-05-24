@@ -250,7 +250,7 @@ static void fan_pwm_control();
 static void fan_heater_rpm();
 static void fan_rpm();
 static void preheat();
-static void lcd_time_print();
+static void lcd_time_print(uint8_t dots_column);
 static void therm1_read();
 static void get_serial_num(Serial_num_t &sn);
 
@@ -1965,7 +1965,8 @@ void start_drying() {
       gastro_pan = false;
     }
   }
-  lcd_time_print();
+  if (!preheat_complete) lcd_time_print(8);
+  else lcd_time_print(7);
 }
 
 void start_curing() {
@@ -2025,7 +2026,7 @@ void start_curing() {
       gastro_pan = false;
     }
   }
-  lcd_time_print();
+  lcd_time_print(7);
 }
 
 void start_washing() {
@@ -2071,7 +2072,7 @@ void start_washing() {
           tDown.start();
         }
 
-        lcd_time_print();
+        lcd_time_print(8);
       }
     } else {
       menu_position = 0;
@@ -2139,7 +2140,7 @@ void start_washing() {
           tDown.pause();
         }
 
-        lcd_time_print();
+        lcd_time_print(8);
       }
     } else {
       menu_position = 0;
@@ -2200,7 +2201,11 @@ void stop_curing_drying() {
   menu_move(true);
 }
 
-void lcd_time_print() {
+//! @brief Display remaining time
+//!
+//! @param dots_column Zero indexed column of first line
+//! where to to start printing progress dots.
+void lcd_time_print(uint8_t dots_column) {
   byte mins;
   byte secs;
   if (heat_to_target_temp) {
@@ -2246,25 +2251,8 @@ void lcd_time_print() {
     if (!paused && !paused_time) {
       lcd.setCursor(19, 1);
       lcd.print(" ");
-      int first_position;
 
       if (curing_mode) {
-        if (!drying_mode) {
-          first_position = 7;
-        }
-        if (drying_mode) {
-          if (heat_to_target_temp) {
-            if (!preheat_complete) {
-              first_position = 8;
-            }
-            else {
-              first_position = 7;
-            }
-          }
-          else {
-            first_position = 7;
-          }
-        }
         if (outputchip.digitalRead(COVER_OPEN_PIN) == LOW) {
           if (SI_unit_system) {
             lcd.setCursor(13, 0);
@@ -2285,32 +2273,28 @@ void lcd_time_print() {
         }
       }
 
-      if (!curing_mode) {
-        first_position = 8;
-      }
-
       if (running_count == 0) {
-        lcd.setCursor(first_position, 0);
+        lcd.setCursor(dots_column, 0);
         lcd.print(" ");
-        lcd.setCursor(first_position + 1, 0);
+        lcd.setCursor(dots_column + 1, 0);
         lcd.print(" ");
-        lcd.setCursor(first_position + 2, 0);
+        lcd.setCursor(dots_column + 2, 0);
         lcd.print(" ");
       }
       if (running_count == 1) {
-        lcd.setCursor(first_position, 0);
+        lcd.setCursor(dots_column, 0);
         lcd.print(".");
-        lcd.setCursor(first_position + 1, 0);
+        lcd.setCursor(dots_column + 1, 0);
         lcd.print(" ");
-        lcd.setCursor(first_position + 2, 0);
+        lcd.setCursor(dots_column + 2, 0);
         lcd.print(" ");
       }
       if (running_count == 2) {
-        lcd.setCursor(first_position, 0);
+        lcd.setCursor(dots_column, 0);
         lcd.print(".");
-        lcd.setCursor(first_position + 1, 0);
+        lcd.setCursor(dots_column + 1, 0);
         lcd.print(".");
-        lcd.setCursor(first_position + 2, 0);
+        lcd.setCursor(dots_column + 2, 0);
         lcd.print(" ");
         lcd.setCursor(14, 2);
         lcd.print("  ");
@@ -2318,11 +2302,11 @@ void lcd_time_print() {
         lcd.print("  ");
       }
       if (running_count == 3) {
-        lcd.setCursor(first_position, 0);
+        lcd.setCursor(dots_column, 0);
         lcd.print(".");
-        lcd.setCursor(first_position + 1, 0);
+        lcd.setCursor(dots_column + 1, 0);
         lcd.print(".");
-        lcd.setCursor(first_position + 2, 0);
+        lcd.setCursor(dots_column + 2, 0);
         lcd.print(".");
       }
 
