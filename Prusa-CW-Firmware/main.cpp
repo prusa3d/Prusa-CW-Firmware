@@ -63,7 +63,7 @@ enum menu_state {
   ERROR
 };
 
-#define FW_VERSION  "2.1.1"
+#define FW_VERSION  "2.1.3"
 volatile uint16_t *const bootKeyPtr = (volatile uint16_t *)(RAMEND - 1);
 
 
@@ -193,8 +193,8 @@ long ams_counter;
 long ms_counter;
 long ams_fan_counter;
 
-long button_timer = 0;
-long long_press_time = 1000;
+unsigned long button_timer = 0;
+const unsigned long long_press_time = 1000;
 bool button_active = false;
 bool long_press_active = false;
 bool long_press = false;
@@ -261,10 +261,9 @@ static void fan_pwm_control();
 static void fan_heater_rpm();
 static void fan_rpm();
 static void preheat();
-static void lcd_time_print();
+static void lcd_time_print(uint8_t dots_column);
 static void therm1_read();
 static void get_serial_num(Serial_num_t &sn);
-static uint8_t get_reset_flags();
 
 static inline bool is_error()
 {
@@ -803,7 +802,7 @@ void loop() {
         redraw_menu = true;
         menu_move(true);
         if (sound_response) {
-          echo();
+          //echo();
         }
       }
     }
@@ -842,6 +841,10 @@ void loop() {
     }
   }
 
+  if (millis() > therm_read_time_now + 2000) {
+    therm_read_time_now = millis();
+    therm1_read();
+  }
   if (millis() > therm_read_time_now + 2000) {
     therm_read_time_now = millis();
     therm1_read();
@@ -1007,10 +1010,10 @@ void menu_move(bool sound_echo) {
 
     case TARGET_TEMP:
       if (SI_unit_system) {
-        generic_value("Target temp", &target_temp_celsius, 20, 40, "\xDF" "C", 0);
+        generic_value("Target temp", &target_temp_celsius, 20, 40, " \xDF" "C ", 0);
       }
       else {
-        generic_value("Target temp", &target_temp_celsius, 20, 40, "\xDF" "F", 1);
+        generic_value("Target temp", &target_temp_celsius, 20, 40, " \xDF" "F ", 1);
       }
       break;
 
@@ -1119,10 +1122,10 @@ void menu_move(bool sound_echo) {
       if (curing_mode) {
         if (paused) {
           if (heat_to_target_temp || (curing_machine_mode == 3) || (preheat_complete == false)) {
-            lcd.print(paused ? "Paused..." : drying_mode ? "Heating" : "Curing");
+            lcd.print(paused ? "Paused...          " : drying_mode ? "Heating" : "Curing");
           }
           else {
-            lcd.print(paused ? "Paused..." : drying_mode ? "Drying" : "Curing");
+            lcd.print(paused ? "Paused...          " : drying_mode ? "Drying" : "Curing");
           }
         }
         else {
@@ -1140,7 +1143,7 @@ void menu_move(bool sound_echo) {
         }
       }
       else {
-        lcd.print(cover_open ? "Open cover!" : (paused ? "Paused..." : "Washing"));
+        lcd.print(cover_open ? "Open cover!" : (paused ? "Paused...          " : "Washing"));
       }
       if (curing_mode && drying_mode && heat_to_target_temp && !preheat_complete) {
         lcd.setCursor(14, 2);
@@ -1402,6 +1405,8 @@ void machine_running() {
             }
             if (tDown.isCounterCompleted() == false) {
               start_curing();
+              fan1_duty = FAN1_CURING_SPEED;
+              fan2_duty = FAN2_CURING_SPEED;
             }
             else {
               stop_curing_drying ();
@@ -1483,7 +1488,6 @@ void button_press() {
                 tUp.start();
                 fan1_duty = FAN1_PREHEAT_SPEED;
                 fan2_duty = FAN2_PREHEAT_SPEED;
-
                 outputchip.digitalWrite(LED_RELE_PIN, LOW); //turn off LED
                 digitalWrite(LED_PWM_PIN, LOW);
                 drying_mode = true;
@@ -1497,8 +1501,8 @@ void button_press() {
                   remain = drying_run_time;
                   tDown.setCounter(0, remain, 0, tDown.COUNT_DOWN, tDownComplete);
                   tDown.start();
-                  fan1_duty = FAN1_CURING_SPEED;
-                  fan2_duty = FAN2_CURING_SPEED;
+                  fan1_duty = FAN1_DRYING_SPEED;
+                  fan2_duty = FAN2_DRYING_SPEED;
                 }
                 else {
                   pid_mode = true;
@@ -1535,8 +1539,8 @@ void button_press() {
                   remain = drying_run_time;
                   tDown.setCounter(0, remain, 0, tDown.COUNT_DOWN, tDownComplete);
                   tDown.start();
-                  fan1_duty = FAN1_CURING_SPEED;
-                  fan2_duty = FAN2_CURING_SPEED;
+                  fan1_duty = FAN1_DRYING_SPEED;
+                  fan2_duty = FAN2_DRYING_SPEED;
                 }
                 else {
                   pid_mode = true;
@@ -1566,6 +1570,7 @@ void button_press() {
 
           menu_position = 0;
           state = RUNNING;
+          redraw_menu = true;
           menu_move(true);
           break;
 
@@ -1882,32 +1887,6 @@ void button_press() {
       switch (menu_position) {
         case 0:
           if (curing_mode) { //curing mode
-            paused ^= 1;
-            if (paused) {
-              stop_motor();
-              running_count = 0;
-              stop_heater(); // turn off heat fan
-              fan1_duty = FAN1_MENU_SPEED;
-              fan2_duty = FAN2_MENU_SPEED;
-            } else {
-              run_motor();
-              speed_configuration();
-              running_count = 0;
-
-
-              if (!heat_to_target_temp) {
-                fan1_duty = FAN1_CURING_SPEED;
-                fan2_duty = FAN2_CURING_SPEED;
-              }
-              else {
-                fan1_duty = FAN1_PREHEAT_SPEED;
-                fan2_duty = FAN2_PREHEAT_SPEED;
-              }
-            }
-            menu_position = 0;
-            state = RUNNING;
-          }
-          else { //washing mode
             if (!gastro_pan) {
               paused ^= 1;
               if (paused) {
@@ -1916,6 +1895,33 @@ void button_press() {
                 stop_heater(); // turn off heat fan
                 fan1_duty = FAN1_MENU_SPEED;
                 fan2_duty = FAN2_MENU_SPEED;
+              } else {
+                run_motor();
+                speed_configuration();
+                running_count = 0;
+
+                if (!heat_to_target_temp) {
+                  fan1_duty = FAN1_CURING_SPEED;
+                  fan2_duty = FAN2_CURING_SPEED;
+                }
+                else {
+                  fan1_duty = FAN1_PREHEAT_SPEED;
+                  fan2_duty = FAN2_PREHEAT_SPEED;
+                }
+              }
+              menu_position = 0;
+              state = RUNNING;
+            }
+          }
+          else { //washing mode
+            if (!gastro_pan) {
+              paused ^= 1;
+              if (paused) {
+                stop_motor();
+                running_count = 0;
+                stop_heater(); // turn off heat fan
+                //fan1_duty = FAN1_MENU_SPEED;
+                //fan2_duty = FAN2_MENU_SPEED;
               } else {
                 run_motor();
                 speed_configuration();
@@ -1932,6 +1938,7 @@ void button_press() {
 
         case 1:
           menu_position = 0;
+          pid_mode = false;
           state = MENU;
           running_count = 0;
           stop_motor();
@@ -1971,6 +1978,7 @@ void button_press() {
 
   redraw_menu = true;
   rotary_diff = 128;
+  redraw_menu = true;
   menu_move(true);
   //delay(475);
 }
@@ -2191,7 +2199,32 @@ void start_drying() {
     }
 
   }
-  lcd_time_print();
+  if (outputchip.digitalRead(WASH_DETECT_PIN) == LOW) { //Gastro Pen check
+    lcd.setCursor(1, 0);
+    lcd.print("Remove IPA tank!");
+    running_count = 0;
+    paused = true;
+    if (!paused_time) {
+      paused_time = true;
+    }
+    tDown.pause();
+    stop_heater();
+    stop_motor();
+    if (!gastro_pan) {
+      redraw_menu = true;
+      menu_move(true);
+      gastro_pan = true;
+    }
+  }
+  else {
+    if (gastro_pan) {
+      redraw_menu = true;
+      menu_move(true);
+      gastro_pan = false;
+    }
+  }
+  if (!preheat_complete) lcd_time_print(8);
+  else lcd_time_print(7);
 }
 
 void start_curing() {
@@ -2227,7 +2260,31 @@ void start_curing() {
     }
     tDown.start();
   }
-  lcd_time_print();
+  if (outputchip.digitalRead(WASH_DETECT_PIN) == LOW) { //Gastro Pen check
+    lcd.setCursor(1, 0);
+    lcd.print("Remove IPA tank!");
+    running_count = 0;
+    paused = true;
+    if (!paused_time) {
+      paused_time = true;
+    }
+    tDown.pause();
+    stop_heater();
+    stop_motor();
+    if (!gastro_pan) {
+      redraw_menu = true;
+      menu_move(true);
+      gastro_pan = true;
+    }
+  }
+  else {
+    if (gastro_pan) {
+      redraw_menu = true;
+      menu_move(true);
+      gastro_pan = false;
+    }
+  }
+  lcd_time_print(7);
 }
 
 void start_washing() {
@@ -2273,7 +2330,7 @@ void start_washing() {
           tDown.start();
         }
 
-        lcd_time_print();
+        lcd_time_print(8);
       }
     } else {
       menu_position = 0;
@@ -2341,7 +2398,7 @@ void start_washing() {
           tDown.pause();
         }
 
-        lcd_time_print();
+        lcd_time_print(8);
       }
     } else {
       menu_position = 0;
@@ -2402,7 +2459,11 @@ void stop_curing_drying() {
   menu_move(true);
 }
 
-void lcd_time_print() {
+//! @brief Display remaining time
+//!
+//! @param dots_column Zero indexed column of first line
+//! where to to start printing progress dots.
+void lcd_time_print(uint8_t dots_column) {
   byte mins;
   byte secs;
   if (heat_to_target_temp || (curing_machine_mode == 3)) {
@@ -2429,7 +2490,6 @@ void lcd_time_print() {
 
   if (state == RUNNING && (secs != last_seconds || redraw_ms)) {
 
-    therm_read != therm_read;
     //therm1_read();
     //therm2_read();
     redraw_ms = false;
@@ -2449,25 +2509,10 @@ void lcd_time_print() {
     if (!paused && !paused_time) {
       lcd.setCursor(19, 1);
       lcd.print(" ");
-      int first_position;
 
       if (curing_mode) {
-        if (!drying_mode) {
-          first_position = 7;
-        }
-        if (drying_mode) {
-          if (heat_to_target_temp || (curing_machine_mode == 3)) {
-            if (!preheat_complete) {
-              first_position = 8;
-            }
-            else {
-              first_position = 7;
-            }
-          }
-          else {
-            first_position = 7;
-          }
-        }
+
+
         if (outputchip.digitalRead(COVER_OPEN_PIN) == LOW) {
           if (SI_unit_system) {
             lcd.setCursor(13, 0);
@@ -2488,32 +2533,28 @@ void lcd_time_print() {
         }
       }
 
-      if (!curing_mode) {
-        first_position = 8;
-      }
-
       if (running_count == 0) {
-        lcd.setCursor(first_position, 0);
+        lcd.setCursor(dots_column, 0);
         lcd.print(" ");
-        lcd.setCursor(first_position + 1, 0);
+        lcd.setCursor(dots_column + 1, 0);
         lcd.print(" ");
-        lcd.setCursor(first_position + 2, 0);
+        lcd.setCursor(dots_column + 2, 0);
         lcd.print(" ");
       }
       if (running_count == 1) {
-        lcd.setCursor(first_position, 0);
+        lcd.setCursor(dots_column, 0);
         lcd.print(".");
-        lcd.setCursor(first_position + 1, 0);
+        lcd.setCursor(dots_column + 1, 0);
         lcd.print(" ");
-        lcd.setCursor(first_position + 2, 0);
+        lcd.setCursor(dots_column + 2, 0);
         lcd.print(" ");
       }
       if (running_count == 2) {
-        lcd.setCursor(first_position, 0);
+        lcd.setCursor(dots_column, 0);
         lcd.print(".");
-        lcd.setCursor(first_position + 1, 0);
+        lcd.setCursor(dots_column + 1, 0);
         lcd.print(".");
-        lcd.setCursor(first_position + 2, 0);
+        lcd.setCursor(dots_column + 2, 0);
         lcd.print(" ");
         lcd.setCursor(14, 2);
         lcd.print("  ");
@@ -2521,11 +2562,11 @@ void lcd_time_print() {
         lcd.print("  ");
       }
       if (running_count == 3) {
-        lcd.setCursor(first_position, 0);
+        lcd.setCursor(dots_column, 0);
         lcd.print(".");
-        lcd.setCursor(first_position + 1, 0);
+        lcd.setCursor(dots_column + 1, 0);
         lcd.print(".");
-        lcd.setCursor(first_position + 2, 0);
+        lcd.setCursor(dots_column + 2, 0);
         lcd.print(".");
       }
 
@@ -2830,12 +2871,14 @@ void get_serial_num(Serial_num_t &sn)
   sn[sizeof(Serial_num_t) - 1] = 0;
 }
 
+#if 0
 //! @brief Get reset flags
 //! @return value of MCU Status Register - MCUSR as it was backed up by bootloader
 static uint8_t get_reset_flags()
 {
   return bootKeyPtrVal;
 }
+#endif
 
 #define ATTR_INIT_SECTION(SectionIndex) __attribute__ ((used, naked, section (".init" #SectionIndex )))
 void get_key_from_boot(void) ATTR_INIT_SECTION(3);

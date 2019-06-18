@@ -1,10 +1,10 @@
-
+#include "thermistor.h"
 #include "Arduino.h"
 #include "stdint.h"
 #include "src/Configuration.h"
 #include "src/Conditionals.h"
 #include "src/Thermistortables.h"
-#include "thermistor.h"
+#include "float.h"
 
 #define HOTENDS  1
 #define ARRAY_6(v1, v2, v3, v4, v5, v6, ...) { v1, v2, v3, v4, v5, v6 }
@@ -34,8 +34,8 @@ float thermistor::analog2temp() {
   for(int j=1;j<=OVERSAMPLENR;j++){
     raw += analogRead(_pin);
   }
+  float celsius = FLT_MAX;
   if (heater_ttbl_map[e] != NULL) {
-    float celsius = 0;
     uint8_t i;
     short(*tt)[][2] = (short(*)[][2])(heater_ttbl_map[e]);
     for (i = 1; i < heater_ttbllen_map[e]; i++) {
@@ -53,4 +53,5 @@ float thermistor::analog2temp() {
 
     return celsius;
   }
+  return celsius;
 }
