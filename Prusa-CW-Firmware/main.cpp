@@ -2243,7 +2243,7 @@ void start_drying() {
       gastro_pan = false;
     }
   }
-  if (heat_to_target_temp) {
+  if (heat_to_target_temp || (curing_machine_mode == 3)) {
     if (!preheat_complete) lcd_time_print(8);
     else lcd_time_print(7);
   }
