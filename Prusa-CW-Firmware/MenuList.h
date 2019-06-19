@@ -15,7 +15,7 @@ struct Scrolling_item
    PrusaLcd::Terminator last_symbol;
 };
 
-typedef Scrolling_item Scrolling_items[8];
+typedef Scrolling_item Scrolling_items[9];
 
 uint_least8_t scrolling_list(const Scrolling_items &items);
 void scrolling_list_set(uint8_t index);

@@ -50,6 +50,7 @@ enum menu_state {
   RUN_MODE,
   SOUND_SETTINGS,
   FANS,
+  LED_INTENSITY,
   FAN1_CURING,
   FAN1_DRYING,
   FAN2_CURING,
@@ -63,7 +64,7 @@ enum menu_state {
   ERROR
 };
 
-#define FW_VERSION  "2.1.3"
+#define FW_VERSION  "2.1.4"
 volatile uint16_t *const bootKeyPtr = (volatile uint16_t *)(RAMEND - 1);
 
 
@@ -109,6 +110,7 @@ byte resin_target_temp_celsius = 30;
 byte cover_check_enabled = 1;
 byte curing_machine_mode;
 byte SI_unit_system = 1;
+byte LED_PWM_VALUE = 100;
 
 int fan1_pwm_State = LOW;
 int fan2_pwm_State = LOW;
@@ -975,6 +977,7 @@ void menu_move(bool sound_echo) {
         {"Preheat", true, Ter::right},
         {"Sound", true, Ter::right},
         {"Fans", true, Ter::right},
+        {"LED intensity", true, Ter::right},
         {is_error() ? "Information ->!!" : "Information", true, Ter::right},
         {"Unit system", true, Ter::right},
       };
@@ -1064,6 +1067,12 @@ void menu_move(bool sound_echo) {
 
         break;
       }
+
+    case LED_INTENSITY:
+
+      generic_value("LED intensity", &LED_PWM_VALUE, 1, 100, "% ", 0);
+
+      break;
 
     case FAN1_CURING:
 
@@ -1623,6 +1632,11 @@ void button_press() {
 
         case 6:
           menu_position = 0;
+          state = LED_INTENSITY;
+          break;
+
+        case 7:
+          menu_position = 0;
           state = INFO;
           break;
 
@@ -1679,6 +1693,12 @@ void button_press() {
           state = FAN2_DRYING;
           break;
       }
+      break;
+
+    case LED_INTENSITY:
+      menu_position = 6;
+      write_config(EEPROM.length() - EEPROM_OFFSET);
+      state = SETTINGS;
       break;
 
     case FAN1_CURING:
@@ -1841,7 +1861,7 @@ void button_press() {
       state = TIME;
       break;
     case INFO:
-      menu_position = 6;
+      menu_position = 7;
       state = SETTINGS;
       break;
     case RUN_MODE:
@@ -1874,7 +1894,7 @@ void button_press() {
       break;
     case UNIT_SYSTEM:
       write_config(EEPROM.length() - EEPROM_OFFSET);
-      menu_position = 7;
+      menu_position = 8;
       state = SETTINGS;
       break;
 
@@ -2223,8 +2243,14 @@ void start_drying() {
       gastro_pan = false;
     }
   }
-  if (!preheat_complete) lcd_time_print(8);
-  else lcd_time_print(7);
+  if (heat_to_target_temp) {
+    if (!preheat_complete) lcd_time_print(8);
+    else lcd_time_print(7);
+  }
+  else{
+    lcd_time_print(7);
+  }
+  
 }
 
 void start_curing() {
@@ -2236,7 +2262,9 @@ void start_curing() {
     }
     if (millis() > led_time_now + LED_delay) {
       outputchip.digitalWrite(LED_RELE_PIN, HIGH); // turn LED on
-      digitalWrite(LED_PWM_PIN, HIGH);
+      int val;
+      val = map(LED_PWM_VALUE, 0, 100, 0, 255);
+      analogWrite(LED_PWM_PIN, val);
     }
   }
   else {
