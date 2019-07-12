@@ -54,7 +54,7 @@ enum menu_state {
   ERROR
 };
 
-#define FW_VERSION  "2.1.3"
+#define FW_VERSION  "2.1.4"
 volatile uint16_t *const bootKeyPtr = (volatile uint16_t *)(RAMEND - 1);
 
 
@@ -129,16 +129,16 @@ int fan2_duty; //%
 
 //fan1_duty = 0-100%
 int FAN1_MENU_SPEED = 30;//20;
-int FAN1_CURING_SPEED = 80;//70
-int FAN1_WASHING_SPEED = 80;//70
-int FAN1_DRYING_SPEED = 80;//70
+int FAN1_CURING_SPEED = 60;//70
+int FAN1_WASHING_SPEED = 60;//70
+int FAN1_DRYING_SPEED = 60;//70
 int FAN1_PREHEAT_SPEED = 40;//70
 
 //fan2_duty = 0-100%
 int FAN2_MENU_SPEED = 30;//20;
-int FAN2_CURING_SPEED = 80;//30
-int FAN2_WASHING_SPEED = 80;//70
-int FAN2_DRYING_SPEED = 80;//70
+int FAN2_CURING_SPEED = 70;//30
+int FAN2_WASHING_SPEED = 70;//70
+int FAN2_DRYING_SPEED = 70;//70
 int FAN2_PREHEAT_SPEED = 40;//70
 
 long remain = 0;
@@ -1965,8 +1965,13 @@ void start_drying() {
       gastro_pan = false;
     }
   }
-  if (!preheat_complete) lcd_time_print(8);
-  else lcd_time_print(7);
+   if (heat_to_target_temp) {
+    if (!preheat_complete) lcd_time_print(8);
+    else lcd_time_print(7);
+  }
+  else{
+    lcd_time_print(7);
+  }
 }
 
 void start_curing() {
