@@ -142,17 +142,17 @@ int fan2_duty; //%
 
 //fan1_duty = 0-100%
 byte FAN1_MENU_SPEED = 30;
-byte FAN1_CURING_SPEED = 80;//70
-byte FAN1_WASHING_SPEED = 80;//70
-byte FAN1_DRYING_SPEED = 80;//70
-byte FAN1_PREHEAT_SPEED = 20;//40
+byte FAN1_CURING_SPEED = 60;//70
+byte FAN1_WASHING_SPEED = 60;//70
+byte FAN1_DRYING_SPEED = 60;//70
+byte FAN1_PREHEAT_SPEED = 40;//40
 
 //fan2_duty = 0-100%
 byte FAN2_MENU_SPEED = 30;
-byte FAN2_CURING_SPEED = 80;//30
-byte FAN2_WASHING_SPEED = 80;//70
-byte FAN2_DRYING_SPEED = 80;//70
-byte FAN2_PREHEAT_SPEED = 20;//40
+byte FAN2_CURING_SPEED = 70;//30
+byte FAN2_WASHING_SPEED = 70;//70
+byte FAN2_DRYING_SPEED = 70;//70
+byte FAN2_PREHEAT_SPEED = 40;//40
 
 long remain = 0;
 unsigned long us_last = 0;
@@ -2243,14 +2243,15 @@ void start_drying() {
       gastro_pan = false;
     }
   }
-  if (heat_to_target_temp || (curing_machine_mode == 3)) {
+  if (heat_to_target_temp || (curing_machine_mode == 3))
+  {
     if (!preheat_complete) lcd_time_print(8);
     else lcd_time_print(7);
   }
-  else{
+  else
+  {
     lcd_time_print(7);
   }
-  
 }
 
 void start_curing() {
