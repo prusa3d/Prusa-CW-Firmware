@@ -6,7 +6,10 @@
 #include "Main.h"
 #include <stdint.h>
 
+static const int rows = 4;
+
 static uint8_t menu_offset = 0;
+static uint8_t cursor_position = 0;
 
 static uint_least8_t count_visible(const Scrolling_items &items)
 {
@@ -36,13 +39,13 @@ static uint_least8_t first_visible(const Scrolling_items &items, uint_least8_t p
 }
 
 //! @brief Print scrolling list
-//! @param[in] items
 //!
 //! Prints visible items only.
-void scrolling_list(const Scrolling_items &items)
+//! @param[in] items
+//! @return Zero indexed selected item
+uint_least8_t scrolling_list(const Scrolling_items &items)
 {
     const uint_least8_t visible_items = count_visible(items);
-    const int rows = 4;
     const uint_least8_t columns = 20;
     const uint_least8_t cursor_columns = 1;
 
@@ -51,9 +54,9 @@ void scrolling_list(const Scrolling_items &items)
 
     if (rotary_diff > 128)
     {
-        if ((menu_position < (rows - 1)) && (menu_position < visible_items - 1))
+        if ((cursor_position < (rows - 1)) && (cursor_position < visible_items - 1))
         {
-            ++menu_position;
+            ++cursor_position;
         }
         else if (menu_offset < (visible_items - rows))
         {
@@ -62,9 +65,9 @@ void scrolling_list(const Scrolling_items &items)
     }
     else if (rotary_diff < 128)
     {
-        if (menu_position)
+        if (cursor_position)
         {
-            --menu_position;
+            --cursor_position;
         }
         else if (menu_offset)
         {
@@ -85,15 +88,24 @@ void scrolling_list(const Scrolling_items &items)
 
         if (visible_index < num_items)
         {
-            lcd.printClear(items[visible_index].caption, columns - cursor_columns);
+            lcd.printClear(items[visible_index].caption, columns - cursor_columns, items[visible_index].last_symbol);
         }
         ++visible_index;
     }
 
-    print_menu_cursor();
+    print_menu_cursor(cursor_position);
+    return (cursor_position + menu_offset);
 }
 
-void scrolling_list_reset()
+void scrolling_list_set(uint8_t index)
 {
-    menu_offset = 0;
+    if (index >= rows)
+    {
+        menu_offset = index - (rows - 1);
+        index -= menu_offset;
+    } else
+    {
+        menu_offset = 0;
+    }
+    cursor_position = index;
 }
