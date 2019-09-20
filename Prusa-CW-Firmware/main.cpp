@@ -88,7 +88,6 @@ volatile uint8_t rotary_diff = 128;
 typedef struct
 {
 	const char magic[6];
-	//const char magic2[6];
 	byte washing_speed;
 	byte curing_speed;
 	byte washing_run_time;
@@ -493,7 +492,7 @@ void setup() {
 }
 
 void write_config(unsigned int address) {		//useless address param
-  EEPROM.put(reinterpret_cast<int>(&(eeprom_base->magic)), magic);
+  EEPROM.put(reinterpret_cast<int>(&(eeprom_base->magic)), magic2);
   EEPROM.put(reinterpret_cast<int>(&(eeprom_base->washing_speed)), washing_speed);
   EEPROM.put(reinterpret_cast<int>(&(eeprom_base->curing_speed)), curing_speed);
   EEPROM.put(reinterpret_cast<int>(&(eeprom_base->washing_run_time)), washing_run_time);
@@ -519,8 +518,8 @@ void write_config(unsigned int address) {		//useless address param
 
 void read_config(unsigned int address) {
   char test_magic[MAGIC_SIZE];
-  EEPROM.get(reinterpret_cast<int>(&(eeprom_base->magic)), magic);
-  if (!strncmp(magic, test_magic, MAGIC_SIZE)) {
+  EEPROM.get(reinterpret_cast<int>(&(eeprom_base->magic)), test_magic);
+  if (!strncmp(magic2, test_magic, MAGIC_SIZE)) {
     EEPROM.get(reinterpret_cast<int>(&(eeprom_base->washing_speed)), washing_speed);
     EEPROM.get(reinterpret_cast<int>(&(eeprom_base->curing_speed)), curing_speed);
     EEPROM.get(reinterpret_cast<int>(&(eeprom_base->washing_run_time)), washing_run_time);
@@ -534,14 +533,16 @@ void read_config(unsigned int address) {
     EEPROM.get(reinterpret_cast<int>(&(eeprom_base->target_temp_fahrenheit)), target_temp_fahrenheit);
     EEPROM.get(reinterpret_cast<int>(&(eeprom_base->SI_unit_system)), SI_unit_system);
     EEPROM.get(reinterpret_cast<int>(&(eeprom_base->heater_failure)), heater_failure);
-    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->FAN1_CURING_SPEED)), FAN1_CURING_SPEED);
-    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->FAN1_DRYING_SPEED)), FAN1_DRYING_SPEED);
-    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->FAN1_PREHEAT_SPEED)), FAN1_PREHEAT_SPEED);
-    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->FAN2_CURING_SPEED)), FAN2_CURING_SPEED);
-    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->FAN2_DRYING_SPEED)), FAN2_DRYING_SPEED);
-    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->FAN2_PREHEAT_SPEED)), FAN2_PREHEAT_SPEED);
-    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->resin_preheat_run_time)), resin_preheat_run_time);
-    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->resin_target_temp_celsius)), resin_target_temp_celsius);
+    if(!strncmp(magic, test_magic, MAGIC_SIZE)){
+    	EEPROM.get(reinterpret_cast<int>(&(eeprom_base->FAN1_CURING_SPEED)), FAN1_CURING_SPEED);
+    	EEPROM.get(reinterpret_cast<int>(&(eeprom_base->FAN1_DRYING_SPEED)), FAN1_DRYING_SPEED);
+    	EEPROM.get(reinterpret_cast<int>(&(eeprom_base->FAN1_PREHEAT_SPEED)), FAN1_PREHEAT_SPEED);
+    	EEPROM.get(reinterpret_cast<int>(&(eeprom_base->FAN2_CURING_SPEED)), FAN2_CURING_SPEED);
+    	EEPROM.get(reinterpret_cast<int>(&(eeprom_base->FAN2_DRYING_SPEED)), FAN2_DRYING_SPEED);
+    	EEPROM.get(reinterpret_cast<int>(&(eeprom_base->FAN2_PREHEAT_SPEED)), FAN2_PREHEAT_SPEED);
+    	EEPROM.get(reinterpret_cast<int>(&(eeprom_base->resin_preheat_run_time)), resin_preheat_run_time);
+    	EEPROM.get(reinterpret_cast<int>(&(eeprom_base->resin_target_temp_celsius)), resin_target_temp_celsius);
+    }
   }
 }
 
