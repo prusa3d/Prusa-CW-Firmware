@@ -67,7 +67,6 @@ enum menu_state {
 #define FW_VERSION  "2.1.4"
 volatile uint16_t *const bootKeyPtr = (volatile uint16_t *)(RAMEND - 1);
 
-
 menu_state state = MENU;
 
 long lastJob = 0;
@@ -86,8 +85,51 @@ unsigned long therm_read_time_now = 0;
 bool button_released = false;
 volatile uint8_t rotary_diff = 128;
 
+typedef struct
+{
+	const char magic[6];
+	//const char magic2[6];
+	byte washing_speed;
+	byte curing_speed;
+	byte washing_run_time;
+	byte curing_run_time;
+	byte drying_run_time;
+	byte finish_beep_mode;
+	byte sound_response;
+	byte heat_to_target_temp;
+	byte target_temp_celsius;
+	byte target_temp_fahrenheit;
+	byte curing_machine_mode;
+	byte SI_unit_system;
+	bool heater_failure;
+	byte FAN1_CURING_SPEED;
+	byte FAN1_DRYING_SPEED;
+	byte FAN1_PREHEAT_SPEED;
+	byte FAN2_CURING_SPEED;
+	byte FAN2_DRYING_SPEED;
+	byte FAN2_PREHEAT_SPEED;
+	byte resin_preheat_run_time;
+	byte resin_target_temp_celsius;
+
+} eeprom_t;
+
+static constexpr eeprom_t const * eeprom_base = reinterpret_cast<eeprom_t*> (EEPROM.length() - EEPROM_OFFSET);
+
 byte washing_speed = 10;
 byte curing_speed = 1;
+byte washing_run_time = 4;
+byte curing_run_time = 3;
+byte drying_run_time = 3;
+byte resin_preheat_run_time = 3;
+byte finish_beep_mode = 1;
+byte sound_response = 1;
+byte heat_to_target_temp = 0;
+byte target_temp_celsius = 35;
+byte target_temp_fahrenheit = 95;
+byte resin_target_temp_celsius = 30;
+byte curing_machine_mode;
+byte SI_unit_system = 1;
+
 int max_washing_speed = 16; //15 //smaller = faster
 int min_washing_speed = 70; //100 //smaller = faster
 int max_curing_speed = 25; //50 //smaller = faster
@@ -95,21 +137,8 @@ int min_curing_speed = 220; //smaller = faster
 int set_washing_speed;
 int set_curing_speed;
 
-byte washing_run_time = 4;
-byte curing_run_time = 3;
-byte drying_run_time = 3;
-byte resin_preheat_run_time = 3;
 byte max_preheat_run_time = 30;
-
-byte finish_beep_mode = 1;
-byte sound_response = 1;
-byte heat_to_target_temp = 0;
-byte target_temp_celsius = 35;
-byte target_temp_fahrenheit = 95;
-byte resin_target_temp_celsius = 30;
 byte cover_check_enabled = 1;
-byte curing_machine_mode;
-byte SI_unit_system = 1;
 byte LED_PWM_VALUE = 100;
 
 int fan1_pwm_State = LOW;
@@ -129,8 +158,8 @@ long fan3_tacho_last_count;
 unsigned long fan1_previous_millis = 0;
 unsigned long fan2_previous_millis = 0;
 
-bool heater_error = false;
 bool heater_failure = false;
+bool heater_error = false;
 bool fan1_error = false;
 bool fan2_error = false;
 
@@ -243,6 +272,8 @@ static volatile uint16_t bootKeyPtrVal __attribute__ ((section (".noinit")));
 #define EEPROM_OFFSET 128
 #define MAGIC_SIZE 6
 const char magic[MAGIC_SIZE] = "CURWA";
+const char magic2[MAGIC_SIZE] = "CURW1";
+
 
 static void motor_configuration();
 static void read_config(unsigned int address);
@@ -461,60 +492,56 @@ void setup() {
   menu_move(true);
 }
 
-
-void write_config(unsigned int address) {
-  EEPROM.put(address, magic);
-  address += MAGIC_SIZE;
-  EEPROM.put(address++, washing_speed);
-  EEPROM.put(address++, curing_speed);
-  EEPROM.put(address++, washing_run_time);
-  EEPROM.put(address++, curing_run_time);
-  EEPROM.put(address++, finish_beep_mode);
-  EEPROM.put(address++, drying_run_time);
-  EEPROM.put(address++, sound_response);
-  EEPROM.put(address++, curing_machine_mode);
-  EEPROM.put(address++, heat_to_target_temp);
-  EEPROM.put(address++, target_temp_celsius);
-  EEPROM.put(address++, target_temp_fahrenheit);
-  EEPROM.put(address++, SI_unit_system);
-  EEPROM.put(address++, heater_failure);
-  EEPROM.put(address++, FAN1_CURING_SPEED);
-  EEPROM.put(address++, FAN1_DRYING_SPEED);
-  EEPROM.put(address++, FAN1_PREHEAT_SPEED);
-  EEPROM.put(address++, FAN2_CURING_SPEED);
-  EEPROM.put(address++, FAN2_DRYING_SPEED);
-  EEPROM.put(address++, FAN2_PREHEAT_SPEED);
-  EEPROM.put(address++, resin_preheat_run_time);
-  EEPROM.put(address++, resin_target_temp_celsius);
+void write_config(unsigned int address) {		//useless address param
+  EEPROM.put(reinterpret_cast<int>(&(eeprom_base->magic)), magic);
+  EEPROM.put(reinterpret_cast<int>(&(eeprom_base->washing_speed)), washing_speed);
+  EEPROM.put(reinterpret_cast<int>(&(eeprom_base->curing_speed)), curing_speed);
+  EEPROM.put(reinterpret_cast<int>(&(eeprom_base->washing_run_time)), washing_run_time);
+  EEPROM.put(reinterpret_cast<int>(&(eeprom_base->curing_run_time)), curing_run_time);
+  EEPROM.put(reinterpret_cast<int>(&(eeprom_base->finish_beep_mode)), finish_beep_moded);
+  EEPROM.put(reinterpret_cast<int>(&(eeprom_base->drying_run_time)), drying_run_time);
+  EEPROM.put(reinterpret_cast<int>(&(eeprom_base->sound_response)), sound_response);
+  EEPROM.put(reinterpret_cast<int>(&(eeprom_base->curing_machine_mode)), curing_machine_mode);
+  EEPROM.put(reinterpret_cast<int>(&(eeprom_base->heat_to_target_temp)), heat_to_target_temp);
+  EEPROM.put(reinterpret_cast<int>(&(eeprom_base->target_temp_celsius)), target_temp_celsius);
+  EEPROM.put(reinterpret_cast<int>(&(eeprom_base->target_temp_fahrenheit)), target_temp_fahrenheit);
+  EEPROM.put(reinterpret_cast<int>(&(eeprom_base->SI_unit_system)), SI_unit_system);
+  EEPROM.put(reinterpret_cast<int>(&(eeprom_base->heater_failure)), heater_failure);
+  EEPROM.put(reinterpret_cast<int>(&(eeprom_base->FAN1_CURING_SPEED)), FAN1_CURING_SPEED);
+  EEPROM.put(reinterpret_cast<int>(&(eeprom_base->FAN1_DRYING_SPEED)), FAN1_DRYING_SPEED);
+  EEPROM.put(reinterpret_cast<int>(&(eeprom_base->FAN1_PREHEAT_SPEED)), FAN1_PREHEAT_SPEED);
+  EEPROM.put(reinterpret_cast<int>(&(eeprom_base->FAN2_CURING_SPEED)), FAN2_CURING_SPEED);
+  EEPROM.put(reinterpret_cast<int>(&(eeprom_base->FAN2_DRYING_SPEED)), FAN2_DRYING_SPEED);
+  EEPROM.put(reinterpret_cast<int>(&(eeprom_base->FAN2_PREHEAT_SPEED)), FAN2_PREHEAT_SPEED);
+  EEPROM.put(reinterpret_cast<int>(&(eeprom_base->resin_preheat_run_time)), resin_preheat_run_time);
+  EEPROM.put(reinterpret_cast<int>(&(eeprom_base->resin_target_temp_celsius)), resin_target_temp_celsius);
 }
-
 
 void read_config(unsigned int address) {
   char test_magic[MAGIC_SIZE];
-  EEPROM.get(address, test_magic);
-  address += MAGIC_SIZE;
+  EEPROM.get(reinterpret_cast<int>(&(eeprom_base->magic)), magic);
   if (!strncmp(magic, test_magic, MAGIC_SIZE)) {
-    EEPROM.get(address++, washing_speed);
-    EEPROM.get(address++, curing_speed);
-    EEPROM.get(address++, washing_run_time);
-    EEPROM.get(address++, curing_run_time);
-    EEPROM.get(address++, finish_beep_mode);
-    EEPROM.get(address++, drying_run_time);
-    EEPROM.get(address++, sound_response);
-    EEPROM.get(address++, curing_machine_mode);
-    EEPROM.get(address++, heat_to_target_temp);
-    EEPROM.get(address++, target_temp_celsius);
-    EEPROM.get(address++, target_temp_fahrenheit);
-    EEPROM.get(address++, SI_unit_system);
-    EEPROM.get(address++, heater_failure);
-    EEPROM.get(address++, FAN1_CURING_SPEED);
-    EEPROM.get(address++, FAN1_DRYING_SPEED);
-    EEPROM.get(address++, FAN1_PREHEAT_SPEED);
-    EEPROM.get(address++, FAN2_CURING_SPEED);
-    EEPROM.get(address++, FAN2_DRYING_SPEED);
-    EEPROM.get(address++, FAN2_PREHEAT_SPEED);
-    EEPROM.get(address++, resin_preheat_run_time);
-    EEPROM.get(address++, resin_target_temp_celsius);
+    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->washing_speed)), washing_speed);
+    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->curing_speed)), curing_speed);
+    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->washing_run_time)), washing_run_time);
+    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->curing_run_time)), curing_run_time);
+    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->finish_beep_mode)), finish_beep_moded);
+    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->drying_run_time)), drying_run_time);
+    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->sound_response)), sound_response);
+    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->curing_machine_mode)), curing_machine_mode);
+    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->heat_to_target_temp)), heat_to_target_temp);
+    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->target_temp_celsius)), target_temp_celsius);
+    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->target_temp_fahrenheit)), target_temp_fahrenheit);
+    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->SI_unit_system)), SI_unit_system);
+    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->heater_failure)), heater_failure);
+    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->FAN1_CURING_SPEED)), FAN1_CURING_SPEED);
+    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->FAN1_DRYING_SPEED)), FAN1_DRYING_SPEED);
+    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->FAN1_PREHEAT_SPEED)), FAN1_PREHEAT_SPEED);
+    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->FAN2_CURING_SPEED)), FAN2_CURING_SPEED);
+    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->FAN2_DRYING_SPEED)), FAN2_DRYING_SPEED);
+    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->FAN2_PREHEAT_SPEED)), FAN2_PREHEAT_SPEED);
+    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->resin_preheat_run_time)), resin_preheat_run_time);
+    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->resin_target_temp_celsius)), resin_target_temp_celsius);
   }
 }
 
