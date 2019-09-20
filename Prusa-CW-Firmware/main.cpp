@@ -17,6 +17,8 @@ using Ter = PrusaLcd::Terminator;
 
 typedef char Serial_num_t[20]; //!< Null terminated string for serial number
 
+int bla = 0;
+
 
 Countimer tDown;
 Countimer tUp;
