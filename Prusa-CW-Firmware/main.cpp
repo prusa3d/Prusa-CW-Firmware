@@ -15,6 +15,9 @@
 
 using Ter = PrusaLcd::Terminator;
 
+#define EEPROM_OFFSET 128
+#define MAGIC_SIZE 6
+
 typedef char Serial_num_t[20]; //!< Null terminated string for serial number
 
 
@@ -112,7 +115,7 @@ typedef struct
 
 } eeprom_t;
 
-static constexpr eeprom_t const * eeprom_base = reinterpret_cast<eeprom_t*> (EEPROM.length() - EEPROM_OFFSET);
+static constexpr eeprom_t const * eeprom_base = reinterpret_cast<eeprom_t*> (E2END + 1 - EEPROM_OFFSET);
 
 byte washing_speed = 10;
 byte curing_speed = 1;
@@ -268,8 +271,6 @@ byte Right[8] = {
 static volatile uint16_t bootKeyPtrVal __attribute__ ((section (".noinit")));
 
 
-#define EEPROM_OFFSET 128
-#define MAGIC_SIZE 6
 const char magic[MAGIC_SIZE] = "CURWA";
 const char magic2[MAGIC_SIZE] = "CURW1";
 
@@ -497,7 +498,7 @@ void write_config(unsigned int address) {		//useless address param
   EEPROM.put(reinterpret_cast<int>(&(eeprom_base->curing_speed)), curing_speed);
   EEPROM.put(reinterpret_cast<int>(&(eeprom_base->washing_run_time)), washing_run_time);
   EEPROM.put(reinterpret_cast<int>(&(eeprom_base->curing_run_time)), curing_run_time);
-  EEPROM.put(reinterpret_cast<int>(&(eeprom_base->finish_beep_mode)), finish_beep_moded);
+  EEPROM.put(reinterpret_cast<int>(&(eeprom_base->finish_beep_mode)), finish_beep_mode);
   EEPROM.put(reinterpret_cast<int>(&(eeprom_base->drying_run_time)), drying_run_time);
   EEPROM.put(reinterpret_cast<int>(&(eeprom_base->sound_response)), sound_response);
   EEPROM.put(reinterpret_cast<int>(&(eeprom_base->curing_machine_mode)), curing_machine_mode);
@@ -524,7 +525,7 @@ void read_config(unsigned int address) {
     EEPROM.get(reinterpret_cast<int>(&(eeprom_base->curing_speed)), curing_speed);
     EEPROM.get(reinterpret_cast<int>(&(eeprom_base->washing_run_time)), washing_run_time);
     EEPROM.get(reinterpret_cast<int>(&(eeprom_base->curing_run_time)), curing_run_time);
-    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->finish_beep_mode)), finish_beep_moded);
+    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->finish_beep_mode)), finish_beep_mode);
     EEPROM.get(reinterpret_cast<int>(&(eeprom_base->drying_run_time)), drying_run_time);
     EEPROM.get(reinterpret_cast<int>(&(eeprom_base->sound_response)), sound_response);
     EEPROM.get(reinterpret_cast<int>(&(eeprom_base->curing_machine_mode)), curing_machine_mode);
