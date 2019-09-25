@@ -127,15 +127,15 @@ struct EEPROMClass{
     uint16_t length()                    { return E2END + 1; }
     
     //Functionality to 'get' and 'put' objects to and from EEPROM.
-    template< typename T > T &get( int idx, T &t ){
-        EEPtr e = idx;
+    template< typename T > T &get( const T *src, T &t ){
+        EEPtr e = reinterpret_cast<int>(src);
         uint8_t *ptr = (uint8_t*) &t;
         for( int count = sizeof(T) ; count ; --count, ++e )  *ptr++ = *e;
         return t;
     }
     
-    template< typename T > const T &put( int idx, const T &t ){
-        EEPtr e = idx;
+    template< typename T > const T &put( T *dst, const T &t ){
+        EEPtr e = reinterpret_cast<int>(dst);
         const uint8_t *ptr = (const uint8_t*) &t;
         for( int count = sizeof(T) ; count ; --count, ++e )  (*e).update( *ptr++ );
         return t;
