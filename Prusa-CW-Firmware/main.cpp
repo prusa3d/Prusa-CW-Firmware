@@ -115,7 +115,7 @@ typedef struct
 
 } eeprom_t;
 
-static_assert(sizeof(eeprom_t) >= EEPROM_OFFSET, "eeprom_t doesn't fit in it's reserved space in the memory.");
+static_assert(sizeof(eeprom_t) <= EEPROM_OFFSET, "eeprom_t doesn't fit in it's reserved space in the memory.");
 
 static constexpr eeprom_t const * eeprom_base = reinterpret_cast<eeprom_t*> (E2END + 1 - EEPROM_OFFSET);
 
