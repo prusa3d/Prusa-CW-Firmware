@@ -421,7 +421,7 @@ void motor_configuration() {
   else {
     myStepper.set_IHOLD_IRUN(31, 31, 5);
     setupTimer3();
-    OCR3A = min_washing_speed; //smaller = faster
+    OCR3A = 100; //smaller = faster
     myStepper.set_mres(16);
 
   }
@@ -518,11 +518,19 @@ void write_config() {
   EEPROM.put(reinterpret_cast<int>(&(eeprom_base->resin_preheat_run_time)), resin_preheat_run_time);
   EEPROM.put(reinterpret_cast<int>(&(eeprom_base->resin_target_temp_celsius)), resin_target_temp_celsius);
 }
-
+/*! \brief This function loads user-defined values from eeprom.
+ *
+ *
+ *  It loads different amount of variables, depending on the magic variable from eeprom.
+ *  If magic is not set in the eeprom, variables keep their default values.
+ *  If magic from eeprom is equal to magic, it loads only variables customizable in older firmware and keeps new variables default.
+ *  If magic from eeprom is equal to magic2, it loads all variables including those added in new firmware.
+ *  It won't load undefined (new) variables after flashing new firmware.
+ */
 void read_config() {
   char test_magic[MAGIC_SIZE];
   EEPROM.get(reinterpret_cast<int>(&(eeprom_base->magic)), test_magic);
-  if (!strncmp(magic2, test_magic, MAGIC_SIZE)) {
+  if (!strncmp(magic2, test_magic, MAGIC_SIZE) || !strncmp(magic, test_magic, MAGIC_SIZE)) {
     EEPROM.get(reinterpret_cast<int>(&(eeprom_base->washing_speed)), washing_speed);
     EEPROM.get(reinterpret_cast<int>(&(eeprom_base->curing_speed)), curing_speed);
     EEPROM.get(reinterpret_cast<int>(&(eeprom_base->washing_run_time)), washing_run_time);
@@ -536,7 +544,7 @@ void read_config() {
     EEPROM.get(reinterpret_cast<int>(&(eeprom_base->target_temp_fahrenheit)), target_temp_fahrenheit);
     EEPROM.get(reinterpret_cast<int>(&(eeprom_base->SI_unit_system)), SI_unit_system);
     EEPROM.get(reinterpret_cast<int>(&(eeprom_base->heater_failure)), heater_failure);
-    if(!strncmp(magic, test_magic, MAGIC_SIZE)){
+    if(!strncmp(magic2, test_magic, MAGIC_SIZE)){
     	EEPROM.get(reinterpret_cast<int>(&(eeprom_base->FAN1_CURING_SPEED)), FAN1_CURING_SPEED);
     	EEPROM.get(reinterpret_cast<int>(&(eeprom_base->FAN1_DRYING_SPEED)), FAN1_DRYING_SPEED);
     	EEPROM.get(reinterpret_cast<int>(&(eeprom_base->FAN1_PREHEAT_SPEED)), FAN1_PREHEAT_SPEED);
@@ -1974,7 +1982,6 @@ void button_press() {
                 //fan1_duty = FAN1_MENU_SPEED;
                 //fan2_duty = FAN2_MENU_SPEED;
               } else {
-            	//OCR3A = min_washing_speed;
                 run_motor();
                 speed_configuration();
                 running_count = 0;
