@@ -429,7 +429,7 @@ void motor_configuration() {
 
 void setup() {
 
-  //Serial.begin(115200);
+  //SerialUSB.begin(115200);
   outputchip.begin();
   outputchip.pinMode(0B0000000010010111);
   outputchip.pullupMode(0B0000000010000011);
