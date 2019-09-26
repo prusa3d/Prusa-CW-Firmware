@@ -115,7 +115,9 @@ typedef struct
 
 } eeprom_t;
 
+static_assert(sizeof(eeprom_t) <= EEPROM_OFFSET, "eeprom_t doesn't fit in it's reserved space in the memory.");
 static constexpr eeprom_t * eeprom_base = reinterpret_cast<eeprom_t*> (E2END + 1 - EEPROM_OFFSET);
+
 
 byte washing_speed = 10;
 byte curing_speed = 1;
@@ -276,7 +278,7 @@ const char magic2[MAGIC_SIZE] = "CURW1";
 
 
 static void motor_configuration();
-static void read_config(unsigned int address);
+static void read_config();
 static void fan_tacho1();
 static void fan_tacho2();
 static void fan_tacho3();
@@ -431,7 +433,7 @@ void setup() {
   outputchip.begin();
   outputchip.pinMode(0B0000000010010111);
   outputchip.pullupMode(0B0000000010000011);
-  read_config(EEPROM.length() - EEPROM_OFFSET);
+  read_config();
 
   outputchip.digitalWrite(EN_PIN, HIGH); // disable driver
 
@@ -492,7 +494,7 @@ void setup() {
   menu_move(true);
 }
 
-void write_config(unsigned int address) {		//useless address param
+void write_config() {
   EEPROM.put(eeprom_base->magic, magic2);
   EEPROM.put(eeprom_base->washing_speed, washing_speed);
   EEPROM.put(eeprom_base->curing_speed, curing_speed);
@@ -516,11 +518,19 @@ void write_config(unsigned int address) {		//useless address param
   EEPROM.put(eeprom_base->resin_preheat_run_time, resin_preheat_run_time);
   EEPROM.put(eeprom_base->resin_target_temp_celsius, resin_target_temp_celsius);
 }
-
-void read_config(unsigned int address) {
+/*! \brief This function loads user-defined values from eeprom.
+ *
+ *
+ *  It loads different amount of variables, depending on the magic variable from eeprom.
+ *  If magic is not set in the eeprom, variables keep their default values.
+ *  If magic from eeprom is equal to magic, it loads only variables customizable in older firmware and keeps new variables default.
+ *  If magic from eeprom is equal to magic2, it loads all variables including those added in new firmware.
+ *  It won't load undefined (new) variables after flashing new firmware.
+ */
+void read_config() {
   char test_magic[MAGIC_SIZE];
   EEPROM.get(eeprom_base->magic, test_magic);
-  if (!strncmp(magic2, test_magic, MAGIC_SIZE)) {
+  if (!strncmp(magic2, test_magic, MAGIC_SIZE) || !strncmp(magic, test_magic, MAGIC_SIZE)) {
     EEPROM.get(eeprom_base->washing_speed, washing_speed);
     EEPROM.get(eeprom_base->curing_speed, curing_speed);
     EEPROM.get(eeprom_base->washing_run_time, washing_run_time);
@@ -534,7 +544,7 @@ void read_config(unsigned int address) {
     EEPROM.get(eeprom_base->target_temp_fahrenheit, target_temp_fahrenheit);
     EEPROM.get(eeprom_base->SI_unit_system, SI_unit_system);
     EEPROM.get(eeprom_base->heater_failure, heater_failure);
-    if(!strncmp(magic, test_magic, MAGIC_SIZE)){
+    if(!strncmp(magic2, test_magic, MAGIC_SIZE)){
     	EEPROM.get(eeprom_base->FAN1_CURING_SPEED, FAN1_CURING_SPEED);
     	EEPROM.get(eeprom_base->FAN1_DRYING_SPEED, FAN1_DRYING_SPEED);
     	EEPROM.get(eeprom_base->FAN1_PREHEAT_SPEED, FAN1_PREHEAT_SPEED);
@@ -1726,31 +1736,31 @@ void button_press() {
 
     case LED_INTENSITY:
       menu_position = 6;
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       state = SETTINGS;
       break;
 
     case FAN1_CURING:
       menu_position = 1;
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       state = FANS;
       break;
 
     case FAN1_DRYING:
       menu_position = 2;
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       state = FANS;
       break;
 
     case FAN2_CURING:
       menu_position = 3;
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       state = FANS;
       break;
 
     case FAN2_DRYING:
       menu_position = 4;
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       state = FANS;
       break;
 
@@ -1821,12 +1831,12 @@ void button_press() {
       }
       break;
     case SPEED_CURING:
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       state = SPEED_STATE;
       break;
 
     case SPEED_WASHING:
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       state = SPEED_STATE;
       break;
 
@@ -1860,32 +1870,32 @@ void button_press() {
       }
       break;
     case BEEP:
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       menu_position = 2;
       state = SOUND_SETTINGS;
       break;
     case SOUND:
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       menu_position = 1;
       state = SOUND_SETTINGS;
       break;
     case TIME_CURING:
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       menu_position = 1;
       state = TIME;
       break;
     case TIME_DRYING:
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       menu_position = 2;
       state = TIME;
       break;
     case TIME_WASHING:
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       menu_position = 3;
       state = TIME;
       break;
     case TIME_RESIN_PREHEAT:
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       menu_position = 4;
       state = TIME;
       break;
@@ -1894,7 +1904,7 @@ void button_press() {
       state = SETTINGS;
       break;
     case RUN_MODE:
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       if (!long_press) {
         menu_position = 2;
         state = SETTINGS;
@@ -1906,23 +1916,23 @@ void button_press() {
       }
       break;
     case PREHEAT_ENABLE:
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       menu_position = 1;
       state = PREHEAT;
       break;
     case TARGET_TEMP:
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       menu_position = 2;
       state = PREHEAT;
       break;
 
     case RESIN_TARGET_TEMP:
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       menu_position = 3;
       state = PREHEAT;
       break;
     case UNIT_SYSTEM:
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       menu_position = 8;
       state = SETTINGS;
       break;
@@ -2809,7 +2819,7 @@ void fan_heater_rpm() {
       heater_error = false;
       heater_failure = false;
     }
-    write_config(EEPROM.length() - EEPROM_OFFSET);
+    write_config();
     fan3_tacho_last_count = fan3_tacho_count;
 
     ams_counter = 0;
