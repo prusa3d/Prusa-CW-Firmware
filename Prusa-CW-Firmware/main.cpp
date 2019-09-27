@@ -17,6 +17,7 @@ using Ter = PrusaLcd::Terminator;
 
 #define EEPROM_OFFSET 128
 #define MAGIC_SIZE 6
+#define ROTATION_START 200
 
 typedef char Serial_num_t[20]; //!< Null terminated string for serial number
 
@@ -84,6 +85,7 @@ bool pinda_therm = 0; // 0 - 100K thermistor - ATC Semitec 104GT-2/ 1 - PINDA th
 
 unsigned long time_now = 0;
 unsigned long therm_read_time_now = 0;
+unsigned long uni_speed_var;		//double buffering of OCR3A register
 
 bool button_released = false;
 volatile uint8_t rotary_diff = 128;
@@ -337,7 +339,9 @@ void setupTimer3() { //timmer for stepper move
   TCCR3B = 0;
   TCNT3 = 0;
   // 1 Hz (16000000/((15624+1)*1024))
-  OCR3A = 200; // 15-50
+  uni_speed_var = 200; // 15-50
+  SerialUSB.print(uni_speed_var);
+  SerialUSB.write('\n');
   // CTC
   TCCR3B |= (1 << WGM32);
   // Prescaler 1024
@@ -346,8 +350,6 @@ void setupTimer3() { //timmer for stepper move
   TIMSK3 |= (1 << OCIE3A);
   interrupts();
 }
-
-
 
 void enable_timer3() {
 
@@ -398,13 +400,16 @@ void speed_configuration() {
   if (curing_mode == true) {
     set_curing_speed = map(curing_speed, 1, 10, min_curing_speed, max_curing_speed);
     motor_configuration();
-    OCR3A = set_curing_speed;
+    uni_speed_var = set_curing_speed;
+    //SerialUSB.print(OCR3A);
+    //SerialUSB.write('s');
+    //SerialUSB.write('\n');
   }
 
   else {
     set_washing_speed = map(washing_speed, 1, 10, min_washing_speed, max_washing_speed);
     motor_configuration();
-    var_speed = min_washing_speed;
+    var_speed = ROTATION_START;
     speed_up = true;
   }
 }
@@ -413,15 +418,20 @@ void motor_configuration() {
 
   if (curing_mode == true) {
     myStepper.set_IHOLD_IRUN(10, 10, 0);
-    setupTimer3();
-    OCR3A = min_curing_speed; //smaller = faster
+    //setupTimer3();
+    uni_speed_var = min_curing_speed; //smaller = faster
+    //SerialUSB.print(uni_speed_var);
+    //SerialUSB.write('m');
+    //SerialUSB.write('\n');
     myStepper.set_mres(256);
   }
 
   else {
     myStepper.set_IHOLD_IRUN(31, 31, 5);
-    setupTimer3();
-    OCR3A = 100; //smaller = faster
+    //setupTimer3();
+    uni_speed_var = ROTATION_START; //smaller = faster
+    SerialUSB.print(uni_speed_var);
+    SerialUSB.write('\n');
     myStepper.set_mres(16);
 
   }
@@ -811,8 +821,13 @@ void loop() {
     if (us_now - us_last > 50) {
       if (var_speed >= set_washing_speed) {
         var_speed--;
-        setupTimer3();
-        OCR3A = var_speed;
+        //setupTimer3();
+        uni_speed_var = var_speed;
+        SerialUSB.print(uni_speed_var);
+        SerialUSB.write('.');
+        SerialUSB.print(set_washing_speed);
+        SerialUSB.write('.');
+        SerialUSB.write('\n');
         us_last = us_now;
       }
     }
@@ -2050,6 +2065,8 @@ ISR(TIMER3_COMPA_vect) { // timmer for stepper move
     digitalWrite(STEP_PIN, LOW);
     delayMicroseconds(2);
   }
+
+	OCR3A = uni_speed_var;
 }
 
 //ISR(TIMER1_COMPA_vect) // timmer for encoder reading
