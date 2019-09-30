@@ -18,6 +18,7 @@ using Ter = PrusaLcd::Terminator;
 #define EEPROM_OFFSET 128
 #define MAGIC_SIZE 6
 #define ROTATION_START 200
+//#define SERIAL_COM_DEBUG	//!< Set up for communication through USB
 
 typedef char Serial_num_t[20]; //!< Null terminated string for serial number
 
@@ -340,8 +341,10 @@ void setupTimer3() { //timmer for stepper move
   TCNT3 = 0;
   // 1 Hz (16000000/((15624+1)*1024))
   uni_speed_var = 200; // 15-50
+#ifdef SERIAL_COM_DEBUG
   SerialUSB.print(uni_speed_var);
   SerialUSB.write('\n');
+#endif
   // CTC
   TCCR3B |= (1 << WGM32);
   // Prescaler 1024
@@ -401,9 +404,10 @@ void speed_configuration() {
     set_curing_speed = map(curing_speed, 1, 10, min_curing_speed, max_curing_speed);
     motor_configuration();
     uni_speed_var = set_curing_speed;
-    //SerialUSB.print(OCR3A);
-    //SerialUSB.write('s');
-    //SerialUSB.write('\n');
+#ifdef SERIAL_COM_DEBUG
+    SerialUSB.print(OCR3A);
+    SerialUSB.write('\n');
+#endif
   }
 
   else {
@@ -420,9 +424,10 @@ void motor_configuration() {
     myStepper.set_IHOLD_IRUN(10, 10, 0);
     //setupTimer3();
     uni_speed_var = min_curing_speed; //smaller = faster
-    //SerialUSB.print(uni_speed_var);
-    //SerialUSB.write('m');
-    //SerialUSB.write('\n');
+#ifdef SERIAL_COM_DEBUG
+    SerialUSB.print(uni_speed_var);
+    SerialUSB.write('\n');
+#endif
     myStepper.set_mres(256);
   }
 
@@ -430,8 +435,10 @@ void motor_configuration() {
     myStepper.set_IHOLD_IRUN(31, 31, 5);
     //setupTimer3();
     uni_speed_var = ROTATION_START; //smaller = faster
+#ifdef SERIAL_COM_DEBUG
     SerialUSB.print(uni_speed_var);
     SerialUSB.write('\n');
+#endif
     myStepper.set_mres(16);
 
   }
@@ -820,14 +827,16 @@ void loop() {
     unsigned long us_now = millis();
     if (us_now - us_last > 50) {
       if (var_speed >= set_washing_speed) {
+    	  if(var_speed > min_washing_speed + 5)
+    		  var_speed -= 4;
         var_speed--;
-        //setupTimer3();
         uni_speed_var = var_speed;
+#ifdef SERIAL_COM_DEBUG
         SerialUSB.print(uni_speed_var);
         SerialUSB.write('.');
         SerialUSB.print(set_washing_speed);
-        SerialUSB.write('.');
         SerialUSB.write('\n');
+#endif
         us_last = us_now;
       }
     }
