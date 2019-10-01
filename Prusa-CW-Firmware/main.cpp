@@ -11,6 +11,7 @@
 #include <USBCore.h>
 #include "PrusaLcd.h"
 #include "MenuList.h"
+#include "Selftest.h"
 //#include "LiquidCrystal_Prusa.h"
 
 using Ter = PrusaLcd::Terminator;
@@ -20,6 +21,8 @@ typedef char Serial_num_t[20]; //!< Null terminated string for serial number
 
 Countimer tDown;
 Countimer tUp;
+
+selftest_t selftest;
 
 thermistor therm1(A4, 5);
 
@@ -61,7 +64,8 @@ enum menu_state {
   BEEP,
   INFO,
   CONFIRM,
-  ERROR
+  ERROR,
+  SELFTEST
 };
 
 #define FW_VERSION  "2.1.4"
@@ -715,6 +719,36 @@ void loop() {
   tDown.run();
   tUp.run();
 
+  if(state == SELFTEST){
+  	  switch(selftest.phase){
+  	  case 1:
+  		    selftest.measured_state = outputchip.digitalRead(COVER_OPEN_PIN) == HIGH ? true : false;
+  		    if(selftest.first_loop){
+  		    	selftest.prev_measured_state = selftest.measured_state;
+  		    	selftest.first_loop = false;
+  	        }
+  	  	    if(selftest.measured_state != selftest.prev_measured_state){
+  	  	    	selftest.prev_measured_state = selftest.measured_state;
+  	  	    	selftest.counter++;
+  	  	    }
+  	  		break;
+
+  	  case 2:
+  		    selftest.measured_state = outputchip.digitalRead(WASH_DETECT_PIN) == HIGH ? true : false;
+  		    if(selftest.first_loop){
+  		  		    selftest.prev_measured_state = selftest.measured_state;
+  		  		    selftest.first_loop = false;
+  		  	}
+  		  	if(selftest.measured_state != selftest.prev_measured_state){
+  		  	  	    selftest.prev_measured_state = selftest.measured_state;
+  		  	  	    selftest.counter++;
+  		  	}
+  		  	break;
+  	  default:
+  		  break;
+  	  }
+    }
+
   if (heater_error) {
     if (heat_to_target_temp) {
       tDown.stop();
@@ -888,19 +922,21 @@ void menu_move(bool sound_echo) {
           state = MENU;
           break;
         case 1:
-          generic_menu(3, curing_mode ? "Start curing       " : "Start washing      ", "Run-time",
-                  is_error() ? "Settings ->!!" : "Settings          ");
-          lcd_print_right(1);
-          lcd_print_right(2);
+        	generic_menu(4, curing_mode ? "Start curing       " : "Start washing      ", "Run-time",
+        	             is_error() ? "Settings ->!!" : "Settings          ", "Selftest");
+        	lcd_print_right(1);
+        	lcd_print_right(2);
+        	lcd_print_right(3);
 
           state = MENU;
           break;
         case 0:
         default:
-          generic_menu(3, curing_mode ? "Start drying/curing" : "Start washing", "Run-time",
-                  is_error() ? "Settings ->!!" : "Settings          ");
+        	generic_menu(4, curing_mode ? "Start drying/curing" : "Start washing", "Run-time",
+        	             is_error() ? "Settings ->!!" : "Settings          ", "Selftest");
           lcd_print_right(1);
           lcd_print_right(2);
+          lcd_print_right(3);
 
           state = MENU;
           break;
@@ -1247,6 +1283,45 @@ void menu_move(bool sound_echo) {
       lcd.print("Press to continue");
       break;
 
+    case SELFTEST:
+          switch (selftest.phase){
+          case 0:
+        	  generic_menu(2, "Back              ", "Continue          ");
+        	  lcd_print_back();
+        	  lcd_print_right(1);
+        	  break;
+
+          case 1:
+        	  lcd.setCursor(1, 0);
+        	  if(selftest.counter < 5){
+        		  if(!selftest.measured_state)
+        		  	  lcd.print("Open the cover");
+        	  	  else
+        		  	  lcd.print("Close the cover");
+        	  } else {
+        		  lcd.print("Test Successful");
+        		  selftest.cover_test = true;
+        	  }
+        	  break;
+
+          case 2:
+        	  lcd.setCursor(1, 0);
+        	  if(selftest.counter < 5){
+        	       if(!selftest.measured_state)
+        	      		  	  lcd.print("Remove IPA tank");
+        	      	  	  else
+        	      		  	  lcd.print("Insert IPA tank");
+        	  } else {
+        	        lcd.print("Test Successful");
+        	      	selftest.tank_test = true;
+        	  }
+        	  break;
+
+          default:
+        	  break;
+          }
+          break;
+
     default:
       break;
   }
@@ -1591,6 +1666,11 @@ void button_press() {
         case 2:
           menu_position = 0;
           state = SETTINGS;
+          break;
+
+        case 3:
+          menu_position = 0;
+          state = SELFTEST;
           break;
 
         default:
@@ -1990,6 +2070,34 @@ void button_press() {
       menu_position = 0;
       state = RUN_MENU;
       break;
+
+    case SELFTEST:
+        	switch (selftest.phase) {
+        	        case 0:
+        	        	if(menu_position){
+        	        		selftest.phase++;
+        	        	} else
+        	        		state = MENU;	//	v SETTINGS?
+        	        	break;
+
+        	        case 1:
+        	        	//if(selftest.cover_check_test)
+        	        	selftest.phase++;
+        	        	selftest.cleanUp();
+        	        	state = MENU;
+        	        	break;
+        	        case 2:
+        	            //if(selftest.cover_check_test)
+        	            selftest.phase = 0;
+        	            selftest.cleanUp();
+        	            state = MENU;
+        	            break;
+
+        	        default:
+        	        	break;
+        	}
+        	menu_position = 0;
+        	break;
 
     default:
       break;
