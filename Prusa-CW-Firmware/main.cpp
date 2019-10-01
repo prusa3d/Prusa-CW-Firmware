@@ -11,6 +11,7 @@
 #include <USBCore.h>
 #include "PrusaLcd.h"
 #include "MenuList.h"
+#include "SpeedControl.h"
 //#include "LiquidCrystal_Prusa.h"
 
 using Ter = PrusaLcd::Terminator;
