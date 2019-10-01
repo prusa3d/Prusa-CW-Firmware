@@ -71,7 +71,7 @@ enum menu_state {
 #define FW_VERSION  "2.1.4"
 volatile uint16_t *const bootKeyPtr = (volatile uint16_t *)(RAMEND - 1);
 
-const unsigned int rotation_start = 200;
+static const unsigned int rotation_start = 200;
 menu_state state = MENU;
 
 long lastJob = 0;
