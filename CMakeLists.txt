@@ -13,6 +13,11 @@ SET(CPPTUNING "-fno-exceptions -fno-threadsafe-statics")
 SET(OPT "-Os -ffunction-sections -fdata-sections -flto -fno-fat-lto-objects")
 SET(MCU "-mmcu=atmega32u4")
 
+# This compile definition is redundant,
+# it is already defined by compiler when it is passed argument ${MCU}
+# it is just workaround to have this symbol defined in Eclipse CDT
+SET(MCU_DUPLICATE "__AVR_ATmega32U4__")
+
 add_compile_definitions(
 	F_CPU=16000000
 	ARDUINO=10805
@@ -20,6 +25,7 @@ add_compile_definitions(
 	USB_PID=0x0008
 	USB_MANUFACTURER="Prusa Research prusa3d.com"
 	USB_PRODUCT="Original Prusa CW1"
+	${MCU_DUPLICATE}
 )
 
 SET(CFLAGS "${OPT} ${WARN} ${CSTANDARD} ${MCU}")
