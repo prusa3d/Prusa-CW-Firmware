@@ -17,7 +17,6 @@ using Ter = PrusaLcd::Terminator;
 
 #define EEPROM_OFFSET 128
 #define MAGIC_SIZE 6
-#define ROTATION_START 200
 //#define SERIAL_COM_DEBUG	//!< Set up for communication through USB
 
 typedef char Serial_num_t[20]; //!< Null terminated string for serial number
