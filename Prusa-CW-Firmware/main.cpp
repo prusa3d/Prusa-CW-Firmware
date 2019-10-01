@@ -71,7 +71,7 @@ enum menu_state {
 #define FW_VERSION  "2.1.4"
 volatile uint16_t *const bootKeyPtr = (volatile uint16_t *)(RAMEND - 1);
 
-const unsigned int ROTATION_START = 200;
+const unsigned int rotation_start = 200;
 menu_state state = MENU;
 
 long lastJob = 0;
@@ -413,8 +413,8 @@ void speed_configuration() {
   else {
     set_washing_speed = map(washing_speed, 1, 10, min_washing_speed, max_washing_speed);
     motor_configuration();
-    var_speed = ROTATION_START;
     speed_up = true;
+    var_speed = rotation_start;
   }
 }
 
@@ -434,7 +434,7 @@ void motor_configuration() {
   else {
     myStepper.set_IHOLD_IRUN(31, 31, 5);
     //setupTimer3();
-    uni_speed_var = ROTATION_START; //smaller = faster
+    uni_speed_var = rotation_start; //smaller = faster
 #ifdef SERIAL_COM_DEBUG
     SerialUSB.print(uni_speed_var);
     SerialUSB.write('\n');
