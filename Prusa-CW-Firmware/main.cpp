@@ -72,6 +72,7 @@ enum menu_state {
 #define FW_VERSION  "2.1.4"
 volatile uint16_t *const bootKeyPtr = (volatile uint16_t *)(RAMEND - 1);
 
+const unsigned int ROTATION_START = 200;
 menu_state state = MENU;
 
 long lastJob = 0;
@@ -86,7 +87,7 @@ bool pinda_therm = 0; // 0 - 100K thermistor - ATC Semitec 104GT-2/ 1 - PINDA th
 
 unsigned long time_now = 0;
 unsigned long therm_read_time_now = 0;
-unsigned long uni_speed_var;		//double buffering of OCR3A register
+unsigned long uni_speed_var = ROTATION_START;		//double buffering of OCR3A register
 
 bool button_released = false;
 volatile uint8_t rotary_diff = 128;
@@ -446,7 +447,6 @@ void motor_configuration() {
 
 void setup() {
 
-  //Serial.begin(115200);
   outputchip.begin();
   outputchip.pinMode(0B0000000010010111);
   outputchip.pullupMode(0B0000000010000011);
