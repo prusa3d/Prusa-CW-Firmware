@@ -86,7 +86,7 @@ bool pinda_therm = 0; // 0 - 100K thermistor - ATC Semitec 104GT-2/ 1 - PINDA th
 
 unsigned long time_now = 0;
 unsigned long therm_read_time_now = 0;
-unsigned long uni_speed_var = ROTATION_START;		//double buffering of OCR3A register
+unsigned long uni_speed_var = rotation_start;		//double buffering of OCR3A register
 
 bool button_released = false;
 volatile uint8_t rotary_diff = 128;
