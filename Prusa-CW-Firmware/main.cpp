@@ -722,27 +722,13 @@ void loop() {
   if(state == SELFTEST){
   	  switch(selftest.phase){
   	  case 1:
-  		    selftest.measured_state = outputchip.digitalRead(COVER_OPEN_PIN) == HIGH ? true : false;
-  		    if(selftest.first_loop){
-  		    	selftest.prev_measured_state = selftest.measured_state;
-  		    	selftest.first_loop = false;
-  	        }
-  	  	    if(selftest.measured_state != selftest.prev_measured_state){
-  	  	    	selftest.prev_measured_state = selftest.measured_state;
-  	  	    	selftest.counter++;
-  	  	    }
+  		    selftest.measured_state = outputchip.digitalRead(COVER_OPEN_PIN) == HIGH;
+  		    selftest.universal_pin_test();
   	  		break;
 
   	  case 2:
-  		    selftest.measured_state = outputchip.digitalRead(WASH_DETECT_PIN) == HIGH ? true : false;
-  		    if(selftest.first_loop){
-  		  		    selftest.prev_measured_state = selftest.measured_state;
-  		  		    selftest.first_loop = false;
-  		  	}
-  		  	if(selftest.measured_state != selftest.prev_measured_state){
-  		  	  	    selftest.prev_measured_state = selftest.measured_state;
-  		  	  	    selftest.counter++;
-  		  	}
+  		    selftest.measured_state = outputchip.digitalRead(WASH_DETECT_PIN) == HIGH;
+  		    selftest.universal_pin_test();
   		  	break;
   	  default:
   		  break;
@@ -1284,43 +1270,15 @@ void menu_move(bool sound_echo) {
       break;
 
     case SELFTEST:
-          switch (selftest.phase){
-          case 0:
-        	  generic_menu(2, "Back              ", "Continue          ");
-        	  lcd_print_back();
-        	  lcd_print_right(1);
-        	  break;
-
-          case 1:
+        if(selftest.phase == 0){
+        generic_menu(2, "Back              ", "Continue          ");
+        lcd_print_back();
+        lcd_print_right(1);
+        } else {
         	  lcd.setCursor(1, 0);
-        	  if(selftest.counter < 5){
-        		  if(!selftest.measured_state)
-        		  	  lcd.print("Open the cover");
-        	  	  else
-        		  	  lcd.print("Close the cover");
-        	  } else {
-        		  lcd.print("Test Successful");
-        		  selftest.cover_test = true;
-        	  }
-        	  break;
-
-          case 2:
-        	  lcd.setCursor(1, 0);
-        	  if(selftest.counter < 5){
-        	       if(!selftest.measured_state)
-        	      		  	  lcd.print("Remove IPA tank");
-        	      	  	  else
-        	      		  	  lcd.print("Insert IPA tank");
-        	  } else {
-        	        lcd.print("Test Successful");
-        	      	selftest.tank_test = true;
-        	  }
-        	  break;
-
-          default:
-        	  break;
-          }
-          break;
+        	  lcd.print(selftest.print());
+        }
+        break;
 
     default:
       break;
