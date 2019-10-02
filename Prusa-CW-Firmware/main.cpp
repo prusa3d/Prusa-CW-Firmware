@@ -341,10 +341,6 @@ void setupTimer3() { //timmer for stepper move
   TCNT3 = 0;
   // 1 Hz (16000000/((15624+1)*1024))
   OCR3A = 200; // 15-50
-#ifdef SERIAL_COM_DEBUG
-  SerialUSB.print(uni_speed_var);
-  SerialUSB.write('\n');
-#endif
   // CTC
   TCCR3B |= (1 << WGM32);
   // Prescaler 1024
