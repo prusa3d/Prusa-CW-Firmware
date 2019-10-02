@@ -26,6 +26,8 @@ typedef char Serial_num_t[20]; //!< Null terminated string for serial number
 Countimer tDown;
 Countimer tUp;
 
+speed_control_t speed_control;
+
 thermistor therm1(A4, 5);
 
 Trinamic_TMC2130 myStepper(CS_PIN);
@@ -72,7 +74,6 @@ enum menu_state {
 #define FW_VERSION  "2.1.4"
 volatile uint16_t *const bootKeyPtr = (volatile uint16_t *)(RAMEND - 1);
 
-static const unsigned int rotation_start = 200;
 menu_state state = MENU;
 
 long lastJob = 0;
@@ -82,12 +83,10 @@ uint8_t last_menu_position = 0;
 byte max_menu_position = 0;
 bool redraw_menu = true;
 bool redraw_ms = true;
-bool speed_up = false;
 bool pinda_therm = 0; // 0 - 100K thermistor - ATC Semitec 104GT-2/ 1 - PINDA thermistor
 
 unsigned long time_now = 0;
 unsigned long therm_read_time_now = 0;
-unsigned long uni_speed_var = rotation_start;		//double buffering of OCR3A register
 
 bool button_released = false;
 volatile uint8_t rotary_diff = 128;
@@ -123,8 +122,6 @@ static_assert(sizeof(eeprom_t) <= EEPROM_OFFSET, "eeprom_t doesn't fit in it's r
 
 static constexpr eeprom_t const * eeprom_base = reinterpret_cast<eeprom_t*> (E2END + 1 - EEPROM_OFFSET);
 
-byte washing_speed = 10;
-byte curing_speed = 1;
 byte washing_run_time = 4;
 byte curing_run_time = 3;
 byte drying_run_time = 3;
@@ -137,13 +134,6 @@ byte target_temp_fahrenheit = 95;
 byte resin_target_temp_celsius = 30;
 byte curing_machine_mode;
 byte SI_unit_system = 1;
-
-int max_washing_speed = 16; //15 //smaller = faster
-int min_washing_speed = 70; //100 //smaller = faster
-int max_curing_speed = 25; //50 //smaller = faster
-int min_curing_speed = 220; //smaller = faster
-int set_washing_speed;
-int set_curing_speed;
 
 byte max_preheat_run_time = 30;
 byte cover_check_enabled = 1;
@@ -208,7 +198,6 @@ bool cover_open = false;
 bool gastro_pan = false;
 bool paused_time = false;
 bool led_start = false;
-int var_speed = 0;
 int running_count = 0;
 
 long thermNom_1 = 100000;
@@ -341,11 +330,7 @@ void setupTimer3() { //timmer for stepper move
   TCCR3B = 0;
   TCNT3 = 0;
   // 1 Hz (16000000/((15624+1)*1024))
-  uni_speed_var = 200; // 15-50
-#ifdef SERIAL_COM_DEBUG
-  SerialUSB.print(uni_speed_var);
-  SerialUSB.write('\n');
-#endif
+  OCR3A = 200;
   // CTC
   TCCR3B |= (1 << WGM32);
   // Prescaler 1024
@@ -399,49 +384,14 @@ void stop_heater() {
 
 }
 
-void speed_configuration() {
-
-  if (curing_mode == true) {
-    set_curing_speed = map(curing_speed, 1, 10, min_curing_speed, max_curing_speed);
-    motor_configuration();
-    uni_speed_var = set_curing_speed;
-#ifdef SERIAL_COM_DEBUG
-    SerialUSB.print(OCR3A);
-    SerialUSB.write('\n');
-#endif
-  }
-
-  else {
-    set_washing_speed = map(washing_speed, 1, 10, min_washing_speed, max_washing_speed);
-    motor_configuration();
-    speed_up = true;
-    var_speed = rotation_start;
-  }
-}
-
 void motor_configuration() {
 
   if (curing_mode == true) {
     myStepper.set_IHOLD_IRUN(10, 10, 0);
-    //setupTimer3();
-    uni_speed_var = min_curing_speed; //smaller = faster
-#ifdef SERIAL_COM_DEBUG
-    SerialUSB.print(uni_speed_var);
-    SerialUSB.write('\n');
-#endif
     myStepper.set_mres(256);
-  }
-
-  else {
+  } else {
     myStepper.set_IHOLD_IRUN(31, 31, 5);
-    //setupTimer3();
-    uni_speed_var = rotation_start; //smaller = faster
-#ifdef SERIAL_COM_DEBUG
-    SerialUSB.print(uni_speed_var);
-    SerialUSB.write('\n');
-#endif
     myStepper.set_mres(16);
-
   }
 }
 
@@ -513,8 +463,8 @@ void setup() {
 
 void write_config() {
   EEPROM.put(reinterpret_cast<int>(&(eeprom_base->magic)), magic2);
-  EEPROM.put(reinterpret_cast<int>(&(eeprom_base->washing_speed)), washing_speed);
-  EEPROM.put(reinterpret_cast<int>(&(eeprom_base->curing_speed)), curing_speed);
+  EEPROM.put(reinterpret_cast<int>(&(eeprom_base->washing_speed)), speed_control.washing_speed);
+  EEPROM.put(reinterpret_cast<int>(&(eeprom_base->curing_speed)), speed_control.curing_speed);
   EEPROM.put(reinterpret_cast<int>(&(eeprom_base->washing_run_time)), washing_run_time);
   EEPROM.put(reinterpret_cast<int>(&(eeprom_base->curing_run_time)), curing_run_time);
   EEPROM.put(reinterpret_cast<int>(&(eeprom_base->finish_beep_mode)), finish_beep_mode);
@@ -548,8 +498,8 @@ void read_config() {
   char test_magic[MAGIC_SIZE];
   EEPROM.get(reinterpret_cast<int>(&(eeprom_base->magic)), test_magic);
   if (!strncmp(magic2, test_magic, MAGIC_SIZE) || !strncmp(magic, test_magic, MAGIC_SIZE)) {
-    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->washing_speed)), washing_speed);
-    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->curing_speed)), curing_speed);
+    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->washing_speed)), speed_control.washing_speed);
+    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->curing_speed)), speed_control.curing_speed);
     EEPROM.get(reinterpret_cast<int>(&(eeprom_base->washing_run_time)), washing_run_time);
     EEPROM.get(reinterpret_cast<int>(&(eeprom_base->curing_run_time)), curing_run_time);
     EEPROM.get(reinterpret_cast<int>(&(eeprom_base->finish_beep_mode)), finish_beep_mode);
@@ -823,28 +773,17 @@ void loop() {
     redraw_menu = true;
   }
 
-  if (speed_up == true) { //stepper motor speed up function
+  if (speed_control.speed_up == true) { //stepper motor speed up function
     unsigned long us_now = millis();
-    if (us_now - us_last > 50) {
-      if (var_speed >= set_washing_speed) {
-    	  if(var_speed > min_washing_speed + 5)
-    		  var_speed -= 4;
-        var_speed--;
-        uni_speed_var = var_speed;
-#ifdef SERIAL_COM_DEBUG
-        SerialUSB.print(uni_speed_var);
-        SerialUSB.write('.');
-        SerialUSB.print(set_washing_speed);
-        SerialUSB.write('\n');
-#endif
-        us_last = us_now;
-      }
+    if (us_now - us_last > 50){
+    	speed_control.speeding_up();
+    	us_last = us_now;
     }
-    if (var_speed == set_washing_speed) {
-      speed_up = false;
-      myStepper.set_IHOLD_IRUN(10, 10, 5);
+    if (speed_control.speed_up == false){
+    	myStepper.set_IHOLD_IRUN(10, 10, 5);
     }
   }
+
   // rotary "click" is 4 "micro steps"
   if (rotary_diff <= 124 || rotary_diff >= 132 || redraw_menu) { //124, 132
     menu_move(true);
@@ -982,13 +921,13 @@ void menu_move(bool sound_echo) {
 
     case SPEED_CURING:
 
-      generic_value("Curing speed", &curing_speed, 1, 10, "/10", 0);
+      generic_value("Curing speed", &speed_control.curing_speed, 1, 10, "/10", 0);
 
       break;
 
     case SPEED_WASHING:
 
-      generic_value("Washing speed", &washing_speed, 1, 10, "/10", 0);
+      generic_value("Washing speed", &speed_control.washing_speed, 1, 10, "/10", 0);
 
       break;
 
@@ -1339,7 +1278,8 @@ void machine_running() {
     }
     if (cover_open == true) {
       stop_motor();
-      speed_configuration();
+      motor_configuration();
+      speed_control.speed_configuration(curing_mode);
       stop_heater(); // turn off heat fan
       outputchip.digitalWrite(LED_RELE_PIN, LOW); // turn off led
       digitalWrite(LED_PWM_PIN, LOW);
@@ -1549,7 +1489,7 @@ void button_press() {
 
           if (curing_mode) { // curing_mode
             motor_configuration();
-            speed_configuration();
+            speed_control.speed_configuration(curing_mode);
             running_count = 0;
 
             switch (curing_machine_mode) {
@@ -1627,9 +1567,9 @@ void button_press() {
             }
           } else { // washing_mode
             drying_mode = false;
-            motor_configuration();
             run_motor();
-            speed_configuration();
+            motor_configuration();
+            speed_control.speed_configuration(curing_mode);
             running_count = 0;
             remain = washing_run_time;
             tDown.setCounter(0, remain, 0, tDown.COUNT_DOWN, tDownComplete);
@@ -1980,7 +1920,8 @@ void button_press() {
                 fan2_duty = FAN2_MENU_SPEED;
               } else {
                 run_motor();
-                speed_configuration();
+                motor_configuration();
+                speed_control.speed_configuration(curing_mode);
                 running_count = 0;
 
                 if (!heat_to_target_temp) {
@@ -2007,7 +1948,8 @@ void button_press() {
                 //fan2_duty = FAN2_MENU_SPEED;
               } else {
                 run_motor();
-                speed_configuration();
+            	motor_configuration();
+                speed_control.speed_configuration(curing_mode);
                 running_count = 0;
 
                 fan1_duty = FAN1_WASHING_SPEED;
@@ -2068,14 +2010,14 @@ void button_press() {
 
 ISR(TIMER3_COMPA_vect) { // timmer for stepper move
 
+	OCR3A = speed_control.uni_speed_var;
+
   if (motor_running == true) {
     digitalWrite(STEP_PIN, HIGH);
     delayMicroseconds(2);
     digitalWrite(STEP_PIN, LOW);
     delayMicroseconds(2);
   }
-
-	OCR3A = uni_speed_var;
 }
 
 //ISR(TIMER1_COMPA_vect) // timmer for encoder reading
