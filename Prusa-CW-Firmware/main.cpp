@@ -340,7 +340,7 @@ void setupTimer3() { //timmer for stepper move
   TCCR3B = 0;
   TCNT3 = 0;
   // 1 Hz (16000000/((15624+1)*1024))
-  uni_speed_var = 200; // 15-50
+  OCR3A = 200; // 15-50
 #ifdef SERIAL_COM_DEBUG
   SerialUSB.print(uni_speed_var);
   SerialUSB.write('\n');
