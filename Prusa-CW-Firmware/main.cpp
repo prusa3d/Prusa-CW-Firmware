@@ -463,8 +463,8 @@ void setup() {
 
 void write_config() {
   EEPROM.put(eeprom_base->magic, magic2);
-  EEPROM.put(reinterpret_cast<int>(&(eeprom_base->washing_speed)), speed_control.washing_speed);
-  EEPROM.put(reinterpret_cast<int>(&(eeprom_base->curing_speed)), speed_control.curing_speed);
+  EEPROM.put(eeprom_base->washing_speed, speed_control.washing_speed);
+  EEPROM.put(eeprom_base->curing_speed, speed_control.curing_speed);
   EEPROM.put(eeprom_base->washing_run_time, washing_run_time);
   EEPROM.put(eeprom_base->curing_run_time, curing_run_time);
   EEPROM.put(eeprom_base->finish_beep_mode, finish_beep_mode);
@@ -498,8 +498,8 @@ void read_config() {
   char test_magic[MAGIC_SIZE];
   EEPROM.get(eeprom_base->magic, test_magic);
   if (!strncmp(magic2, test_magic, MAGIC_SIZE) || !strncmp(magic, test_magic, MAGIC_SIZE)) {
-    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->washing_speed)), speed_control.washing_speed);
-    EEPROM.get(reinterpret_cast<int>(&(eeprom_base->curing_speed)), speed_control.curing_speed);
+    EEPROM.get(eeprom_base->washing_speed, speed_control.washing_speed);
+    EEPROM.get(eeprom_base->curing_speed, speed_control.curing_speed);
     EEPROM.get(eeprom_base->washing_run_time, washing_run_time);
     EEPROM.get(eeprom_base->curing_run_time, curing_run_time);
     EEPROM.get(eeprom_base->finish_beep_mode, finish_beep_mode);
