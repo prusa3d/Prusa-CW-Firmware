@@ -730,6 +730,12 @@ void loop() {
   		    selftest.measured_state = outputchip.digitalRead(WASH_DETECT_PIN) == HIGH;
   		    selftest.universal_pin_test();
   		  	break;
+  	  case 3:
+  		    selftest.ventilation_test(fan1_error, fan2_error);
+  		  	fan1_duty = selftest.fan1_speed;
+  		    fan2_duty = selftest.fan2_speed;
+  		    break;
+
   	  default:
   		  break;
   	  }
@@ -2046,10 +2052,17 @@ void button_press() {
         	        	break;
         	        case 2:
         	            //if(selftest.cover_check_test)
-        	            selftest.phase = 0;
+        	            selftest.phase++;
         	            selftest.cleanUp();
         	            state = MENU;
         	            break;
+        	        case 3:
+        	        	if(selftest.fan1_speed == 0){
+        	        		selftest.phase = 0;
+        	        		selftest.cleanUp();
+        	        		state = MENU;
+        	        	}
+        	        	break;
 
         	        default:
         	        	break;
