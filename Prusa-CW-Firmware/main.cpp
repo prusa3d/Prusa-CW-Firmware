@@ -26,7 +26,7 @@ typedef char Serial_num_t[20]; //!< Null terminated string for serial number
 Countimer tDown;
 Countimer tUp;
 
-speed_control_t speed_control;
+CSpeedControl speed_control;
 
 thermistor therm1(A4, 5);
 
