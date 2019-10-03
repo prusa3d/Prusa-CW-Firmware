@@ -86,7 +86,9 @@ bool pinda_therm = 0; // 0 - 100K thermistor - ATC Semitec 104GT-2/ 1 - PINDA th
 
 unsigned long time_now = 0;
 unsigned long therm_read_time_now = 0;
-unsigned long uni_speed_var = rotation_start;		//double buffering of OCR3A register
+byte uni_speed_var = rotation_start;		//Universal variable for handling rotation speed in both curing & washing mode.
+											//Used as double buffering of OCR3A, mainly for speeding up.
+											//It is byte because it's passed to OCR3A register in the interuption process.
 
 bool button_released = false;
 volatile uint8_t rotary_diff = 128;
