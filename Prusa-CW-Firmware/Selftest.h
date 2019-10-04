@@ -26,6 +26,8 @@ public:
 	void cleanUp();
 	void measureState(bool tmp);
 	void motor_speed_test();
+	void LED_test();
+	bool isFirstLoop();
 
 	int phase;
 	bool cover_test;

@@ -735,11 +735,25 @@ void loop() {
   		  	fan1_duty = selftest.fan1_speed;
   		    fan2_duty = selftest.fan2_speed;
   		    break;
+  	  case 4:
+  		    if(selftest.isFirstLoop()){
+  		    	outputchip.digitalWrite(LED_RELE_PIN, HIGH); // turn LED on
+  		    	int val;
+  		    	val = map(LED_PWM_VALUE, 0, 100, 0, 255);
+  		    	analogWrite(LED_PWM_PIN, val);
+  		    }
+  		    if(selftest.led_test == false){
+  		    	selftest.LED_test();
+  		    } else {
+		        outputchip.digitalWrite(LED_RELE_PIN, LOW); // turn LED off
+		        digitalWrite(LED_PWM_PIN, LOW);
+  		    }
+  		    break;
 
   	  default:
   		  break;
   	  }
-    }
+  }
 
   if (heater_error) {
     if (heat_to_target_temp) {
@@ -2057,12 +2071,21 @@ void button_press() {
         	            state = MENU;
         	            break;
         	        case 3:
-        	        	if(selftest.fan1_speed == 0){
-        	        		selftest.phase = 0;
+        	        	if(selftest.vent_test){		//only if there's not error
+        	        		selftest.phase++;
         	        		selftest.cleanUp();
         	        		state = MENU;
         	        	}
         	        	break;
+        	        case 4:
+        	        	if(selftest.led_test){
+        	        		selftest.phase = 3;
+        	        		selftest.cleanUp();
+        	        		selftest.vent_test = false;	//Remove this line
+        	        		selftest.led_test = false;
+        	        		state = MENU;
+        	        	}
+        	            break;
 
         	        default:
         	        	break;
