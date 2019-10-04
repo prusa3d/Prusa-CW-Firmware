@@ -188,7 +188,6 @@ unsigned long last_millis = 0;
 unsigned int last_seconds = 0;
 unsigned long led_time_now = 0;
 unsigned long LED_delay = 1000;
-bool motor_running = false;
 bool heater_running = false;
 bool curing_mode = false;
 bool drying_mode = false;
@@ -357,14 +356,14 @@ void disable_timer3() {
 void run_motor() {
 
   outputchip.digitalWrite(EN_PIN, LOW); // enable driver
-  motor_running = true;
+  speed_control.motor_running = true;
 
 }
 
 void stop_motor() {
 
   outputchip.digitalWrite(EN_PIN, HIGH); // disable driver
-  motor_running = false;
+  speed_control.motor_running = false;
 
 }
 
@@ -776,7 +775,7 @@ void loop() {
   if (speed_control.speed_up == true) { //stepper motor speed up function
     unsigned long us_now = millis();
     if (us_now - us_last > 50){
-    	speed_control.speeding_up();
+    	speed_control.acceleration50ms();
     	us_last = us_now;
     }
     if (speed_control.speed_up == false){
@@ -2010,9 +2009,8 @@ void button_press() {
 
 ISR(TIMER3_COMPA_vect) { // timmer for stepper move
 
+  if (speed_control.motor_running == true) {
 	OCR3A = speed_control.uni_speed_var;
-
-  if (motor_running == true) {
     digitalWrite(STEP_PIN, HIGH);
     delayMicroseconds(2);
     digitalWrite(STEP_PIN, LOW);

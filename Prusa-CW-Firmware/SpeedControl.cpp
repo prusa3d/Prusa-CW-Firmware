@@ -1,7 +1,7 @@
 #include "SpeedControl.h"
 
 CSpeedControl::CSpeedControl() : uni_speed_var(200), washing_speed(10), curing_speed(1),
-								 speed_up(false), set_curing_speed(220), set_washing_speed(200) {}
+								 speed_up(false), motor_running(false), set_curing_speed(220), set_washing_speed(200) {}
 
 CSpeedControl::~CSpeedControl() {}
 
@@ -16,7 +16,7 @@ void CSpeedControl::speed_configuration(bool curing_mode){
 	}
 }
 
-void CSpeedControl::speeding_up(){
+void CSpeedControl::acceleration50ms(){
 	if (uni_speed_var > set_washing_speed) {
 	    	  if(uni_speed_var > min_washing_speed + 5)
 	    		  uni_speed_var -= 4;

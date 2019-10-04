@@ -22,14 +22,15 @@ public:
 */
 	void speed_configuration(bool curing_mode);
 /**
-* Speeding_up handles acceleration. There is an option to print out "current.wanted" values through USB (SERIAL_COM_DEBUG macro)
+* acceleration50ms handles acceleration of the motor every 50 ms. There is an option to print out "current.wanted" values through USB (SERIAL_COM_DEBUG macro)
 */
-	void speeding_up();
+	void acceleration50ms();
 
 	byte uni_speed_var;		/**< Universal variable for passing current speed of rotation. Must be byte because it is passed in interuption process.*/
 	byte washing_speed;		/**< User-defined value from 1 to 10, loaded from eeprom. */
 	byte curing_speed;		/**< User-defined value from 1 to 10, loaded from eeprom. */
 	bool speed_up;			/**< Speeding up process flag */
+	bool motor_running;		/**< Determines if motor is running (for stepper) */
 
 private:
 
