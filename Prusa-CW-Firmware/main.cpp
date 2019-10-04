@@ -37,7 +37,7 @@ MCP outputchip(0, 8);
 
 PrusaLcd lcd(LCD_PINS_RS, LCD_PINS_ENABLE, LCD_PINS_D4, LCD_PINS_D5, LCD_PINS_D6, LCD_PINS_D7);
 
-enum menu_state {
+enum menu_state : uint8_t {
   MENU,
   SPEED_STATE,
   SPEED_CURING,
