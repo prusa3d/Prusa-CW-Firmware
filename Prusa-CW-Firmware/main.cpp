@@ -22,7 +22,7 @@ typedef char Serial_num_t[20]; //!< Null terminated string for serial number
 Countimer tDown;
 Countimer tUp;
 
-selftest_t selftest;
+CSelftest selftest;
 
 thermistor therm1(A4, 5);
 
@@ -722,12 +722,12 @@ void loop() {
   if(state == SELFTEST){
   	  switch(selftest.phase){
   	  case 1:
-  		    selftest.measured_state = outputchip.digitalRead(COVER_OPEN_PIN) == HIGH;
+  		    selftest.measureState(outputchip.digitalRead(COVER_OPEN_PIN) == HIGH);
   		    selftest.universal_pin_test();
   	  		break;
 
   	  case 2:
-  		    selftest.measured_state = outputchip.digitalRead(WASH_DETECT_PIN) == HIGH;
+  		  	selftest.measureState(outputchip.digitalRead(WASH_DETECT_PIN) == HIGH);
   		    selftest.universal_pin_test();
   		  	break;
   	  case 3:
