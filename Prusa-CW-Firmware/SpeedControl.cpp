@@ -1,33 +1,33 @@
 #include "SpeedControl.h"
 
-CSpeedControl::CSpeedControl() : uni_speed_var(200), washing_speed(10), curing_speed(1),
-								 speed_up(false), motor_running(false), set_curing_speed(220), set_washing_speed(200) {}
+CSpeedControl::CSpeedControl() : microstep_control(200), washing_speed(10), curing_speed(1),
+								 acceleration_flag(false), motor_running(false), target_curing_period(220), target_washing_period(200) {}
 
 CSpeedControl::~CSpeedControl() {}
 
 void CSpeedControl::speed_configuration(bool curing_mode){
 	if (curing_mode == true) {
-	    set_curing_speed = map(curing_speed, 1, 10, min_curing_speed, max_curing_speed);
-	    uni_speed_var = set_curing_speed;
+	    target_curing_period = map(curing_speed, 1, 10, min_curing_speed, max_curing_speed);
+	    microstep_control = target_curing_period;
 	} else {
-	    set_washing_speed = map(washing_speed, 1, 10, min_washing_speed, max_washing_speed);
-	    uni_speed_var = rotation_start;
-	    speed_up = true;
+	    target_washing_period = map(washing_speed, 1, 10, min_washing_speed, max_washing_speed);
+	    microstep_control = rotation_start;
+	    acceleration_flag = true;
 	}
 }
 
 void CSpeedControl::acceleration50ms(){
-	if (uni_speed_var > set_washing_speed) {
-	    	  if(uni_speed_var > min_washing_speed + 5)
-	    		  uni_speed_var -= 4;
-	    	  uni_speed_var--;
+	if (microstep_control > target_washing_period) {
+	    	  if(microstep_control > min_washing_speed + 5)
+	    		  microstep_control -= 4;
+	    	  microstep_control--;
 	#ifdef SERIAL_COM_DEBUG
-	        SerialUSB.print(uni_speed_var);
+	        SerialUSB.print(microstep_control);
 	        SerialUSB.write('.');
-	        SerialUSB.print(set_washing_speed);
+	        SerialUSB.print(target_washing_period);
 	        SerialUSB.write('\n');
 	#endif
 	} else {
-		speed_up = false;
+		acceleration_flag = false;
 	}
 }

@@ -772,13 +772,13 @@ void loop() {
     redraw_menu = true;
   }
 
-  if (speed_control.speed_up == true) { //stepper motor speed up function
+  if (speed_control.acceleration_flag == true) { //stepper motor speed up function
     unsigned long us_now = millis();
     if (us_now - us_last > 50){
     	speed_control.acceleration50ms();
     	us_last = us_now;
     }
-    if (speed_control.speed_up == false){
+    if (speed_control.acceleration_flag == false){
     	myStepper.set_IHOLD_IRUN(10, 10, 5);
     }
   }
@@ -2010,7 +2010,7 @@ void button_press() {
 ISR(TIMER3_COMPA_vect) { // timmer for stepper move
 
   if (speed_control.motor_running == true) {
-	OCR3A = speed_control.uni_speed_var;
+	OCR3A = speed_control.microstep_control;
     digitalWrite(STEP_PIN, HIGH);
     delayMicroseconds(2);
     digitalWrite(STEP_PIN, LOW);

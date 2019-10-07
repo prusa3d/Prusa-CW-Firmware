@@ -17,7 +17,7 @@ public:
 	CSpeedControl();
 	~CSpeedControl();
 /**
-* Speed_configuration calculates user-defined speed and sets up speeding process (washing mode).
+* Speed_configuration calculates user-defined time period of microsteps and sets up acceleration process (washing mode).
 * @param curing_mode - devides function into two states: curing_mode & washing mode.
 */
 	void speed_configuration(bool curing_mode);
@@ -26,11 +26,11 @@ public:
 */
 	void acceleration50ms();
 
-	byte uni_speed_var;		/**< Universal variable for passing current speed of rotation. Must be byte because it is passed in interuption process.*/
-	byte washing_speed;		/**< User-defined value from 1 to 10, loaded from eeprom. */
-	byte curing_speed;		/**< User-defined value from 1 to 10, loaded from eeprom. */
-	bool speed_up;			/**< Speeding up process flag */
-	bool motor_running;		/**< Determines if motor is running (for stepper) */
+	byte microstep_control;		/**< Universal variable for passing current speed of rotation. Must be byte because it is passed in interuption process.*/
+	byte washing_speed;			/**< User-defined value from 1 to 10, loaded from eeprom. */
+	byte curing_speed;			/**< User-defined value from 1 to 10, loaded from eeprom. */
+	bool acceleration_flag;		/**< Activates acceleration process */
+	bool motor_running;			/**< Determines if motor is running (for stepper) */
 
 private:
 
@@ -39,8 +39,8 @@ private:
 	const unsigned int max_curing_speed = 25;	/**< Smaller = faster */
 	const unsigned int min_washing_speed = 70;	/**< Smaller = faster */
 	const unsigned int max_washing_speed = 16;	/**< Smaller = faster */
-	unsigned int set_curing_speed;			/**< Stores wanted speed mapped in speed_configuration() */
-	unsigned int set_washing_speed;			/**< Stores wanted speed mapped in speed_configuration() */
+	unsigned int target_curing_period;			/**< Stores wanted time period of microsteps mapped in speed_configuration() */
+	unsigned int target_washing_period;			/**< Stores wanted time period of microsteps mapped in speed_configuration() */
 
 };
 
