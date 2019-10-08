@@ -2083,26 +2083,26 @@ void button_press() {
         	        	//if(selftest.cover_check_test)
         	        	selftest.phase++;
         	        	selftest.clean_up();
-        	        	state = MENU;
+        	        	//state = MENU;
         	        	break;
         	        case 2:
         	            //if(selftest.cover_check_test)
         	            selftest.phase++;
         	            selftest.clean_up();
-        	            state = MENU;
+        	            //state = MENU;
         	            break;
         	        case 3:
         	        	if(selftest.vent_test){		//only if there's not error
-        	        		selftest.phase += 2;	//jump over LED TEST	>> 	 ++;
+        	        		selftest.phase++;
         	        		selftest.clean_up();
-        	        		state = MENU;
+        	        		//state = MENU;
         	        	}
         	        	break;
         	        case 4:
         	        	if(selftest.led_test){
         	        		selftest.phase++;
         	        		selftest.clean_up();
-        	        		state = MENU;
+        	        		//state = MENU;
         	        	}
         	            break;
         	        case 5:

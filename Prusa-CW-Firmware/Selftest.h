@@ -3,16 +3,6 @@
 #ifndef SELFTEST_H
 #define SELFTEST_H
 
-/*
-1) fukncnost a mereni ventilatoru, alespon minutu aby bezeli.	In progress
-2) zkontrolovat cover check ( alespon 5x) otevrit a zavrit		Done
-3) to same s ir senzorem pro gastro pan							Done
-4) zkontrolovat zda se motor toci pri vsech rychlostech ktere cw1 pouziva (s vlozenou gastro pan)		In progres
-5) zkontrolovat heater, alespon at bezi 10minut - zaroven s nim otestovat termistor zda se v zavistlosti zmeni teplota.
-6) zkontrolovat jestli bezi ledky, taky alespon 10 minut sviceni.
- */
-
-
 #include "Countimer.h"
 
 class CSelftest {
