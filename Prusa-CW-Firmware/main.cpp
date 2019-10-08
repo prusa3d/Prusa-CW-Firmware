@@ -12,9 +12,14 @@
 #include "PrusaLcd.h"
 #include "MenuList.h"
 #include "Selftest.h"
+#include "SpeedControl.h"
 //#include "LiquidCrystal_Prusa.h"
 
 using Ter = PrusaLcd::Terminator;
+
+#define EEPROM_OFFSET 128
+#define MAGIC_SIZE 6
+//#define SERIAL_COM_DEBUG	//!< Set up for communication through USB
 
 typedef char Serial_num_t[20]; //!< Null terminated string for serial number
 
@@ -23,6 +28,7 @@ Countimer tDown;
 Countimer tUp;
 
 CSelftest selftest;
+CSpeedControl speed_control;
 
 thermistor therm1(A4, 5);
 
@@ -33,7 +39,7 @@ MCP outputchip(0, 8);
 
 PrusaLcd lcd(LCD_PINS_RS, LCD_PINS_ENABLE, LCD_PINS_D4, LCD_PINS_D5, LCD_PINS_D6, LCD_PINS_D7);
 
-enum menu_state {
+enum menu_state : uint8_t {
   MENU,
   SPEED_STATE,
   SPEED_CURING,
@@ -71,7 +77,6 @@ enum menu_state {
 #define FW_VERSION  "2.1.4"
 volatile uint16_t *const bootKeyPtr = (volatile uint16_t *)(RAMEND - 1);
 
-
 menu_state state = MENU;
 
 long lastJob = 0;
@@ -81,7 +86,6 @@ uint8_t last_menu_position = 0;
 byte max_menu_position = 0;
 bool redraw_menu = true;
 bool redraw_ms = true;
-bool speed_up = false;
 bool pinda_therm = 0; // 0 - 100K thermistor - ATC Semitec 104GT-2/ 1 - PINDA thermistor
 
 unsigned long time_now = 0;
@@ -90,30 +94,52 @@ unsigned long therm_read_time_now = 0;
 bool button_released = false;
 volatile uint8_t rotary_diff = 128;
 
-byte washing_speed = 10;
-byte curing_speed = 1;
-int max_washing_speed = 16; //15 //smaller = faster
-int min_washing_speed = 70; //100 //smaller = faster
-int max_curing_speed = 25; //50 //smaller = faster
-int min_curing_speed = 220; //smaller = faster
-int set_washing_speed;
-int set_curing_speed;
+typedef struct
+{
+	char magic[6];
+	byte washing_speed;
+	byte curing_speed;
+	byte washing_run_time;
+	byte curing_run_time;
+	byte drying_run_time;
+	byte finish_beep_mode;
+	byte sound_response;
+	byte heat_to_target_temp;
+	byte target_temp_celsius;
+	byte target_temp_fahrenheit;
+	byte curing_machine_mode;
+	byte SI_unit_system;
+	bool heater_failure;
+	byte FAN1_CURING_SPEED;
+	byte FAN1_DRYING_SPEED;
+	byte FAN1_PREHEAT_SPEED;
+	byte FAN2_CURING_SPEED;
+	byte FAN2_DRYING_SPEED;
+	byte FAN2_PREHEAT_SPEED;
+	byte resin_preheat_run_time;
+	byte resin_target_temp_celsius;
+
+} eeprom_t;
+
+static_assert(sizeof(eeprom_t) <= EEPROM_OFFSET, "eeprom_t doesn't fit in it's reserved space in the memory.");
+static constexpr eeprom_t * eeprom_base = reinterpret_cast<eeprom_t*> (E2END + 1 - EEPROM_OFFSET);
+
 
 byte washing_run_time = 4;
 byte curing_run_time = 3;
 byte drying_run_time = 3;
 byte resin_preheat_run_time = 3;
-byte max_preheat_run_time = 30;
-
 byte finish_beep_mode = 1;
 byte sound_response = 1;
 byte heat_to_target_temp = 0;
 byte target_temp_celsius = 35;
 byte target_temp_fahrenheit = 95;
 byte resin_target_temp_celsius = 30;
-byte cover_check_enabled = 1;
 byte curing_machine_mode;
 byte SI_unit_system = 1;
+
+byte max_preheat_run_time = 30;
+byte cover_check_enabled = 1;
 byte LED_PWM_VALUE = 100;
 
 int fan1_pwm_State = LOW;
@@ -133,8 +159,8 @@ long fan3_tacho_last_count;
 unsigned long fan1_previous_millis = 0;
 unsigned long fan2_previous_millis = 0;
 
-bool heater_error = false;
 bool heater_failure = false;
+bool heater_error = false;
 bool fan1_error = false;
 bool fan2_error = false;
 
@@ -165,7 +191,6 @@ unsigned long last_millis = 0;
 unsigned int last_seconds = 0;
 unsigned long led_time_now = 0;
 unsigned long LED_delay = 1000;
-bool motor_running = false;
 bool heater_running = false;
 bool curing_mode = false;
 bool drying_mode = false;
@@ -175,7 +200,6 @@ bool cover_open = false;
 bool gastro_pan = false;
 bool paused_time = false;
 bool led_start = false;
-int var_speed = 0;
 int running_count = 0;
 
 long thermNom_1 = 100000;
@@ -244,12 +268,12 @@ byte Right[8] = {
 static volatile uint16_t bootKeyPtrVal __attribute__ ((section (".noinit")));
 
 
-#define EEPROM_OFFSET 128
-#define MAGIC_SIZE 6
 const char magic[MAGIC_SIZE] = "CURWA";
+const char magic2[MAGIC_SIZE] = "CURW1";
+
 
 static void motor_configuration();
-static void read_config(unsigned int address);
+static void read_config();
 static void fan_tacho1();
 static void fan_tacho2();
 static void fan_tacho3();
@@ -318,8 +342,6 @@ void setupTimer3() { //timmer for stepper move
   interrupts();
 }
 
-
-
 void enable_timer3() {
 
   // Output Compare Match A Interrupt Enable
@@ -337,14 +359,14 @@ void disable_timer3() {
 void run_motor() {
 
   outputchip.digitalWrite(EN_PIN, LOW); // enable driver
-  motor_running = true;
+  speed_control.motor_running = true;
 
 }
 
 void stop_motor() {
 
   outputchip.digitalWrite(EN_PIN, HIGH); // disable driver
-  motor_running = false;
+  speed_control.motor_running = false;
 
 }
 
@@ -364,47 +386,23 @@ void stop_heater() {
 
 }
 
-void speed_configuration() {
-
-  if (curing_mode == true) {
-    set_curing_speed = map(curing_speed, 1, 10, min_curing_speed, max_curing_speed);
-    motor_configuration();
-    OCR3A = set_curing_speed;
-  }
-
-  else {
-    set_washing_speed = map(washing_speed, 1, 10, min_washing_speed, max_washing_speed);
-    motor_configuration();
-    var_speed = min_washing_speed;
-    speed_up = true;
-  }
-}
-
 void motor_configuration() {
 
   if (curing_mode == true) {
     myStepper.set_IHOLD_IRUN(10, 10, 0);
-    setupTimer3();
-    OCR3A = min_curing_speed; //smaller = faster
     myStepper.set_mres(256);
-  }
-
-  else {
+  } else {
     myStepper.set_IHOLD_IRUN(31, 31, 5);
-    setupTimer3();
-    OCR3A = 100; //smaller = faster
     myStepper.set_mres(16);
-
   }
 }
 
 void setup() {
 
-  //Serial.begin(115200);
   outputchip.begin();
   outputchip.pinMode(0B0000000010010111);
   outputchip.pullupMode(0B0000000010000011);
-  read_config(EEPROM.length() - EEPROM_OFFSET);
+  read_config();
 
   outputchip.digitalWrite(EN_PIN, HIGH); // disable driver
 
@@ -465,60 +463,66 @@ void setup() {
   menu_move(true);
 }
 
-
-void write_config(unsigned int address) {
-  EEPROM.put(address, magic);
-  address += MAGIC_SIZE;
-  EEPROM.put(address++, washing_speed);
-  EEPROM.put(address++, curing_speed);
-  EEPROM.put(address++, washing_run_time);
-  EEPROM.put(address++, curing_run_time);
-  EEPROM.put(address++, finish_beep_mode);
-  EEPROM.put(address++, drying_run_time);
-  EEPROM.put(address++, sound_response);
-  EEPROM.put(address++, curing_machine_mode);
-  EEPROM.put(address++, heat_to_target_temp);
-  EEPROM.put(address++, target_temp_celsius);
-  EEPROM.put(address++, target_temp_fahrenheit);
-  EEPROM.put(address++, SI_unit_system);
-  EEPROM.put(address++, heater_failure);
-  EEPROM.put(address++, FAN1_CURING_SPEED);
-  EEPROM.put(address++, FAN1_DRYING_SPEED);
-  EEPROM.put(address++, FAN1_PREHEAT_SPEED);
-  EEPROM.put(address++, FAN2_CURING_SPEED);
-  EEPROM.put(address++, FAN2_DRYING_SPEED);
-  EEPROM.put(address++, FAN2_PREHEAT_SPEED);
-  EEPROM.put(address++, resin_preheat_run_time);
-  EEPROM.put(address++, resin_target_temp_celsius);
+void write_config() {
+  EEPROM.put(eeprom_base->magic, magic2);
+  EEPROM.put(eeprom_base->washing_speed, speed_control.washing_speed);
+  EEPROM.put(eeprom_base->curing_speed, speed_control.curing_speed);
+  EEPROM.put(eeprom_base->washing_run_time, washing_run_time);
+  EEPROM.put(eeprom_base->curing_run_time, curing_run_time);
+  EEPROM.put(eeprom_base->finish_beep_mode, finish_beep_mode);
+  EEPROM.put(eeprom_base->drying_run_time, drying_run_time);
+  EEPROM.put(eeprom_base->sound_response, sound_response);
+  EEPROM.put(eeprom_base->curing_machine_mode, curing_machine_mode);
+  EEPROM.put(eeprom_base->heat_to_target_temp, heat_to_target_temp);
+  EEPROM.put(eeprom_base->target_temp_celsius, target_temp_celsius);
+  EEPROM.put(eeprom_base->target_temp_fahrenheit, target_temp_fahrenheit);
+  EEPROM.put(eeprom_base->SI_unit_system, SI_unit_system);
+  EEPROM.put(eeprom_base->heater_failure, heater_failure);
+  EEPROM.put(eeprom_base->FAN1_CURING_SPEED, FAN1_CURING_SPEED);
+  EEPROM.put(eeprom_base->FAN1_DRYING_SPEED, FAN1_DRYING_SPEED);
+  EEPROM.put(eeprom_base->FAN1_PREHEAT_SPEED, FAN1_PREHEAT_SPEED);
+  EEPROM.put(eeprom_base->FAN2_CURING_SPEED, FAN2_CURING_SPEED);
+  EEPROM.put(eeprom_base->FAN2_DRYING_SPEED, FAN2_DRYING_SPEED);
+  EEPROM.put(eeprom_base->FAN2_PREHEAT_SPEED, FAN2_PREHEAT_SPEED);
+  EEPROM.put(eeprom_base->resin_preheat_run_time, resin_preheat_run_time);
+  EEPROM.put(eeprom_base->resin_target_temp_celsius, resin_target_temp_celsius);
 }
-
-
-void read_config(unsigned int address) {
+/*! \brief This function loads user-defined values from eeprom.
+ *
+ *
+ *  It loads different amount of variables, depending on the magic variable from eeprom.
+ *  If magic is not set in the eeprom, variables keep their default values.
+ *  If magic from eeprom is equal to magic, it loads only variables customizable in older firmware and keeps new variables default.
+ *  If magic from eeprom is equal to magic2, it loads all variables including those added in new firmware.
+ *  It won't load undefined (new) variables after flashing new firmware.
+ */
+void read_config() {
   char test_magic[MAGIC_SIZE];
-  EEPROM.get(address, test_magic);
-  address += MAGIC_SIZE;
-  if (!strncmp(magic, test_magic, MAGIC_SIZE)) {
-    EEPROM.get(address++, washing_speed);
-    EEPROM.get(address++, curing_speed);
-    EEPROM.get(address++, washing_run_time);
-    EEPROM.get(address++, curing_run_time);
-    EEPROM.get(address++, finish_beep_mode);
-    EEPROM.get(address++, drying_run_time);
-    EEPROM.get(address++, sound_response);
-    EEPROM.get(address++, curing_machine_mode);
-    EEPROM.get(address++, heat_to_target_temp);
-    EEPROM.get(address++, target_temp_celsius);
-    EEPROM.get(address++, target_temp_fahrenheit);
-    EEPROM.get(address++, SI_unit_system);
-    EEPROM.get(address++, heater_failure);
-    EEPROM.get(address++, FAN1_CURING_SPEED);
-    EEPROM.get(address++, FAN1_DRYING_SPEED);
-    EEPROM.get(address++, FAN1_PREHEAT_SPEED);
-    EEPROM.get(address++, FAN2_CURING_SPEED);
-    EEPROM.get(address++, FAN2_DRYING_SPEED);
-    EEPROM.get(address++, FAN2_PREHEAT_SPEED);
-    EEPROM.get(address++, resin_preheat_run_time);
-    EEPROM.get(address++, resin_target_temp_celsius);
+  EEPROM.get(eeprom_base->magic, test_magic);
+  if (!strncmp(magic2, test_magic, MAGIC_SIZE) || !strncmp(magic, test_magic, MAGIC_SIZE)) {
+    EEPROM.get(eeprom_base->washing_speed, speed_control.washing_speed);
+    EEPROM.get(eeprom_base->curing_speed, speed_control.curing_speed);
+    EEPROM.get(eeprom_base->washing_run_time, washing_run_time);
+    EEPROM.get(eeprom_base->curing_run_time, curing_run_time);
+    EEPROM.get(eeprom_base->finish_beep_mode, finish_beep_mode);
+    EEPROM.get(eeprom_base->drying_run_time, drying_run_time);
+    EEPROM.get(eeprom_base->sound_response, sound_response);
+    EEPROM.get(eeprom_base->curing_machine_mode, curing_machine_mode);
+    EEPROM.get(eeprom_base->heat_to_target_temp, heat_to_target_temp);
+    EEPROM.get(eeprom_base->target_temp_celsius, target_temp_celsius);
+    EEPROM.get(eeprom_base->target_temp_fahrenheit, target_temp_fahrenheit);
+    EEPROM.get(eeprom_base->SI_unit_system, SI_unit_system);
+    EEPROM.get(eeprom_base->heater_failure, heater_failure);
+    if(!strncmp(magic2, test_magic, MAGIC_SIZE)){
+    	EEPROM.get(eeprom_base->FAN1_CURING_SPEED, FAN1_CURING_SPEED);
+    	EEPROM.get(eeprom_base->FAN1_DRYING_SPEED, FAN1_DRYING_SPEED);
+    	EEPROM.get(eeprom_base->FAN1_PREHEAT_SPEED, FAN1_PREHEAT_SPEED);
+    	EEPROM.get(eeprom_base->FAN2_CURING_SPEED, FAN2_CURING_SPEED);
+    	EEPROM.get(eeprom_base->FAN2_DRYING_SPEED, FAN2_DRYING_SPEED);
+    	EEPROM.get(eeprom_base->FAN2_PREHEAT_SPEED, FAN2_PREHEAT_SPEED);
+    	EEPROM.get(eeprom_base->resin_preheat_run_time, resin_preheat_run_time);
+    	EEPROM.get(eeprom_base->resin_target_temp_celsius, resin_target_temp_celsius);
+    }
   }
 }
 
@@ -825,21 +829,17 @@ void loop() {
     redraw_menu = true;
   }
 
-  if (speed_up == true) { //stepper motor speed up function
+  if (speed_control.acceleration_flag == true) { //stepper motor speed up function
     unsigned long us_now = millis();
-    if (us_now - us_last > 50) {
-      if (var_speed >= set_washing_speed) {
-        var_speed--;
-        setupTimer3();
-        OCR3A = var_speed;
-        us_last = us_now;
-      }
+    if (us_now - us_last > 50){
+    	speed_control.acceleration50ms();
+    	us_last = us_now;
     }
-    if (var_speed == set_washing_speed) {
-      speed_up = false;
-      myStepper.set_IHOLD_IRUN(10, 10, 5);
+    if (speed_control.acceleration_flag == false){
+    	myStepper.set_IHOLD_IRUN(10, 10, 5);
     }
   }
+
   // rotary "click" is 4 "micro steps"
   if (rotary_diff <= 124 || rotary_diff >= 132 || redraw_menu) { //124, 132
     menu_move(true);
@@ -979,13 +979,13 @@ void menu_move(bool sound_echo) {
 
     case SPEED_CURING:
 
-      generic_value("Curing speed", &curing_speed, 1, 10, "/10", 0);
+      generic_value("Curing speed", &speed_control.curing_speed, 1, 10, "/10", 0);
 
       break;
 
     case SPEED_WASHING:
 
-      generic_value("Washing speed", &washing_speed, 1, 10, "/10", 0);
+      generic_value("Washing speed", &speed_control.washing_speed, 1, 10, "/10", 0);
 
       break;
 
@@ -1347,7 +1347,8 @@ void machine_running() {
     }
     if (cover_open == true) {
       stop_motor();
-      speed_configuration();
+      motor_configuration();
+      speed_control.speed_configuration(curing_mode);
       stop_heater(); // turn off heat fan
       outputchip.digitalWrite(LED_RELE_PIN, LOW); // turn off led
       digitalWrite(LED_PWM_PIN, LOW);
@@ -1557,7 +1558,7 @@ void button_press() {
 
           if (curing_mode) { // curing_mode
             motor_configuration();
-            speed_configuration();
+            speed_control.speed_configuration(curing_mode);
             running_count = 0;
 
             switch (curing_machine_mode) {
@@ -1635,9 +1636,9 @@ void button_press() {
             }
           } else { // washing_mode
             drying_mode = false;
-            motor_configuration();
             run_motor();
-            speed_configuration();
+            motor_configuration();
+            speed_control.speed_configuration(curing_mode);
             running_count = 0;
             remain = washing_run_time;
             tDown.setCounter(0, remain, 0, tDown.COUNT_DOWN, tDownComplete);
@@ -1773,31 +1774,31 @@ void button_press() {
 
     case LED_INTENSITY:
       menu_position = 6;
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       state = SETTINGS;
       break;
 
     case FAN1_CURING:
       menu_position = 1;
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       state = FANS;
       break;
 
     case FAN1_DRYING:
       menu_position = 2;
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       state = FANS;
       break;
 
     case FAN2_CURING:
       menu_position = 3;
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       state = FANS;
       break;
 
     case FAN2_DRYING:
       menu_position = 4;
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       state = FANS;
       break;
 
@@ -1868,12 +1869,12 @@ void button_press() {
       }
       break;
     case SPEED_CURING:
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       state = SPEED_STATE;
       break;
 
     case SPEED_WASHING:
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       state = SPEED_STATE;
       break;
 
@@ -1907,32 +1908,32 @@ void button_press() {
       }
       break;
     case BEEP:
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       menu_position = 2;
       state = SOUND_SETTINGS;
       break;
     case SOUND:
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       menu_position = 1;
       state = SOUND_SETTINGS;
       break;
     case TIME_CURING:
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       menu_position = 1;
       state = TIME;
       break;
     case TIME_DRYING:
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       menu_position = 2;
       state = TIME;
       break;
     case TIME_WASHING:
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       menu_position = 3;
       state = TIME;
       break;
     case TIME_RESIN_PREHEAT:
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       menu_position = 4;
       state = TIME;
       break;
@@ -1941,7 +1942,7 @@ void button_press() {
       state = SETTINGS;
       break;
     case RUN_MODE:
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       if (!long_press) {
         menu_position = 2;
         state = SETTINGS;
@@ -1953,23 +1954,23 @@ void button_press() {
       }
       break;
     case PREHEAT_ENABLE:
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       menu_position = 1;
       state = PREHEAT;
       break;
     case TARGET_TEMP:
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       menu_position = 2;
       state = PREHEAT;
       break;
 
     case RESIN_TARGET_TEMP:
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       menu_position = 3;
       state = PREHEAT;
       break;
     case UNIT_SYSTEM:
-      write_config(EEPROM.length() - EEPROM_OFFSET);
+      write_config();
       menu_position = 8;
       state = SETTINGS;
       break;
@@ -1993,7 +1994,8 @@ void button_press() {
                 fan2_duty = FAN2_MENU_SPEED;
               } else {
                 run_motor();
-                speed_configuration();
+                motor_configuration();
+                speed_control.speed_configuration(curing_mode);
                 running_count = 0;
 
                 if (!heat_to_target_temp) {
@@ -2020,7 +2022,8 @@ void button_press() {
                 //fan2_duty = FAN2_MENU_SPEED;
               } else {
                 run_motor();
-                speed_configuration();
+            	motor_configuration();
+                speed_control.speed_configuration(curing_mode);
                 running_count = 0;
 
                 fan1_duty = FAN1_WASHING_SPEED;
@@ -2130,7 +2133,8 @@ void button_press() {
 
 ISR(TIMER3_COMPA_vect) { // timmer for stepper move
 
-  if (motor_running == true) {
+  if (speed_control.motor_running == true) {
+	OCR3A = speed_control.microstep_control;
     digitalWrite(STEP_PIN, HIGH);
     delayMicroseconds(2);
     digitalWrite(STEP_PIN, LOW);
@@ -2931,7 +2935,7 @@ void fan_heater_rpm() {
       heater_error = false;
       heater_failure = false;
     }
-    write_config(EEPROM.length() - EEPROM_OFFSET);
+    write_config();
     fan3_tacho_last_count = fan3_tacho_count;
 
     ams_counter = 0;
