@@ -23,29 +23,33 @@ public:
 	void universal_pin_test();
 	void ventilation_test(bool f1_error, bool f2_error);
 	const char * print();
-	void cleanUp();
-	void measureState(bool tmp);
+	void clean_up();
+	void measure_state(bool tmp);
 	void motor_speed_test();
 	void LED_test();
-	bool isFirstLoop();
+	bool is_first_loop();
+	void heat_test(bool heater_error);
 
-	int phase;
+
+	uint8_t phase;
+	uint8_t fan1_tacho;		/**< Stores measured rotation per 1 ms for ventilation_test*/
+	uint8_t fan2_tacho;		/**< Stores measured rotation per 1 ms for ventilation_test*/
 	bool cover_test;
 	bool tank_test;
 	bool vent_test;
 	bool heater_test;
 	bool rotation_test;
 	bool led_test;
-	int fan1_speed;	// %
-	int fan2_speed;	// %
+	uint8_t fan1_speed;	// %
+	uint8_t fan2_speed;	// %
+	Countimer tCountDown;
 
 private:
 
-	Countimer tCountDown;
 	bool first_loop;
 	bool measured_state;
 	bool prev_measured_state;
-	int counter;
+	uint8_t counter;
 
 };
 
