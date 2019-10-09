@@ -43,6 +43,9 @@ static uint_least8_t first_visible(const Scrolling_items &items, uint_least8_t p
 //! Prints visible items only.
 //! @param[in] items
 //! @return Zero indexed selected item
+//! Invisible items are not counted, so if there are two invisible items
+//! in the beginning of items and then two visible items,
+//! possible returned indexes are 0 and 1. Not 2 and 3.
 uint_least8_t scrolling_list(const Scrolling_items &items)
 {
     const uint_least8_t visible_items = count_visible(items);
