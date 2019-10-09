@@ -79,7 +79,7 @@ volatile uint16_t *const bootKeyPtr = (volatile uint16_t *)(RAMEND - 1);
 
 menu_state state = MENU;
 
-long lastJob = 0;
+//long lastJob = 0;
 
 uint8_t menu_position = 0;
 uint8_t last_menu_position = 0;
@@ -142,33 +142,26 @@ byte max_preheat_run_time = 30;
 byte cover_check_enabled = 1;
 byte LED_PWM_VALUE = 100;
 
-int fan1_pwm_State = LOW;
-int fan2_pwm_State = LOW;
+bool fan1_pwm_State = LOW;
+bool fan2_pwm_State = LOW;
 
-long fan1_tacho_count;
-long fan2_tacho_count;
-long fan3_tacho_count;
+int fan_tacho_count[3];
+int fan_tacho_last_count[3];
 
 bool fan1_on = false;
 bool fan2_on = false;
-
-long fan1_tacho_last_count;
-long fan2_tacho_last_count;
-long fan3_tacho_last_count;
 
 unsigned long fan1_previous_millis = 0;
 unsigned long fan2_previous_millis = 0;
 
 bool heater_failure = false;
 bool heater_error = false;
-bool fan1_error = false;
-bool fan2_error = false;
+bool fan_error[2] = {false, false};
 
 // constants won't change:
-int fan_frequency = 70; //Hz
-float period = (1 / (float)fan_frequency) * 1000; //
-int fan1_duty; //%
-int fan2_duty; //%
+const uint8_t fan_frequency = 70; //Hz
+const float period = (1 / (float)fan_frequency) * 1000; //
+uint8_t fan_duty[2]; //%
 
 //fan1_duty = 0-100%
 byte FAN1_MENU_SPEED = 30;
@@ -188,9 +181,9 @@ long remain = 0;
 unsigned long us_last = 0;
 unsigned long last_remain = 0;
 unsigned long last_millis = 0;
-unsigned int last_seconds = 0;
+uint8_t last_seconds = 0;
 unsigned long led_time_now = 0;
-unsigned long LED_delay = 1000;
+const int LED_delay = 1000;
 bool heater_running = false;
 bool curing_mode = false;
 bool drying_mode = false;
@@ -200,17 +193,17 @@ bool cover_open = false;
 bool gastro_pan = false;
 bool paused_time = false;
 bool led_start = false;
-int running_count = 0;
+uint8_t running_count = 0;
 
-long thermNom_1 = 100000;
-int refTemp_1 = 25;
-int beta_1 = 4267;
-long thermistor_pullup_1 = 100000;
+const long thermNom_1 = 100000;
+const uint8_t refTemp_1 = 25;
+const int beta_1 = 4267;
+const long thermistor_pullup_1 = 100000;
 
-long thermNom_2 = 100000;
+const long thermNom_2 = 100000;
 int refTemp_2 = 25;
 int beta_2 = 4250;
-long thermistor_pullup_2 = 33000;
+const unsigned int thermistor_pullup_2 = 33000;
 
 float chamber_temp_celsius;
 float chamber_temp_fahrenheit;
@@ -219,29 +212,23 @@ bool therm_read = false;
 
 volatile int divider = 0;
 
-long ams_counter;
-long ms_counter;
-long ams_fan_counter;
+int ms_counter;
+int ams_fan_counter;
 
 unsigned long button_timer = 0;
-const unsigned long long_press_time = 1000;
+const int long_press_time = 1000;
 bool button_active = false;
 bool long_press_active = false;
 bool long_press = false;
 bool preheat_complete = false;
 bool pid_mode = false;
 
-double actualTemp = 0;
-double errValue = 0;
 double summErr = 0;
-double diffTemp = 0;
-double oldSpeed = 0;
-double targetTemp = 30;
-double newSpeed = 0;
+//double oldSpeed = 0;
 
-double P = 10;//0.5
-double I = 0.001; //0.001;
-double D = 1; //0.1;
+const uint8_t P = 10;//0.5
+const double I = 0.001; //0.001;
+const uint8_t D = 1; //0.1;
 
 byte Back[8] = {
   B00100,
@@ -288,7 +275,6 @@ static void start_curing();
 static void start_washing();
 static void tUpComplete();
 static void fan_pwm_control();
-static void fan_heater_rpm();
 static void fan_rpm();
 static void preheat();
 static void lcd_time_print(uint8_t dots_column);
@@ -297,7 +283,7 @@ static void get_serial_num(Serial_num_t &sn);
 
 static inline bool is_error()
 {
-    return (fan1_error || fan2_error || heater_failure);
+    return (fan_error[0] || fan_error[1] || heater_failure);
 }
 
 void setupTimer0() { //timmer for fan pwm
@@ -431,8 +417,8 @@ void setup() {
   attachInterrupt(1, fan_tacho2, RISING);
   attachInterrupt(3, fan_tacho3, RISING);
 
-  fan1_duty = FAN1_MENU_SPEED;
-  fan2_duty = FAN2_MENU_SPEED;
+  fan_duty[0] = FAN1_MENU_SPEED;
+  fan_duty[1] = FAN2_MENU_SPEED;
 
   outputchip.digitalWrite(LED_RELE_PIN, LOW); // turn off led
   pinMode(LED_PWM_PIN, OUTPUT);
@@ -526,9 +512,9 @@ void read_config() {
   }
 }
 
-void PID() {
+int PID(float & actualTemp, byte targetTemp) {
 
-  newSpeed = 0;
+  double newSpeed = 0, errValue, diffTemp;
 
   errValue = actualTemp - targetTemp;
 
@@ -537,11 +523,13 @@ void PID() {
   if ((summErr > 10000) || (summErr < -10000))
     summErr = 10000;
 
-  diffTemp = actualTemp - oldSpeed;
+  diffTemp = actualTemp;	// "- oldSpeed;" which was always 0
+
   newSpeed = P * errValue + I * summErr + D * diffTemp;
   if (newSpeed > 100) {
-    newSpeed = 100;
+    return 100;
   }
+  return newSpeed;
 }
 
 void print_menu_cursor(uint8_t line)
@@ -735,9 +723,9 @@ void loop() {
   		    selftest.universal_pin_test();
   		  	break;
   	  case 3:
-  		    selftest.ventilation_test(fan1_error, fan2_error);
-  		  	fan1_duty = selftest.fan1_speed;
-  		    fan2_duty = selftest.fan2_speed;
+  		    selftest.ventilation_test(fan_error[0], fan_error[1]);
+  		  	fan_duty[0] = selftest.fan1_speed;
+  		    fan_duty[1] = selftest.fan2_speed;
   		    break;
   	  case 4:
   		    if(selftest.is_first_loop()){
@@ -758,16 +746,16 @@ void loop() {
   		  	if(selftest.is_first_loop()){
   		  		pid_mode = true;
   		  		run_heater();
-  		  		fan1_duty = FAN1_MENU_SPEED;
-  		  	    fan2_duty = FAN2_MENU_SPEED;
+  		  		fan_duty[0] = FAN1_MENU_SPEED;
+  		  	    fan_duty[1] = FAN2_MENU_SPEED;
   		  	}
   		  	selftest.fan1_speed = outputchip.digitalRead(WASH_DETECT_PIN) == HIGH;	//flag for Wash_tank_pin
   		  	selftest.heat_test(heater_error);
 
   		  	if(selftest.heater_test){
   		  		stop_heater();					//redundant calling!!!
-  		  		fan1_duty = FAN1_MENU_SPEED;
-  		  		fan2_duty = FAN2_MENU_SPEED;
+  		  		fan_duty[0] = FAN1_MENU_SPEED;
+  		  		fan_duty[1] = FAN2_MENU_SPEED;
   		  		pid_mode = false;
   		  	}
   		    break;
@@ -786,8 +774,8 @@ void loop() {
     }
     stop_heater(); // turn off heat fan
     stop_motor(); // turn off motor
-    fan1_duty = FAN1_MENU_SPEED;
-    fan2_duty = FAN2_MENU_SPEED;
+    fan_duty[0] = FAN1_MENU_SPEED;
+    fan_duty[1] = FAN2_MENU_SPEED;
   }
 
   if (state == MENU) {
@@ -946,11 +934,10 @@ void menu_move(bool sound_echo) {
           state = MENU;
           break;
         case 1:
-        	generic_menu(4, curing_mode ? "Start curing       " : "Start washing      ", "Run-time",
-        	             is_error() ? "Settings ->!!" : "Settings          ", "Selftest");
+        	generic_menu(3, curing_mode ? "Start curing       " : "Start washing      ", "Run-time",
+        	             is_error() ? "Settings ->!!" : "Settings          ");
         	lcd_print_right(1);
         	lcd_print_right(2);
-        	lcd_print_right(3);
 
           state = MENU;
           break;
@@ -1165,8 +1152,8 @@ void menu_move(bool sound_echo) {
         Scrolling_items items =
         {
           {"FW version: "  FW_VERSION, true, Ter::none},
-          {"FAN1 failure", fan1_error, Ter::none},
-          {"FAN2 failure", fan2_error, Ter::none},
+          {"FAN1 failure", fan_error[0], Ter::none},
+          {"FAN2 failure", fan_error[1], Ter::none},
           {"HEATER failure", heater_failure, Ter::none},
           {sn, true, Ter::none},
           {"Build: " FW_BUILDNR, true, Ter::none},
@@ -1486,8 +1473,8 @@ void machine_running() {
             }
             if (tDown.isCounterCompleted() == false) {
               start_curing();
-              fan1_duty = FAN1_CURING_SPEED;
-              fan2_duty = FAN2_CURING_SPEED;
+              fan_duty[0] = FAN1_CURING_SPEED;
+              fan_duty[1] = FAN2_CURING_SPEED;
             }
             else {
               stop_curing_drying ();
@@ -1567,8 +1554,8 @@ void button_press() {
                 remain = max_preheat_run_time;
                 tUp.setCounter(0, remain, 0, tUp.COUNT_UP, tUpComplete);
                 tUp.start();
-                fan1_duty = FAN1_PREHEAT_SPEED;
-                fan2_duty = FAN2_PREHEAT_SPEED;
+                fan_duty[0] = FAN1_PREHEAT_SPEED;
+                fan_duty[1] = FAN2_PREHEAT_SPEED;
                 outputchip.digitalWrite(LED_RELE_PIN, LOW); //turn off LED
                 digitalWrite(LED_PWM_PIN, LOW);
                 drying_mode = true;
@@ -1582,16 +1569,16 @@ void button_press() {
                   remain = drying_run_time;
                   tDown.setCounter(0, remain, 0, tDown.COUNT_DOWN, tDownComplete);
                   tDown.start();
-                  fan1_duty = FAN1_DRYING_SPEED;
-                  fan2_duty = FAN2_DRYING_SPEED;
+                  fan_duty[0] = FAN1_DRYING_SPEED;
+                  fan_duty[1] = FAN2_DRYING_SPEED;
                 }
                 else {
                   pid_mode = true;
                   remain = max_preheat_run_time;
                   tUp.setCounter(0, remain, 0, tUp.COUNT_UP, tUpComplete);
                   tUp.start();
-                  fan1_duty = FAN1_PREHEAT_SPEED;
-                  fan2_duty = FAN2_PREHEAT_SPEED;
+                  fan_duty[0] = FAN1_PREHEAT_SPEED;
+                  fan_duty[1] = FAN2_PREHEAT_SPEED;
                 }
 
                 outputchip.digitalWrite(LED_RELE_PIN, LOW); //turn off LED
@@ -1604,8 +1591,8 @@ void button_press() {
                 tDown.setCounter(0, remain, 0, tDown.COUNT_DOWN, tDownComplete);
                 tDown.start();
 
-                fan1_duty = FAN1_CURING_SPEED;
-                fan2_duty = FAN2_CURING_SPEED;
+                fan_duty[0] = FAN1_CURING_SPEED;
+                fan_duty[1] = FAN2_CURING_SPEED;
                 drying_mode = false;
 
                 break;
@@ -1620,16 +1607,16 @@ void button_press() {
                   remain = drying_run_time;
                   tDown.setCounter(0, remain, 0, tDown.COUNT_DOWN, tDownComplete);
                   tDown.start();
-                  fan1_duty = FAN1_DRYING_SPEED;
-                  fan2_duty = FAN2_DRYING_SPEED;
+                  fan_duty[0] = FAN1_DRYING_SPEED;
+                  fan_duty[1] = FAN2_DRYING_SPEED;
                 }
                 else {
                   pid_mode = true;
                   remain = max_preheat_run_time;
                   tUp.setCounter(0, remain, 0, tUp.COUNT_UP, tUpComplete);
                   tUp.start();
-                  fan1_duty = FAN1_PREHEAT_SPEED;
-                  fan2_duty = FAN2_PREHEAT_SPEED;
+                  fan_duty[0] = FAN1_PREHEAT_SPEED;
+                  fan_duty[1] = FAN2_PREHEAT_SPEED;
                 }
 
                 break;
@@ -1643,8 +1630,8 @@ void button_press() {
             remain = washing_run_time;
             tDown.setCounter(0, remain, 0, tDown.COUNT_DOWN, tDownComplete);
             tDown.start();
-            fan1_duty = FAN1_WASHING_SPEED;
-            fan2_duty = FAN2_WASHING_SPEED;
+            fan_duty[0] = FAN1_WASHING_SPEED;
+            fan_duty[1] = FAN2_WASHING_SPEED;
           }
 
           us_last = millis();
@@ -1990,8 +1977,8 @@ void button_press() {
                 stop_motor();
                 running_count = 0;
                 stop_heater(); // turn off heat fan
-                fan1_duty = FAN1_MENU_SPEED;
-                fan2_duty = FAN2_MENU_SPEED;
+                fan_duty[0] = FAN1_MENU_SPEED;
+                fan_duty[1] = FAN2_MENU_SPEED;
               } else {
                 run_motor();
                 motor_configuration();
@@ -1999,12 +1986,12 @@ void button_press() {
                 running_count = 0;
 
                 if (!heat_to_target_temp) {
-                  fan1_duty = FAN1_CURING_SPEED;
-                  fan2_duty = FAN2_CURING_SPEED;
+                  fan_duty[0] = FAN1_CURING_SPEED;
+                  fan_duty[1] = FAN2_CURING_SPEED;
                 }
                 else {
-                  fan1_duty = FAN1_PREHEAT_SPEED;
-                  fan2_duty = FAN2_PREHEAT_SPEED;
+                  fan_duty[0] = FAN1_PREHEAT_SPEED;
+                  fan_duty[1] = FAN2_PREHEAT_SPEED;
                 }
               }
               menu_position = 0;
@@ -2026,8 +2013,8 @@ void button_press() {
                 speed_control.speed_configuration(curing_mode);
                 running_count = 0;
 
-                fan1_duty = FAN1_WASHING_SPEED;
-                fan2_duty = FAN2_WASHING_SPEED;
+                fan_duty[0] = FAN1_WASHING_SPEED;
+                fan_duty[1] = FAN2_WASHING_SPEED;
               }
               menu_position = 0;
               state = RUNNING;
@@ -2046,8 +2033,8 @@ void button_press() {
 
           outputchip.digitalWrite(EN_PIN, HIGH); // disable driver
           stop_heater(); // turn off heat fan
-          fan1_duty = FAN1_MENU_SPEED;
-          fan2_duty = FAN2_MENU_SPEED;
+          fan_duty[0] = FAN1_MENU_SPEED;
+          fan_duty[1] = FAN2_MENU_SPEED;
           outputchip.digitalWrite(LED_RELE_PIN, LOW); // turn off led
           digitalWrite(LED_PWM_PIN, LOW);
           tDown.stop();
@@ -2214,40 +2201,21 @@ SIGNAL(TIMER0_COMPA_vect) //1ms timer
     read_encoder();
   }
 
-  if (heater_running) {
-    fan_heater_rpm();
-  }
-  else
-  {
-    ams_counter = 0;
-  }
-
   if (pid_mode) {
-    if (curing_machine_mode == 0 || curing_machine_mode == 2 || (selftest.phase == 5 && state == SELFTEST)) {
-      if (chamber_temp_celsius >= target_temp_celsius) {
-        actualTemp = chamber_temp_celsius;
-        targetTemp = target_temp_celsius;
-        PID();
-        fan1_duty = newSpeed;
-        fan2_duty = newSpeed;
-      }
-      else {
-        fan1_duty = FAN1_MENU_SPEED;
-        fan2_duty = FAN2_MENU_SPEED;
-      }
-    }
-    if (curing_machine_mode == 3) {
-      if (chamber_temp_celsius >= resin_target_temp_celsius) {
-        actualTemp = chamber_temp_celsius;
-        targetTemp = resin_target_temp_celsius;
-        PID();
-        fan1_duty = newSpeed;
-        fan2_duty = newSpeed;
-      }
-      else {
-        fan1_duty = FAN1_MENU_SPEED;
-        fan2_duty = FAN2_MENU_SPEED;
-      }
+    byte tmpTargetTemp;
+    if (curing_machine_mode == 0 || curing_machine_mode == 2 || curing_machine_mode == 3 || (selftest.phase == 5 && state == SELFTEST)) {
+    	if(curing_machine_mode != 3)
+    		tmpTargetTemp = target_temp_celsius;
+    	else
+    		tmpTargetTemp = resin_target_temp_celsius;
+
+    	if (chamber_temp_celsius >= tmpTargetTemp) {
+    		fan_duty[0] = PID(chamber_temp_celsius, tmpTargetTemp);
+    		fan_duty[1] = fan_duty[0];
+    	} else {
+    		fan_duty[0] = FAN1_MENU_SPEED;
+    		fan_duty[1] = FAN2_MENU_SPEED;
+    	}
     }
   }
 
@@ -2259,9 +2227,9 @@ SIGNAL(TIMER0_COMPA_vect) //1ms timer
 	  if(selftest.phase == 3 || selftest.phase == 4 || selftest.phase == 5){
 		  if(selftest.phase == 3 && selftest.vent_test != true){
 			  lcd.setCursor(8, 1);
-			  lcd.print(selftest.fan1_tacho);
+			  lcd.print(selftest.fan_tacho[0]);
 			  lcd.setCursor(8, 2);
-			  lcd.print(selftest.fan2_tacho);
+			  lcd.print(selftest.fan_tacho[1]);
 	      }
 		  if(selftest.phase == 5 && selftest.heater_test != true){
 			  lcd.setCursor(8, 1);
@@ -2587,8 +2555,8 @@ void start_washing() {
     } else {
       menu_position = 0;
       stop_motor();
-      fan1_duty = FAN1_MENU_SPEED;
-      fan2_duty = FAN2_MENU_SPEED;
+      fan_duty[0] = FAN1_MENU_SPEED;
+      fan_duty[1] = FAN2_MENU_SPEED;
       stop_heater(); // turn off heat fan
       redraw_menu = true;
       rotary_diff = 128;
@@ -2620,8 +2588,8 @@ void stop_curing_drying() {
   digitalWrite(LED_PWM_PIN, LOW);
   stop_motor();
   stop_heater(); // turn off heat fan
-  fan1_duty = FAN1_MENU_SPEED;
-  fan2_duty = FAN2_MENU_SPEED;
+  fan_duty[0] = FAN1_MENU_SPEED;
+  fan_duty[1] = FAN2_MENU_SPEED;
   redraw_menu = true;
   rotary_diff = 128;
   switch (finish_beep_mode) {
@@ -2719,27 +2687,15 @@ void lcd_time_print(uint8_t dots_column) {
 
       if (running_count == 0) {
         lcd.setCursor(dots_column, 0);
-        lcd.print(" ");
-        lcd.setCursor(dots_column + 1, 0);
-        lcd.print(" ");
-        lcd.setCursor(dots_column + 2, 0);
-        lcd.print(" ");
+        lcd.print("   ");
       }
       if (running_count == 1) {
         lcd.setCursor(dots_column, 0);
-        lcd.print(".");
-        lcd.setCursor(dots_column + 1, 0);
-        lcd.print(" ");
-        lcd.setCursor(dots_column + 2, 0);
-        lcd.print(" ");
+        lcd.print(".  ");
       }
       if (running_count == 2) {
         lcd.setCursor(dots_column, 0);
-        lcd.print(".");
-        lcd.setCursor(dots_column + 1, 0);
-        lcd.print(".");
-        lcd.setCursor(dots_column + 2, 0);
-        lcd.print(" ");
+        lcd.print(".. ");
         lcd.setCursor(14, 2);
         lcd.print("  ");
         lcd.setCursor(5, 2);
@@ -2747,11 +2703,7 @@ void lcd_time_print(uint8_t dots_column) {
       }
       if (running_count == 3) {
         lcd.setCursor(dots_column, 0);
-        lcd.print(".");
-        lcd.setCursor(dots_column + 1, 0);
-        lcd.print(".");
-        lcd.setCursor(dots_column + 2, 0);
-        lcd.print(".");
+        lcd.print("...");
       }
 
     }
@@ -2771,16 +2723,16 @@ void lcd_time_print(uint8_t dots_column) {
 void fan_pwm_control() {
 #if (BOARD == 3)
   unsigned long currentMillis = millis();
-  if (fan1_duty > 0) {
+  if (fan_duty[0] > 0) {
     if (fan1_pwm_State == LOW) {
-      if (currentMillis - fan1_previous_millis >= ((period) * (1 - ((float)fan1_duty / 100)))) {
+      if (currentMillis - fan1_previous_millis >= ((period) * (1 - ((float)fan_duty[0] / 100)))) {
         fan1_previous_millis = currentMillis;
         PORTC = PORTC | 0x80; //OUTPUT FAN1 HIGH
         fan1_pwm_State = HIGH;
       }
     }
     if (fan1_pwm_State == HIGH) {
-      if (currentMillis - fan1_previous_millis >= ((period) * ((float)fan1_duty / 100))) {
+      if (currentMillis - fan1_previous_millis >= ((period) * ((float)fan_duty[0] / 100))) {
         fan1_previous_millis = currentMillis;
         PORTC = PORTC & 0x7F; //OUTPUT FAN1 LOW
         fan1_pwm_State = LOW;
@@ -2790,16 +2742,16 @@ void fan_pwm_control() {
   else {
     PORTC = PORTC & 0x7F; //OUTPUT FAN1 LOW
   }
-  if (fan2_duty > 0) {
+  if (fan_duty[1] > 0) {
     if (fan2_pwm_State == LOW) {
-      if (currentMillis - fan2_previous_millis >= ((period) * (1 - ((float)fan2_duty / 100)))) {
+      if (currentMillis - fan2_previous_millis >= ((period) * (1 - ((float)fan_duty[1] / 100)))) {
         fan2_previous_millis = currentMillis;
         PORTB = PORTB | 0x80; //OUTPUT FAN2 HIGH
         fan2_pwm_State = HIGH;
       }
     }
     if (fan2_pwm_State == HIGH) {
-      if (currentMillis - fan2_previous_millis >= ((period) * ((float)fan2_duty / 100))) {
+      if (currentMillis - fan2_previous_millis >= ((period) * ((float)fan_duty[1] / 100))) {
         fan2_previous_millis = currentMillis;
         PORTB = PORTB & 0x7F; //OUTPUT FAN2 LOW
         fan2_pwm_State = LOW;
@@ -2815,7 +2767,7 @@ void fan_pwm_control() {
 #if (BOARD == 4)
   //rev 0.4 - inverted PWM FAN1, FAN2
   unsigned long currentMillis = millis();
-  if (fan1_duty > 0) {
+  if (fan_duty[0] > 0) {
 
     if (!fan1_on) {
       fan1_on = true;
@@ -2824,14 +2776,14 @@ void fan_pwm_control() {
     }
 
     if (fan1_pwm_State == LOW) {
-      if (currentMillis - fan1_previous_millis >= ((period) * (1 - ((float)fan1_duty / 100)))) {
+      if (currentMillis - fan1_previous_millis >= ((period) * (1 - ((float)fan_duty[0] / 100)))) {
         fan1_previous_millis = currentMillis;
         PORTC = PORTC & 0x7F; //OUTPUT FAN1 LOW
         fan1_pwm_State = HIGH;
       }
     }
     if (fan1_pwm_State == HIGH) {
-      if (currentMillis - fan1_previous_millis >= ((period) * ((float)fan1_duty / 100))) {
+      if (currentMillis - fan1_previous_millis >= ((period) * ((float)fan_duty[0] / 100))) {
         fan1_previous_millis = currentMillis;
         PORTC = PORTC | 0x80; //OUTPUT FAN1 HIGH
         fan1_pwm_State = LOW;
@@ -2845,13 +2797,13 @@ void fan_pwm_control() {
       PORTC = PORTC & 0x7F; //OUTPUT FAN1 LOW
     }
   }
-  if (fan2_duty > 0) {
+  if (fan_duty[1] > 0) {
     if (!fan2_on) {
       fan2_on = true;
       outputchip.digitalWrite(FAN2_PIN, HIGH);
     }
     if (fan2_pwm_State == LOW) {
-      if (currentMillis - fan2_previous_millis >= ((period) * (1 - ((float)fan2_duty / 100)))) {
+      if (currentMillis - fan2_previous_millis >= ((period) * (1 - ((float)fan_duty[1] / 100)))) {
         fan2_previous_millis = currentMillis;
         PORTB = PORTB & 0x7F; //OUTPUT FAN2 LOW
         fan2_pwm_State = HIGH;
@@ -2859,7 +2811,7 @@ void fan_pwm_control() {
       }
     }
     if (fan2_pwm_State == HIGH) {
-      if (currentMillis - fan2_previous_millis >= ((period) * ((float)fan2_duty / 100))) {
+      if (currentMillis - fan2_previous_millis >= ((period) * ((float)fan_duty[1] / 100))) {
         fan2_previous_millis = currentMillis;
         PORTB = PORTB | 0x80; //OUTPUT FAN2 HIGH
         fan2_pwm_State = LOW;
@@ -2921,76 +2873,49 @@ void therm2_read() {
 
 }
 
-void fan_heater_rpm() {
-  ams_counter ++;
-  if (ams_counter >= 1000) {
-
-    if (fan3_tacho_count <= fan3_tacho_last_count ) {
-      if (heater_running) {
-        heater_error = true;
-        heater_failure = true;
-      }
-    }
-    else {
-      heater_error = false;
-      heater_failure = false;
-    }
-    write_config();
-    fan3_tacho_last_count = fan3_tacho_count;
-
-    ams_counter = 0;
-    if (fan3_tacho_count >= 10000) {
-      fan3_tacho_count = 0;
-      fan3_tacho_last_count = 0;
-    }
-  }
-}
-
 void fan_rpm() {
   ams_fan_counter ++;
-  if (ams_fan_counter >= 100) {
-
-    if (fan1_tacho_count <= fan1_tacho_last_count ) {
-      if (fan1_duty > 0) {
-        fan1_error = true;
-      }
-    }
-    else {
-      fan1_error = false;
-    }
-    if (fan2_tacho_count <= fan2_tacho_last_count ) {
-      if (fan2_duty > 0) {
-        fan2_error = true;
-      }
-    }
-    else {
-      fan2_error = false;
-    }
-    selftest.fan1_tacho = fan1_tacho_count - fan1_tacho_last_count;
-    selftest.fan2_tacho = fan2_tacho_count - fan2_tacho_last_count;
-    fan1_tacho_last_count = fan1_tacho_count;
-    fan2_tacho_last_count = fan2_tacho_count;
-
-    ams_fan_counter = 0;
-    if (fan1_tacho_count >= 10000) {
-      fan1_tacho_count = 0;
-      fan1_tacho_last_count = 0;
-    }
-    if (fan2_tacho_count >= 10000) {
-      fan2_tacho_count = 0;
-      fan2_tacho_last_count = 0;
-    }
+  if (ams_fan_counter % 100 == 0) {
+	  for(short j = 0; j < 2; j++){
+		if (fan_tacho_count[j] <= fan_tacho_last_count[j] ) {
+		  	if (fan_duty[j] > 0)
+		  		fan_error[j] = true;
+		  	else
+		  		fan_error[j] = false;
+		}
+		selftest.fan_tacho[j] = fan_tacho_count[j] - fan_tacho_last_count[j];
+		fan_tacho_last_count[j] = fan_tacho_count[j];
+		if (fan_tacho_count[j] >= 10000) {
+			fan_tacho_count[j] = 0;
+		  	fan_tacho_last_count[j] = 0;
+		}
+	  }
+	  if(ams_fan_counter >= 1000){
+		  if (heater_running) {
+			  heater_error = (fan_tacho_count[2] <= fan_tacho_last_count[2]);
+			  if(heater_failure != heater_error){									//write to EEPROM only if state is changed
+				  heater_failure = heater_error;
+				  write_config();
+			  }
+			  fan_tacho_last_count[2] = fan_tacho_count[2];
+			  if (fan_tacho_count[2] >= 10000) {
+				  fan_tacho_count[2] = 0;
+				  fan_tacho_last_count[2] = 0;
+			  }
+		  }
+		  ams_fan_counter = 0;
+	  }
   }
 }
 
 void fan_tacho1() {
-  fan1_tacho_count++;
+  fan_tacho_count[0]++;
 }
 void fan_tacho2() {
-  fan2_tacho_count++;
+  fan_tacho_count[1]++;
 }
 void fan_tacho3() {
-  fan3_tacho_count++;
+  fan_tacho_count[2]++;
 }
 
 void preheat() {

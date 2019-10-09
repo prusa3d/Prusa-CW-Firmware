@@ -11,7 +11,7 @@ public:
 	CSelftest();
 	~CSelftest();
 	void universal_pin_test();
-	void ventilation_test(bool f1_error, bool f2_error);
+	void ventilation_test(bool, bool);
 	const char * print();
 	void clean_up();
 	void measure_state(bool tmp);
@@ -22,8 +22,7 @@ public:
 
 
 	uint8_t phase;
-	uint8_t fan1_tacho;		/**< Stores measured rotation per 1 ms for ventilation_test*/
-	uint8_t fan2_tacho;		/**< Stores measured rotation per 1 ms for ventilation_test*/
+	uint8_t fan_tacho[2];		/**< Stores measured rotation per 1 ms for ventilation_test*/
 	bool cover_test;
 	bool tank_test;
 	bool vent_test;

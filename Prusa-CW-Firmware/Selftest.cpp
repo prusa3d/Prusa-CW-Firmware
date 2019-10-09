@@ -9,10 +9,11 @@ void tCountDownComplete()
 	callback = true;
 }
 
-CSelftest::CSelftest() : phase(0), fan1_tacho(0), fan2_tacho(0), cover_test(false), tank_test(false), vent_test(false), heater_test(false),
+CSelftest::CSelftest() : phase(6), cover_test(false), tank_test(false), vent_test(false), heater_test(false),
 						 rotation_test(false), led_test(false), fan1_speed(10), fan2_speed(10), first_loop(true), measured_state(false),
 						 prev_measured_state(false), counter(0)
 {
+	fan_tacho[0] = fan_tacho[1] = 0;
 }
 
 CSelftest::~CSelftest()
@@ -100,18 +101,18 @@ const char * CSelftest::print(){
 				return "Test Successful";
 		}
 	case 4:
-		if(!led_test){
+		if(!led_test)
 			return "LED test";
-		} else
+		else
 			return "Test successful";
 		break;
 	case 5:
-		if(!heater_test)
+		if(!heater_test){
 			if(fan1_speed == 0)
 				return "Remove IPA tank";
 			else
 				return "Heater test";
-		else {
+		} else {
 			if(measured_state)
 				return "Test failed";
 			else
