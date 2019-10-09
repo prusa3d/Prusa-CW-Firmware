@@ -120,11 +120,19 @@ const char * CSelftest::print(){
 		}
 		break;
 
+	case 6:
+		if(!rotation_test)
+			return "Rotation test";
+		else
+			return "Test Successful";
+		break;
+
 	default:
 		return "";
 		break;
 	}
 }
+
 
 void CSelftest::clean_up(){
 	first_loop = true;
@@ -132,6 +140,7 @@ void CSelftest::clean_up(){
 	measured_state = prev_measured_state = false;
 	fan1_speed = fan2_speed = 0;
 	callback = false;
+	helper = false;
 }
 
 void CSelftest::measure_state(bool tmp){
@@ -151,13 +160,31 @@ void CSelftest::LED_test(){
 	}
 }
 
-void CSelftest::motor_speed_test(){
+bool CSelftest::motor_rotation_timer(){
+	if(first_loop){
+		tCountDown.setCounter(0, 0, 10, tCountDown.COUNT_DOWN, tCountDownComplete);		//fans will do 1 minute
+		tCountDown.start();
+		helper = true;
+		return true;
+	}
 
+	if(callback == false){
+		tCountDown.run();
+	} else {
+		tCountDown.stop();
+		callback = false;
+		tCountDown.restart();
+		return true;
+	}
+	return false;
+}
+void CSelftest::set_first_loop(const bool tmp){
+	first_loop = tmp;
 }
 
 void CSelftest::heat_test(bool heater_error){
 	if(first_loop == true){
-			tCountDown.setCounter(0, 5, 0, tCountDown.COUNT_DOWN, tCountDownComplete);		//fans will do 1 minute
+			tCountDown.setCounter(0, 5, 0, tCountDown.COUNT_DOWN, tCountDownComplete);
 			tCountDown.start();
 			first_loop = false;
 	}

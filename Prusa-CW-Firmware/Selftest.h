@@ -14,11 +14,12 @@ public:
 	void ventilation_test(bool, bool);
 	const char * print();
 	void clean_up();
-	void measure_state(bool tmp);
-	void motor_speed_test();
+	void measure_state(bool);
+	bool motor_rotation_timer();
 	void LED_test();
 	bool is_first_loop();
-	void heat_test(bool heater_error);
+	void set_first_loop(const bool);
+	void heat_test(bool);
 
 
 	uint8_t phase;

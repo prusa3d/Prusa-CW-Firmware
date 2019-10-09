@@ -759,6 +759,46 @@ void loop() {
   		  		pid_mode = false;
   		  	}
   		    break;
+  	  case 6:
+  		  if(!selftest.rotation_test && selftest.motor_rotation_timer()){
+  		    static bool mode_flag = true;
+  		    if(selftest.is_first_loop()){
+  		    	if(mode_flag){
+  		    		speed_control.curing_speed = 1;
+  		    		myStepper.set_IHOLD_IRUN(10, 10, 0);		//motor_configuration for curing mode;
+  		    		myStepper.set_mres(256);
+  		    	} else {
+  		    		speed_control.washing_speed = 1;
+  		    		myStepper.set_IHOLD_IRUN(31, 31, 5);			//motor_configuration for washing mode
+  		    		myStepper.set_mres(16);
+  		    	}
+  		    	speed_control.speed_configuration(mode_flag);	//curing speed is not going faster
+  		    	run_motor();
+  		    	selftest.set_first_loop(false);
+  		    } else
+  		    	speed_control.speed_configuration(mode_flag);
+
+  		    lcd.setCursor(1, 1);
+  		    lcd.print(mode_flag);
+
+  		    if(mode_flag){
+  		    	lcd.print(speed_control.curing_speed);
+  		    	speed_control.curing_speed++;
+  		    } else {
+  		    	lcd.print(speed_control.washing_speed);
+  		    	speed_control.washing_speed++;
+  		    }
+  		    if(mode_flag && speed_control.curing_speed > 10){
+  		    	stop_motor();
+  		    	selftest.clean_up();
+  		    	mode_flag = false;
+  		    }
+  		    if (!mode_flag && speed_control.washing_speed > 10){
+  		    	stop_motor();
+  		    	selftest.rotation_test = true;
+  		    }
+  		  }
+  		  break;
 
   	  default:
   		  break;
@@ -2095,6 +2135,14 @@ void button_press() {
         	        case 5:
         	        	if(selftest.heater_test){
         	        		selftest.phase = 5;
+        	        		selftest.clean_up();
+        	        		//state = MENU;
+        	        	}
+        	        	break;
+
+        	        case 6:
+        	        	if(selftest.rotation_test){
+        	        		selftest.phase = 0;
         	        		selftest.clean_up();
         	        		state = MENU;
         	        	}
