@@ -665,7 +665,7 @@ void generic_value_P(const char *label, byte *value, byte min, byte max, const c
 
 void generic_items_P(const char *label, byte *value, byte num, ...) {
   lcd.setCursor(1, 0);
-  lcd.print(label);
+  lcd.printClear_P(label, 19, Ter::none);
   const char *items[num];
   if (*value > num) {
     *value = 0;
@@ -1138,7 +1138,7 @@ void menu_move(bool sound_echo) {
 
     case PREHEAT_ENABLE:
 
-      generic_items_P("Preheat", &config.heat_to_target_temp, 2, "disable >", "< enable");
+      generic_items_P(pgmstr_preheat, &config.heat_to_target_temp, 2, "disable >", "< enable");
 
       break;
 
@@ -1161,11 +1161,11 @@ void menu_move(bool sound_echo) {
       break;
 
     case UNIT_SYSTEM:
-      generic_items_P("Unit system", &config.SI_unit_system, 2, "IMPERIAL/ US >", "< SI");
+      generic_items_P(pgmstr_unit_system, &config.SI_unit_system, 2, "IMPERIAL/ US >", "< SI");
       break;
 
     case RUN_MODE:
-      generic_items_P("Run mode", &config.curing_machine_mode, 4, "Drying & Curing >", "< Curing >", "< Drying >", "< Resin preheat");
+      generic_items_P(pgmstr_run_mode, &config.curing_machine_mode, 4, "Drying & Curing >", "< Curing >", "< Drying >", "< Resin preheat");
       break;
 
     case SOUND_SETTINGS:
@@ -1177,11 +1177,11 @@ void menu_move(bool sound_echo) {
       break;
 
     case SOUND:
-      generic_items_P("Sound response", &config.sound_response, 2, "no >", "< yes");
+      generic_items_P(pgmstr_sound_response, &config.sound_response, 2, "no >", "< yes");
       break;
 
     case BEEP:
-      generic_items_P("Finish beep", &config.finish_beep_mode, 3, "none >", "< once > ", "< continuous");
+      generic_items_P(pgmstr_finish_beep, &config.finish_beep_mode, 3, "none >", "< once > ", "< continuous");
       break;
 
     case FANS:
