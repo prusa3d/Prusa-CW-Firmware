@@ -11,25 +11,24 @@ static const int rows = 4;
 static uint8_t menu_offset = 0;
 static uint8_t cursor_position = 0;
 
-static uint_least8_t count_visible(const Scrolling_items &items)
+static uint_least8_t count_visible(const Scrolling_item *items, uint_least8_t item_count)
 {
     uint_least8_t visible_items = 0;
-    for(auto item : items)
+    for(uint_least8_t i = 0; i < item_count; ++i)
     {
-        if(item.visible) ++visible_items;
+        if(items[i].visible) ++visible_items;
     }
 
     return visible_items;
 }
 
-static uint_least8_t first_visible(const Scrolling_items &items, uint_least8_t pos)
+static uint_least8_t first_visible(const Scrolling_item *items, uint_least8_t item_count, uint_least8_t pos)
 {
     uint_least8_t first_visible = 0;
-    const uint_least8_t num_items = sizeof(Scrolling_items)/sizeof(Scrolling_item);
 
     for (uint_least8_t i = 0; i < pos; ++i)
     {
-        while ((first_visible < (num_items - 2)) && !items[first_visible].visible)
+        while ((first_visible < (item_count - 2)) && !items[first_visible].visible)
         {
             ++first_visible;
         }
@@ -46,9 +45,9 @@ static uint_least8_t first_visible(const Scrolling_items &items, uint_least8_t p
 //! Invisible items are not counted, so if there are two invisible items
 //! in the beginning of items and then two visible items,
 //! possible returned indexes are 0 and 1. Not 2 and 3.
-uint_least8_t scrolling_list(const Scrolling_items &items)
+uint_least8_t scrolling_list(const Scrolling_item *items, uint8_t item_count)
 {
-    const uint_least8_t visible_items = count_visible(items);
+    const uint_least8_t visible_items = count_visible(items, item_count);
     const uint_least8_t columns = 20;
     const uint_least8_t cursor_columns = 1;
 
@@ -78,18 +77,17 @@ uint_least8_t scrolling_list(const Scrolling_items &items)
         }
     }
 
-    uint_least8_t visible_index = first_visible(items, menu_offset);
-    const uint_least8_t num_items = sizeof(Scrolling_items)/sizeof(Scrolling_item);
+    uint_least8_t visible_index = first_visible(items, item_count, menu_offset);
 
     for (uint_least8_t line = 0; line < rows; ++line)
     {
         // (visible_index < num_items) allows visible_index to become equal num_items,
         // but such item is not shown nor accessed in next step.
-        while((visible_index < num_items) && (!items[visible_index].visible)) ++visible_index;
+        while((visible_index < item_count) && (!items[visible_index].visible)) ++visible_index;
 
         lcd.setCursor(cursor_columns, line);
 
-        if (visible_index < num_items)
+        if (visible_index < item_count)
         {
             lcd.printClear(items[visible_index].caption, columns - cursor_columns, items[visible_index].last_symbol);
         }
