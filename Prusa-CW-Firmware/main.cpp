@@ -602,7 +602,7 @@ void lcd_print_right(int a) {
   lcd.write(byte(1));
 }
 
-void generic_value(const char *label, byte *value, byte min, byte max, const char *units, bool conversion) {
+void generic_value_P(const char *label, byte *value, byte min, byte max, const char *units, bool conversion) {
   lcd.setCursor(1, 0);
   lcd.print(label);
   if (!conversion) {
@@ -1039,13 +1039,13 @@ void menu_move(bool sound_echo) {
 
     case SPEED_CURING:
 
-      generic_value("Curing speed", &speed_control.curing_speed, 1, 10, "/10", 0);
+      generic_value_P("Curing speed", &speed_control.curing_speed, 1, 10, "/10", 0);
 
       break;
 
     case SPEED_WASHING:
 
-      generic_value("Washing speed", &speed_control.washing_speed, 1, 10, "/10", 0);
+      generic_value_P("Washing speed", &speed_control.washing_speed, 1, 10, "/10", 0);
 
       break;
 
@@ -1065,25 +1065,25 @@ void menu_move(bool sound_echo) {
       }
     case TIME_CURING:
 
-      generic_value("Curing run-time", &config.curing_run_time, 1, 10, " min", 0);
+      generic_value_P("Curing run-time", &config.curing_run_time, 1, 10, " min", 0);
 
       break;
 
     case TIME_DRYING:
 
-      generic_value("Drying run-time", &config.drying_run_time, 1, 10, " min", 0);
+      generic_value_P("Drying run-time", &config.drying_run_time, 1, 10, " min", 0);
 
       break;
 
     case TIME_WASHING:
 
-      generic_value("Washing run-time", &config.washing_run_time, 1, 10, " min", 0);
+      generic_value_P("Washing run-time", &config.washing_run_time, 1, 10, " min", 0);
 
       break;
 
     case TIME_RESIN_PREHEAT:
 
-      generic_value("Resin preheat time", &config.resin_preheat_run_time, 1, 10, " min", 0);
+      generic_value_P("Resin preheat time", &config.resin_preheat_run_time, 1, 10, " min", 0);
 
       break;
 
@@ -1133,19 +1133,19 @@ void menu_move(bool sound_echo) {
 
     case TARGET_TEMP:
       if (config.SI_unit_system) {
-        generic_value("Target temp", &config.target_temp_celsius, 20, 40, " \xDF" "C ", 0);
+        generic_value_P("Target temp", &config.target_temp_celsius, 20, 40, " \xDF" "C ", 0);
       }
       else {
-        generic_value("Target temp", &config.target_temp_celsius, 20, 40, " \xDF" "F ", 1);
+        generic_value_P("Target temp", &config.target_temp_celsius, 20, 40, " \xDF" "F ", 1);
       }
       break;
 
     case RESIN_TARGET_TEMP:
       if (config.SI_unit_system) {
-        generic_value("Target temp", &config.resin_target_temp_celsius, 20, 40, "\xDF" "C", 0);
+        generic_value_P("Target temp", &config.resin_target_temp_celsius, 20, 40, "\xDF" "C", 0);
       }
       else {
-        generic_value("Target temp", &config.resin_target_temp_celsius, 20, 40, "\xDF" "F", 1);
+        generic_value_P("Target temp", &config.resin_target_temp_celsius, 20, 40, "\xDF" "F", 1);
       }
       break;
 
@@ -1190,31 +1190,31 @@ void menu_move(bool sound_echo) {
 
     case LED_INTENSITY:
 
-      generic_value("LED intensity", &LED_PWM_VALUE, 1, 100, "% ", 0);
+      generic_value_P("LED intensity", &LED_PWM_VALUE, 1, 100, "% ", 0);
 
       break;
 
     case FAN1_CURING:
 
-      generic_value("FAN1 curing speed", &config.FAN1_CURING_SPEED, 0, 100, " %", 0);
+      generic_value_P("FAN1 curing speed", &config.FAN1_CURING_SPEED, 0, 100, " %", 0);
 
       break;
 
     case FAN1_DRYING:
 
-      generic_value("FAN1 drying speed", &config.FAN1_DRYING_SPEED, 0, 100, " %", 0);
+      generic_value_P("FAN1 drying speed", &config.FAN1_DRYING_SPEED, 0, 100, " %", 0);
 
       break;
 
     case FAN2_CURING:
 
-      generic_value("FAN2 curing speed", &config.FAN2_CURING_SPEED, 0, 100, " %", 0);
+      generic_value_P("FAN2 curing speed", &config.FAN2_CURING_SPEED, 0, 100, " %", 0);
 
       break;
 
     case FAN2_DRYING:
 
-      generic_value("FAN2 drying speed", &config.FAN2_DRYING_SPEED, 0, 100, " %", 0);
+      generic_value_P("FAN2 drying speed", &config.FAN2_DRYING_SPEED, 0, 100, " %", 0);
 
       break;
 
