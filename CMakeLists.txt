@@ -35,7 +35,7 @@ SET(ASMFLAGS "${OPT} ${WARN} ${MCU}")
 SET(CMAKE_C_FLAGS ${CFLAGS})
 SET(CMAKE_CXX_FLAGS ${CXXFLAGS})
 SET(CMAKE_ASM_FLAGS ${ASMFLAGS})
-SET(CMAKE_EXE_LINKER_FLAGS "-fuse-linker-plugin -Wl,--gc-sections,--defsym=__TEXT_REGION_LENGTH__=28k")
+SET(CMAKE_EXE_LINKER_FLAGS "-fuse-linker-plugin -Wl,--gc-sections,--defsym=__TEXT_REGION_LENGTH__=28k,-Map=${CMAKE_BINARY_DIR}/Prusa-CW-Firmware.map")
 
 
 project(Prusa-CW-Firmware C CXX ASM)
