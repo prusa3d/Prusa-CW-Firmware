@@ -28,6 +28,10 @@ void CSelftest::universal_pin_test(){
 	if(measured_state != prev_measured_state){
 		prev_measured_state = measured_state;
 	  	counter++;
+	  	if(counter > 5 && phase == 1)
+	  		cover_test = true;
+	  	else if(counter > 5 && phase == 2)
+	  		tank_test = true;
 	}
 }
 
@@ -41,7 +45,7 @@ void CSelftest::ventilation_test(bool f1_error, bool f2_error){
 		tCountDown.run();
 		byte currSec = tCountDown.getCurrentSeconds();
 		if(currSec % 10 == 0){
-			if(fan1_speed + 20 < 100 && helper){
+			if(fan1_speed + 20 <= 100 && helper){
 				fan1_speed += 20;
 				fan2_speed += 20;
 				helper = false;
@@ -70,31 +74,27 @@ bool CSelftest::is_first_loop(){
 const char * CSelftest::print(){
 	switch (phase) {
 	case 1:
-		if(counter < 5){
+		if(!cover_test){
 			if(!measured_state)
 				return "Open the cover";
 			else
 				return "Close the cover";
-		} else {
-			cover_test = true;
+		} else
 			return "Test Successful";
-		}
 		break;
 	case 2:
-		if(counter < 5){
+		if(!tank_test){
 			if(!measured_state)
 				return "Remove IPA tank";
 		    else
 		    	return "Insert IPA tank";
-		    } else {
-		    	tank_test = true;
+		} else
 		    	return "Test Successful";
-		    }
 		break;
 	case 3:
 		if(!vent_test)
 			return "Fan test";
-		else{
+		else {
 			if (measured_state || prev_measured_state)
 				return "Test Failed!";
 			else
@@ -138,7 +138,7 @@ void CSelftest::clean_up(){
 	first_loop = true;
 	counter = 0;
 	measured_state = prev_measured_state = false;
-	fan1_speed = fan2_speed = 0;
+	fan1_speed = fan2_speed = 10;
 	callback = false;
 	helper = false;
 }
@@ -198,7 +198,6 @@ void CSelftest::heat_test(bool heater_error){
 		}
 	} else {
 		tCountDown.stop();
-		if(measured_state == false)
-			heater_test = true;
+		heater_test = true;
 	}
 }
