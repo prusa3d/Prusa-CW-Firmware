@@ -51,6 +51,27 @@ static const char *pgmstr_serial_number = reinterpret_cast<const char *>(0x7fe0)
 static const char pgmstr_build_nr[] PROGMEM = "Build: " FW_BUILDNR;
 static const char pgmstr_fw_hash[] PROGMEM = FW_HASH;
 static const char pgmstr_workspace[] PROGMEM = FW_LOCAL_CHANGES ? "Workspace dirty" : "Workspace clean";
+static const char pgmstr_start_resin_preheat[] PROGMEM = "Start resin preheat";
+static const char pgmstr_start_washing[] PROGMEM = "Start washing";
+static const char pgmstr_run_time[] PROGMEM = "Run-time";
+static const char pgmstr_settings_error[] PROGMEM = "Settings ->!!";
+static const char pgmstr_settings[] PROGMEM = "Settings";
+static const char pgmstr_start_drying[] PROGMEM = "Start drying";
+static const char pgmstr_start_curing[] PROGMEM = "Start curing";
+static const char pgmstr_start_drying_curing[] PROGMEM = "Start drying/curing";
+static const char pgmstr_selftest[] PROGMEM = "Selftest";
+static const char pgmstr_curing_speed[] PROGMEM = "Curing speed";
+static const char pgmstr_washing_speed[] PROGMEM = "Washing speed";
+static const char pgmstr_preheat_enabled[] PROGMEM = "Preheat enabled";
+static const char pgmstr_preheat_disabled[] PROGMEM = "Preheat disabled";
+static const char pgmstr_drying_curing_temp[] PROGMEM = "Drying/Curing temp";
+static const char pgmstr_resin_preheat_temp[] PROGMEM = "Resin preheat temp";
+static const char pgmstr_sound_response[] PROGMEM = "Sound response";
+static const char pgmstr_finish_beep[] PROGMEM = "Finish beep";
+static const char pgmstr_ipa_tank_removed[] PROGMEM = "IPA tank removed";
+static const char pgmstr_pause[] PROGMEM = "Pause";
+static const char pgmstr_stop[] PROGMEM = "Stop";
+static const char pgmstr_continue[] PROGMEM = "Continue";
 
 
 Countimer tDown;
@@ -550,7 +571,7 @@ void generic_menu_P(byte num, ...) {
   max_menu_position = 0;
   for (; num; num--) {
     lcd.setCursor(1, max_menu_position++);
-    lcd.print(va_arg(argList, const char *));
+    lcd.printClear_P(va_arg(argList, const char *), 19, Ter::none);
   }
   va_end(argList);
   max_menu_position--;
@@ -970,24 +991,24 @@ void menu_move(bool sound_echo) {
 
       switch (config.curing_machine_mode) {
         case 3:
-          generic_menu_P(3, curing_mode ? "Start resin preheat" : "Start washing      ", "Run-time",
-                  is_error() ? "Settings ->!!" : "Settings          ");
+          generic_menu_P(3, curing_mode ? pgmstr_start_resin_preheat : pgmstr_start_washing,
+                  pgmstr_run_time, is_error() ? pgmstr_settings_error : pgmstr_settings);
           lcd_print_right(1);
           lcd_print_right(2);
 
             state = MENU;
           break;
         case 2:
-          generic_menu_P(3, curing_mode ? "Start drying       " : "Start washing      ", "Run-time",
-                  is_error() ? "Settings ->!!" : "Settings          ");
+          generic_menu_P(3, curing_mode ? pgmstr_start_drying : pgmstr_start_washing, pgmstr_run_time,
+                  is_error() ? pgmstr_settings_error : pgmstr_settings);
           lcd_print_right(1);
           lcd_print_right(2);
 
           state = MENU;
           break;
         case 1:
-        	generic_menu_P(3, curing_mode ? "Start curing       " : "Start washing      ", "Run-time",
-        	             is_error() ? "Settings ->!!" : "Settings          ");
+        	generic_menu_P(3, curing_mode ? pgmstr_start_curing : pgmstr_start_washing, pgmstr_run_time,
+        	             is_error() ? pgmstr_settings_error : pgmstr_settings);
         	lcd_print_right(1);
         	lcd_print_right(2);
 
@@ -995,8 +1016,8 @@ void menu_move(bool sound_echo) {
           break;
         case 0:
         default:
-        	generic_menu_P(4, curing_mode ? "Start drying/curing" : "Start washing", "Run-time",
-        	             is_error() ? "Settings ->!!" : "Settings          ", "Selftest");
+        	generic_menu_P(4, curing_mode ? pgmstr_start_drying_curing : pgmstr_start_washing, pgmstr_run_time,
+        	             is_error() ? pgmstr_settings_error : pgmstr_settings, pgmstr_selftest);
           lcd_print_right(1);
           lcd_print_right(2);
           lcd_print_right(3);
@@ -1009,7 +1030,7 @@ void menu_move(bool sound_echo) {
 
     case SPEED_STATE:
 
-      generic_menu_P(3, "Back              ", "Curing speed", "Washing speed");
+      generic_menu_P(3, pgmstr_back, pgmstr_curing_speed, pgmstr_washing_speed);
       lcd_print_back();
       lcd_print_right(1);
       lcd_print_right(2);
@@ -1084,7 +1105,7 @@ void menu_move(bool sound_echo) {
       break;
     }
     case ADVANCED_SETTINGS:
-      generic_menu_P(4, "Back              ", "Run mode", "Preheat", "Unit system");
+      generic_menu_P(4, pgmstr_back, pgmstr_run_mode, pgmstr_preheat, pgmstr_unit_system);
       lcd_print_back();
       lcd_print_right(1);
       lcd_print_right(2);
@@ -1093,10 +1114,10 @@ void menu_move(bool sound_echo) {
 
     case PREHEAT:
       if (config.heat_to_target_temp) {
-        generic_menu_P(4, "Back              ", "Preheat enabled", "Drying/Curing temp", "Resin preheat temp" );
+        generic_menu_P(4, pgmstr_back, pgmstr_preheat_enabled, pgmstr_drying_curing_temp, pgmstr_resin_preheat_temp );
       }
       else {
-        generic_menu_P(4, "Back              ", "Preheat disabled", "Drying/Curing temp", "Resin preheat temp" );
+        generic_menu_P(4, pgmstr_back, pgmstr_preheat_disabled, pgmstr_drying_curing_temp, pgmstr_resin_preheat_temp );
       }
       lcd_print_back();
       lcd_print_right(1);
@@ -1137,7 +1158,7 @@ void menu_move(bool sound_echo) {
       break;
 
     case SOUND_SETTINGS:
-      generic_menu_P(3, "Back              ", "Sound response", "Finish beep" );
+      generic_menu_P(3, pgmstr_back, pgmstr_sound_response, pgmstr_finish_beep );
       lcd_print_back();
       lcd_print_right(1);
       lcd_print_right(2);
@@ -1216,10 +1237,10 @@ void menu_move(bool sound_echo) {
       }
     case RUN_MENU:
       if (!curing_mode && paused_time) {
-        generic_menu_P(3, paused ? "IPA tank removed" : "Pause", "Stop", "Back");
+        generic_menu_P(3, paused ? pgmstr_ipa_tank_removed : pgmstr_pause, pgmstr_stop, pgmstr_back);
       }
       else {
-        generic_menu_P(3, paused ? "Continue" : "Pause", "Stop", "Back");
+        generic_menu_P(3, paused ? pgmstr_continue : pgmstr_pause, pgmstr_stop, pgmstr_back);
       }
       break;
 
@@ -1346,7 +1367,7 @@ void menu_move(bool sound_echo) {
 
     case SELFTEST:
         if(selftest.phase == 0){
-        generic_menu_P(2, "Back              ", "Continue          ");
+        generic_menu_P(2, pgmstr_back, pgmstr_continue);
         lcd_print_back();
         lcd_print_right(1);
         } else {
