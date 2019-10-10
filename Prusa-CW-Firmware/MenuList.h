@@ -15,12 +15,12 @@ struct Scrolling_item
    PrusaLcd::Terminator last_symbol;
 };
 
-uint_least8_t scrolling_list(const Scrolling_item items[], uint8_t item_count);
+uint_least8_t scrolling_list_P(const Scrolling_item items[], uint8_t item_count);
 
 template<uint8_t n>
-uint_least8_t scrolling_list(const Scrolling_item (&items)[n])
+uint_least8_t scrolling_list_P(const Scrolling_item (&items)[n])
 {
-  return scrolling_list(items, sizeof(items)/sizeof(Scrolling_item));
+  return scrolling_list_P(items, sizeof(items)/sizeof(Scrolling_item));
 }
 
 

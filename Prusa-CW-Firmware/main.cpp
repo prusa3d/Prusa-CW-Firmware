@@ -940,7 +940,7 @@ void menu_move(bool sound_echo) {
           {"Washing", true, Ter::right},
           {"Resin preheat", true, Ter::right},
         };
-        menu_position = scrolling_list(items);
+        menu_position = scrolling_list_P(items);
 
         break;
       }
@@ -982,7 +982,7 @@ void menu_move(bool sound_echo) {
         {is_error() ? "Information ->!!" : "Information", true, Ter::right},
         {"Unit system", true, Ter::right},
       };
-      menu_position = scrolling_list(items);
+      menu_position = scrolling_list_P(items);
       break;
     }
     case ADVANCED_SETTINGS:
@@ -1064,7 +1064,7 @@ void menu_move(bool sound_echo) {
           {"FAN2 curing", true, Ter::right},
           {"FAN2 drying", true, Ter::right},
         };
-        menu_position = scrolling_list(items);
+        menu_position = scrolling_list_P(items);
 
         break;
       }
@@ -1114,7 +1114,7 @@ void menu_move(bool sound_echo) {
           {FW_HASH, true, Ter::none},
           {FW_LOCAL_CHANGES ? "Workspace dirty" : "Workspace clean", true, Ter::none}
         };
-        menu_position = scrolling_list(items);
+        menu_position = scrolling_list_P(items);
 
         break;
       }
