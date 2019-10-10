@@ -601,14 +601,10 @@ void generic_menu_P(byte num, ...) {
 
 void lcd_print_back() {
   lcd.setCursor(19, 0);
-  lcd.print(" ");
-  lcd.setCursor(19, 0);
   lcd.write(byte(0));
 }
 
-void lcd_print_right(int a) {
-  lcd.setCursor(19, a);
-  lcd.print(" ");
+void lcd_print_right(uint8_t a) {
   lcd.setCursor(19, a);
   lcd.write(byte(1));
 }
