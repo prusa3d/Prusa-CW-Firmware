@@ -9,7 +9,7 @@ void tCountDownComplete()
 	callback = true;
 }
 
-CSelftest::CSelftest() : phase(6), cover_test(false), tank_test(false), vent_test(false), heater_test(false),
+CSelftest::CSelftest() : phase(0), cover_test(false), tank_test(false), vent_test(false), heater_test(false),
 						 rotation_test(false), led_test(false), fan1_speed(10), fan2_speed(10), first_loop(true), measured_state(false),
 						 prev_measured_state(false), counter(0)
 {
@@ -149,7 +149,8 @@ void CSelftest::measure_state(bool tmp){
 
 void CSelftest::LED_test(){
 	if(first_loop == true){
-		tCountDown.restart();		//1 min
+		tCountDown.setCounter(0, 10, 0, tCountDown.COUNT_DOWN, tCountDownComplete);		//leds will shine 10 minutes
+		tCountDown.start();
 		first_loop = false;
 	}
 	if(callback == false){
@@ -162,7 +163,7 @@ void CSelftest::LED_test(){
 
 bool CSelftest::motor_rotation_timer(){
 	if(first_loop){
-		tCountDown.setCounter(0, 0, 10, tCountDown.COUNT_DOWN, tCountDownComplete);		//fans will do 1 minute
+		tCountDown.setCounter(0, 0, 10, tCountDown.COUNT_DOWN, tCountDownComplete);			//10sec time periods
 		tCountDown.start();
 		helper = true;
 		return true;
@@ -184,7 +185,7 @@ void CSelftest::set_first_loop(const bool tmp){
 
 void CSelftest::heat_test(bool heater_error){
 	if(first_loop == true){
-			tCountDown.setCounter(0, 5, 0, tCountDown.COUNT_DOWN, tCountDownComplete);
+			tCountDown.setCounter(0, 10, 0, tCountDown.COUNT_DOWN, tCountDownComplete);
 			tCountDown.start();
 			first_loop = false;
 	}

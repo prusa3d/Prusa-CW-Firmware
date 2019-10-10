@@ -744,36 +744,42 @@ void loop() {
   		    		myStepper.set_IHOLD_IRUN(31, 31, 5);			//motor_configuration for washing mode
   		    		myStepper.set_mres(16);
   		    	}
-  		    	speed_control.speed_configuration(mode_flag);	//curing speed is not going faster
+  		    	speed_control.speed_configuration(mode_flag);
   		    	run_motor();
   		    	selftest.set_first_loop(false);
   		    } else {
-  		    	if(!mode_flag){
-  		    		byte backup = speed_control.microstep_control;
-  		    		speed_control.speed_configuration(mode_flag);
-  		    		speed_control.microstep_control = backup;
-  		    	} else
-  		    		speed_control.speed_configuration(mode_flag);
+  		    	if(speed_control.curing_speed <= 10 && speed_control.washing_speed <= 10){
+  		    		if(!mode_flag){
+  		    			byte backup = speed_control.microstep_control;		//needed for smooth gear-up of the motor
+  		    			speed_control.speed_configuration(mode_flag);
+  		    			speed_control.microstep_control = backup;
+  		    		} else
+  		    			speed_control.speed_configuration(mode_flag);
+  		    	}
   		    }
   		    lcd.setCursor(1, 1);
-  		    lcd.print("Mode/Speed: ");
+  		    lcd.print("Mode/Gear: ");
   		    lcd.print(mode_flag);
   		    lcd.print("/");
 
   		    if(mode_flag){
-  		    	lcd.print(speed_control.curing_speed);
+  		    	if(speed_control.curing_speed <= 10)
+  		    		lcd.print(speed_control.curing_speed);
   		    	speed_control.curing_speed++;
   		    } else {
-  		    	lcd.print(speed_control.washing_speed);
+  		    	if(speed_control.washing_speed <= 10)
+  		    		lcd.print(speed_control.washing_speed);
   		    	speed_control.washing_speed++;
   		    }
-  		    if(mode_flag && speed_control.curing_speed > 10){
+  		    if(mode_flag && speed_control.curing_speed > 11){
   		    	stop_motor();
   		    	selftest.clean_up();
+  		    	speed_control.curing_speed = 1;		//default val
   		    	mode_flag = false;
   		    }
-  		    if (!mode_flag && speed_control.washing_speed > 10){
+  		    if (!mode_flag && speed_control.washing_speed > 11){
   		    	stop_motor();
+  		    	speed_control.washing_speed = 10;	//default val
   		    	selftest.rotation_test = true;
   		    }
   		  }
@@ -791,7 +797,7 @@ void loop() {
     else {
       tUp.stop();
     }
-    stop_heater(); // turn off heat fan
+    stop_heater(); // turn off heater and fan
     stop_motor(); // turn off motor
     fan_duty[0] = FAN1_MENU_SPEED;
     fan_duty[1] = FAN2_MENU_SPEED;
@@ -868,9 +874,9 @@ void loop() {
         long_press = true;
         redraw_menu = true;
         menu_move(true);
-        if (config.sound_response) {
-          //echo();
-        }
+ //       if (config.sound_response) {
+ //			echo();
+ //       }
       }
     }
   } else {
@@ -890,8 +896,8 @@ void loop() {
     if (state == MENU || state == ADVANCED_SETTINGS || state == PREHEAT || state == SOUND_SETTINGS || state == SPEED_STATE) {
       last_menu_position = menu_position;
     }
-    if (state == SETTINGS || state == FANS || state == TIME) {
-    }
+//    if (state == SETTINGS || state == FANS || state == TIME) {
+//    }
 
     time_now = millis();
     lcd.reinit();
@@ -904,8 +910,8 @@ void loop() {
       menu_position = last_menu_position;
       print_menu_cursor(menu_position);
     }
-    if (state == SETTINGS || state == FANS || state == TIME) {
-    }
+//    if (state == SETTINGS || state == FANS || state == TIME) {
+//    }
   }
 
   if (millis() > therm_read_time_now + 2000) {
@@ -2082,7 +2088,7 @@ void button_press() {
         	        	if(menu_position){
         	        		selftest.phase++;
         	        	} else
-        	        		state = MENU;	//	v SETTINGS?
+        	        		state = MENU;
         	        	break;
 
         	        case 1:
@@ -2100,7 +2106,7 @@ void button_press() {
         	            }
         	            break;
         	        case 3:
-        	        	if(selftest.vent_test){		//only if there's not error
+        	        	if(selftest.vent_test){
         	        		selftest.phase++;
         	        		selftest.clean_up();
         	        		//state = MENU;
@@ -2108,7 +2114,7 @@ void button_press() {
         	        	break;
         	        case 4:
         	        	if(selftest.led_test){
-        	        		selftest.phase++;
+        	        		selftest.phase ++;
         	        		selftest.clean_up();
         	        		//state = MENU;
         	        	}
@@ -2125,7 +2131,7 @@ void button_press() {
         	        	if(selftest.rotation_test){
         	        		selftest.phase = 0;
         	        		selftest.clean_up();
-        	        		state = MENU;
+        	        		//state = MENU;
         	        	}
         	        	break;
 
