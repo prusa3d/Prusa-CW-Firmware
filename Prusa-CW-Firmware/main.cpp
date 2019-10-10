@@ -878,7 +878,7 @@ void menu_move(bool sound_echo) {
           lcd_print_right(1);
           lcd_print_right(2);
 
-          state = MENU;
+            state = MENU;
           break;
         case 2:
           generic_menu(3, curing_mode ? "Start drying       " : "Start washing      ", "Run-time",
@@ -932,7 +932,7 @@ void menu_move(bool sound_echo) {
 
     case TIME:
       {
-        Scrolling_items items =
+        Scrolling_item items[] =
         {
           {"Back", true, Ter::back},
           {"Curing", true, Ter::right},
@@ -970,7 +970,7 @@ void menu_move(bool sound_echo) {
 
     case SETTINGS:
     {
-      Scrolling_items items =
+      Scrolling_item items[] =
       {
         {"Back", true, Ter::back},
         {"Rotation speed", true, Ter::right},
@@ -1056,7 +1056,7 @@ void menu_move(bool sound_echo) {
 
     case FANS:
       {
-        Scrolling_items items =
+        Scrolling_item items[] =
         {
           {"Back", true, Ter::back},
           {"FAN1 curing", true, Ter::right},
@@ -1103,7 +1103,7 @@ void menu_move(bool sound_echo) {
       {
         Serial_num_t sn;
         get_serial_num(sn);
-        Scrolling_items items =
+        Scrolling_item items[] =
         {
           {"FW version: "  FW_VERSION, true, Ter::none},
           {"FAN1 failure", fan1_error, Ter::none},
