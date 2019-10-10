@@ -544,7 +544,7 @@ void print_menu_cursor(uint8_t line)
   }
 }
 
-void generic_menu(byte num, ...) {
+void generic_menu_P(byte num, ...) {
   va_list argList;
   va_start(argList, num);
   max_menu_position = 0;
@@ -970,7 +970,7 @@ void menu_move(bool sound_echo) {
 
       switch (config.curing_machine_mode) {
         case 3:
-          generic_menu(3, curing_mode ? "Start resin preheat" : "Start washing      ", "Run-time",
+          generic_menu_P(3, curing_mode ? "Start resin preheat" : "Start washing      ", "Run-time",
                   is_error() ? "Settings ->!!" : "Settings          ");
           lcd_print_right(1);
           lcd_print_right(2);
@@ -978,7 +978,7 @@ void menu_move(bool sound_echo) {
             state = MENU;
           break;
         case 2:
-          generic_menu(3, curing_mode ? "Start drying       " : "Start washing      ", "Run-time",
+          generic_menu_P(3, curing_mode ? "Start drying       " : "Start washing      ", "Run-time",
                   is_error() ? "Settings ->!!" : "Settings          ");
           lcd_print_right(1);
           lcd_print_right(2);
@@ -986,7 +986,7 @@ void menu_move(bool sound_echo) {
           state = MENU;
           break;
         case 1:
-        	generic_menu(3, curing_mode ? "Start curing       " : "Start washing      ", "Run-time",
+        	generic_menu_P(3, curing_mode ? "Start curing       " : "Start washing      ", "Run-time",
         	             is_error() ? "Settings ->!!" : "Settings          ");
         	lcd_print_right(1);
         	lcd_print_right(2);
@@ -995,7 +995,7 @@ void menu_move(bool sound_echo) {
           break;
         case 0:
         default:
-        	generic_menu(4, curing_mode ? "Start drying/curing" : "Start washing", "Run-time",
+        	generic_menu_P(4, curing_mode ? "Start drying/curing" : "Start washing", "Run-time",
         	             is_error() ? "Settings ->!!" : "Settings          ", "Selftest");
           lcd_print_right(1);
           lcd_print_right(2);
@@ -1009,7 +1009,7 @@ void menu_move(bool sound_echo) {
 
     case SPEED_STATE:
 
-      generic_menu(3, "Back              ", "Curing speed", "Washing speed");
+      generic_menu_P(3, "Back              ", "Curing speed", "Washing speed");
       lcd_print_back();
       lcd_print_right(1);
       lcd_print_right(2);
@@ -1084,7 +1084,7 @@ void menu_move(bool sound_echo) {
       break;
     }
     case ADVANCED_SETTINGS:
-      generic_menu(4, "Back              ", "Run mode", "Preheat", "Unit system");
+      generic_menu_P(4, "Back              ", "Run mode", "Preheat", "Unit system");
       lcd_print_back();
       lcd_print_right(1);
       lcd_print_right(2);
@@ -1093,10 +1093,10 @@ void menu_move(bool sound_echo) {
 
     case PREHEAT:
       if (config.heat_to_target_temp) {
-        generic_menu(4, "Back              ", "Preheat enabled", "Drying/Curing temp", "Resin preheat temp" );
+        generic_menu_P(4, "Back              ", "Preheat enabled", "Drying/Curing temp", "Resin preheat temp" );
       }
       else {
-        generic_menu(4, "Back              ", "Preheat disabled", "Drying/Curing temp", "Resin preheat temp" );
+        generic_menu_P(4, "Back              ", "Preheat disabled", "Drying/Curing temp", "Resin preheat temp" );
       }
       lcd_print_back();
       lcd_print_right(1);
@@ -1137,7 +1137,7 @@ void menu_move(bool sound_echo) {
       break;
 
     case SOUND_SETTINGS:
-      generic_menu(3, "Back              ", "Sound response", "Finish beep" );
+      generic_menu_P(3, "Back              ", "Sound response", "Finish beep" );
       lcd_print_back();
       lcd_print_right(1);
       lcd_print_right(2);
@@ -1216,10 +1216,10 @@ void menu_move(bool sound_echo) {
       }
     case RUN_MENU:
       if (!curing_mode && paused_time) {
-        generic_menu(3, paused ? "IPA tank removed" : "Pause", "Stop", "Back");
+        generic_menu_P(3, paused ? "IPA tank removed" : "Pause", "Stop", "Back");
       }
       else {
-        generic_menu(3, paused ? "Continue" : "Pause", "Stop", "Back");
+        generic_menu_P(3, paused ? "Continue" : "Pause", "Stop", "Back");
       }
       break;
 
@@ -1346,7 +1346,7 @@ void menu_move(bool sound_echo) {
 
     case SELFTEST:
         if(selftest.phase == 0){
-        generic_menu(2, "Back              ", "Continue          ");
+        generic_menu_P(2, "Back              ", "Continue          ");
         lcd_print_back();
         lcd_print_right(1);
         } else {
