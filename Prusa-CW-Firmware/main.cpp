@@ -50,7 +50,12 @@ static const char pgmstr_heater_failure[] PROGMEM = "HEATER failure";
 static const char *pgmstr_serial_number = reinterpret_cast<const char *>(0x7fe0);
 static const char pgmstr_build_nr[] PROGMEM = "Build: " FW_BUILDNR;
 static const char pgmstr_fw_hash[] PROGMEM = FW_HASH;
-static const char pgmstr_workspace[] PROGMEM = FW_LOCAL_CHANGES ? "Workspace dirty" : "Workspace clean";
+static const char pgmstr_workspace[] PROGMEM =
+#if FW_LOCAL_CHANGES
+        "Workspace dirty";
+#else
+        "Workspace clean";
+#endif // FW_LOCAL_CHANGES
 static const char pgmstr_start_resin_preheat[] PROGMEM = "Start resin preheat";
 static const char pgmstr_start_washing[] PROGMEM = "Start washing";
 static const char pgmstr_run_time[] PROGMEM = "Run-time";
@@ -201,8 +206,8 @@ typedef struct
 } eeprom_t;
 
 static_assert(sizeof(eeprom_t) <= EEPROM_OFFSET, "eeprom_t doesn't fit in it's reserved space in the memory.");
-static constexpr eeprom_t * eeprom_base = reinterpret_cast<eeprom_t*> (E2END + 1 - EEPROM_OFFSET);
-static constexpr eeprom_small_t * eeprom_small_base = reinterpret_cast<eeprom_small_t*> (E2END + 1 - EEPROM_OFFSET);
+static eeprom_t * const eeprom_base = reinterpret_cast<eeprom_t*> (E2END + 1 - EEPROM_OFFSET);
+static eeprom_small_t * const eeprom_small_base = reinterpret_cast<eeprom_small_t*> (E2END + 1 - EEPROM_OFFSET);
 
 eeprom_t config = {"CURW1", 10, 1, 4, 3, 3, 1, 1, 0, 35, 95, 0, 1, false, 60, 60, 40, 70, 70, 40, 3, 30};
 
