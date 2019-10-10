@@ -18,6 +18,7 @@ public:
         none,
         back,
         right,
+        serialNumber,
     };
 
     //! Print n characters from null terminated string c
@@ -26,14 +27,24 @@ public:
     //! @par c null terminated string to print
     //! @par n number of characters to print or clear
     //! @par last_symbol if non-zero print it in the end of line
-    void printClear(const char *c, uint_least8_t n, Terminator terminator)
+    void printClear_P(const char *c, uint_least8_t n, Terminator terminator)
     {
+#if 0
+        if (terminator == Terminator::serialNumber)
+        {
+            const char *sn = "SN:";
+            print(sn);
+            n -= sizeof(sn);
+        }
+        else
+#endif
         if (terminator != Terminator::none) --n;
+
         for (uint_least8_t i = 0; i < n; ++i)
         {
-            if (*c)
+            if ((char)pgm_read_byte(c))
             {
-                print(*c);
+                print((char)pgm_read_byte(c));
                 ++c;
             }
             else

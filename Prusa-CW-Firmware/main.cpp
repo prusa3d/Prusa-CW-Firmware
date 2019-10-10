@@ -16,11 +16,40 @@
 
 using Ter = PrusaLcd::Terminator;
 
+#define FW_VERSION  "2.1.4"
+
 #define EEPROM_OFFSET 128
 #define MAGIC_SIZE 6
 //#define SERIAL_COM_DEBUG	//!< Set up for communication through USB
 
 typedef char Serial_num_t[20]; //!< Null terminated string for serial number
+
+static const char pgmstr_back[] PROGMEM = "Back";
+static const char pgmstr_fan1_curing[] PROGMEM = "FAN1 curing";
+static const char pgmstr_fan1_drying[] PROGMEM = "FAN1 drying";
+static const char pgmstr_fan2_curing[] PROGMEM = "FAN2 curing";
+static const char pgmstr_fan2_drying[] PROGMEM = "FAN2 drying";
+static const char pgmstr_curing[] PROGMEM = "Curing";
+static const char pgmstr_drying[] PROGMEM = "Drying";
+static const char pgmstr_washing[] PROGMEM = "Washing";
+static const char pgmstr_resin_preheat[] PROGMEM = "Resin preheat";
+static const char pgmstr_rotation_speed[] PROGMEM = "Rotation speed";
+static const char pgmstr_run_mode[] PROGMEM = "Run mode";
+static const char pgmstr_preheat[] PROGMEM = "Preheat";
+static const char pgmstr_sound[] PROGMEM = "Sound";
+static const char pgmstr_fans[] PROGMEM = "Fans";
+static const char pgmstr_led_intensity[] PROGMEM = "LED intensity";
+static const char pgmstr_information_error[] PROGMEM = "Information ->!!";
+static const char pgmstr_information[] PROGMEM = "Information";
+static const char pgmstr_unit_system[] PROGMEM = "Unit system";
+static const char pgmstr_fw_version[] PROGMEM = "FW version: "  FW_VERSION;
+static const char pgmstr_fan1_failure[] PROGMEM = "FAN1 failure";
+static const char pgmstr_fan2_failure[] PROGMEM = "FAN2 failure";
+static const char pgmstr_heater_failure[] PROGMEM = "HEATER failure";
+static const char *pgmstr_serial_number = reinterpret_cast<const char *>(0x7fe0);
+static const char pgmstr_build_nr[] PROGMEM = "Build: " FW_BUILDNR;
+static const char pgmstr_fw_hash[] PROGMEM = FW_HASH;
+static const char pgmstr_workspace[] PROGMEM = FW_LOCAL_CHANGES ? "Workspace dirty" : "Workspace clean";
 
 
 Countimer tDown;
@@ -71,7 +100,6 @@ enum menu_state : uint8_t {
   ERROR
 };
 
-#define FW_VERSION  "2.1.4"
 volatile uint16_t *const bootKeyPtr = (volatile uint16_t *)(RAMEND - 1);
 
 menu_state state = MENU;
@@ -290,7 +318,6 @@ static void fan_rpm();
 static void preheat();
 static void lcd_time_print(uint8_t dots_column);
 static void therm1_read();
-static void get_serial_num(Serial_num_t &sn);
 
 static inline bool is_error()
 {
@@ -934,11 +961,11 @@ void menu_move(bool sound_echo) {
       {
         Scrolling_item items[] =
         {
-          {"Back", true, Ter::back},
-          {"Curing", true, Ter::right},
-          {"Drying", true, Ter::right},
-          {"Washing", true, Ter::right},
-          {"Resin preheat", true, Ter::right},
+          {pgmstr_back, true, Ter::back},
+          {pgmstr_curing, true, Ter::right},
+          {pgmstr_drying, true, Ter::right},
+          {pgmstr_washing, true, Ter::right},
+          {pgmstr_resin_preheat, true, Ter::right},
         };
         menu_position = scrolling_list_P(items);
 
@@ -972,15 +999,15 @@ void menu_move(bool sound_echo) {
     {
       Scrolling_item items[] =
       {
-        {"Back", true, Ter::back},
-        {"Rotation speed", true, Ter::right},
-        {"Run mode", true, Ter::right},
-        {"Preheat", true, Ter::right},
-        {"Sound", true, Ter::right},
-        {"Fans", true, Ter::right},
-        {"LED intensity", true, Ter::right},
-        {is_error() ? "Information ->!!" : "Information", true, Ter::right},
-        {"Unit system", true, Ter::right},
+        {pgmstr_back, true, Ter::back},
+        {pgmstr_rotation_speed, true, Ter::right},
+        {pgmstr_run_mode, true, Ter::right},
+        {pgmstr_preheat, true, Ter::right},
+        {pgmstr_sound, true, Ter::right},
+        {pgmstr_fans, true, Ter::right},
+        {pgmstr_led_intensity, true, Ter::right},
+        {is_error() ? pgmstr_information_error : pgmstr_information, true, Ter::right},
+        {pgmstr_unit_system, true, Ter::right},
       };
       menu_position = scrolling_list_P(items);
       break;
@@ -1058,11 +1085,11 @@ void menu_move(bool sound_echo) {
       {
         Scrolling_item items[] =
         {
-          {"Back", true, Ter::back},
-          {"FAN1 curing", true, Ter::right},
-          {"FAN1 drying", true, Ter::right},
-          {"FAN2 curing", true, Ter::right},
-          {"FAN2 drying", true, Ter::right},
+          {pgmstr_back, true, Ter::back},
+          {pgmstr_fan1_curing, true, Ter::right},
+          {pgmstr_fan1_drying, true, Ter::right},
+          {pgmstr_fan2_curing, true, Ter::right},
+          {pgmstr_fan2_drying, true, Ter::right},
         };
         menu_position = scrolling_list_P(items);
 
@@ -1101,18 +1128,16 @@ void menu_move(bool sound_echo) {
 
     case INFO:
       {
-        Serial_num_t sn;
-        get_serial_num(sn);
         Scrolling_item items[] =
         {
-          {"FW version: "  FW_VERSION, true, Ter::none},
-          {"FAN1 failure", fan1_error, Ter::none},
-          {"FAN2 failure", fan2_error, Ter::none},
-          {"HEATER failure", heater_failure, Ter::none},
-          {sn, true, Ter::none},
-          {"Build: " FW_BUILDNR, true, Ter::none},
-          {FW_HASH, true, Ter::none},
-          {FW_LOCAL_CHANGES ? "Workspace dirty" : "Workspace clean", true, Ter::none}
+          {pgmstr_fw_version, true, Ter::none},
+          {pgmstr_fan1_failure, fan1_error, Ter::none},
+          {pgmstr_fan2_failure, fan2_error, Ter::none},
+          {pgmstr_heater_failure, heater_failure, Ter::none},
+          {pgmstr_serial_number, true, Ter::serialNumber},
+          {pgmstr_build_nr, true, Ter::none},
+          {pgmstr_fw_hash, true, Ter::none},
+          {pgmstr_workspace, true, Ter::none}
         };
         menu_position = scrolling_list_P(items);
 
@@ -2887,22 +2912,6 @@ void preheat() {
     }
   }
 
-}
-
-//! @brief Get serial number
-//! @param[out] sn null terminated string containing serial number
-void get_serial_num(Serial_num_t &sn)
-{
-  uint16_t snAddress = 0x7fe0;
-  sn[0] = 'S';
-  sn[1] = 'N';
-  sn[2] = ':';
-  for (uint_least8_t i = 3; i < 19; ++i)
-  {
-    sn[i] = pgm_read_byte(snAddress++);
-  }
-
-  sn[sizeof(Serial_num_t) - 1] = 0;
 }
 
 #if 0

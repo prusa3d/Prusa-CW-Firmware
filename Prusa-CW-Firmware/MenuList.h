@@ -10,7 +10,7 @@
 
 struct Scrolling_item
 {
-   const char *caption;
+   const char *caption_P;
    bool visible;
    PrusaLcd::Terminator last_symbol;
 };
