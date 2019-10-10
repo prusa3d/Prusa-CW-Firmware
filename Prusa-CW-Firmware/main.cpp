@@ -688,7 +688,7 @@ void generic_items_P(const char *label, byte *value, byte num, ...) {
   if (*value < i) {
     byte len = strlen(items[*value]);
     lcd.setCursor(0, 2);
-    lcd.print("                    ");
+    lcd.printClear_P(PSTR(""),20,Ter::none);
     lcd.setCursor((20 - len) / 2, 2);
     lcd.print(items[*value]);
   }
