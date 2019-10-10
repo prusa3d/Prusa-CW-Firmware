@@ -571,7 +571,7 @@ void generic_menu_P(byte num, ...) {
   max_menu_position = 0;
   for (; num; num--) {
     lcd.setCursor(1, max_menu_position++);
-    lcd.printClear_P(va_arg(argList, const char *), 19, Ter::none);
+    lcd.printClear_P(va_arg(argList, const char *), 18, Ter::none);
   }
   va_end(argList);
   max_menu_position--;
