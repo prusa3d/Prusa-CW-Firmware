@@ -87,6 +87,7 @@ byte max_menu_position = 0;
 bool redraw_menu = true;
 bool redraw_ms = true;
 bool pinda_therm = 0; // 0 - 100K thermistor - ATC Semitec 104GT-2/ 1 - PINDA thermistor
+bool mode_flag = true;	//helping var for selftesting
 
 unsigned long time_now = 0;
 unsigned long therm_read_time_now = 0;
@@ -675,6 +676,46 @@ void lcd_blink(void) {
   analogWrite(LCD_PWM_PIN, 255);
 }
 
+void redraw_selftest_vals(){
+	if(selftest.phase == 3 && selftest.vent_test != true){
+		lcd.setCursor(7, 1);
+		lcd.print(selftest.fan_tacho[0]);
+		lcd.setCursor(7, 2);
+		lcd.print(selftest.fan_tacho[1]);
+	}
+	if(selftest.phase == 5 && selftest.heater_test != true){
+		lcd.setCursor(7, 1);
+		lcd.print(chamber_temp_celsius, 1);
+		lcd.print((char)223);
+		lcd.print("C");
+	}
+	if(selftest.phase == 6 && selftest.rotation_test != true){
+		lcd.setCursor(12,1);
+		lcd.print(mode_flag);
+		lcd.setCursor(14,1);
+		if(mode_flag){
+			if(speed_control.curing_speed <= 11)
+				lcd.print(speed_control.curing_speed - 1);
+		} else {
+			if(speed_control.washing_speed <= 11)
+				lcd.print(speed_control.washing_speed - 1);
+		}
+	}
+	if(selftest.phase == 3 || selftest.phase == 4 || selftest.phase == 5){
+		byte lcd_min = selftest.tCountDown.getCurrentMinutes();
+		byte lcd_sec = selftest.tCountDown.getCurrentSeconds();
+		if(lcd_min > 9)
+			lcd.setCursor(6, 3);
+		else
+			lcd.setCursor(7, 3);
+		lcd.print(lcd_min);
+		lcd.print(":");
+		if(lcd_sec < 10)
+			lcd.print("0");
+		lcd.print(lcd_sec);
+	}
+}
+
 void loop() {
   if ( *bootKeyPtr != MAGIC_KEY)
   {
@@ -684,15 +725,23 @@ void loop() {
   tUp.run();
 
   if(state == SELFTEST){
+
+	  selftest.tCountDown.run();
+	  static unsigned long ms_last_count = millis();
+
+	  if((millis() - ms_last_count) >= 1000){
+		  ms_last_count = millis();
+		  redraw_menu = true;
+	  }
+
   	  switch(selftest.phase){
   	  case 1:
-  		    selftest.measure_state(outputchip.digitalRead(COVER_OPEN_PIN) == HIGH);
-  		    selftest.universal_pin_test();
+  		    selftest.measured_state = outputchip.digitalRead(COVER_OPEN_PIN) == HIGH;
+  		    redraw_menu = selftest.universal_pin_test();
   	  		break;
-
   	  case 2:
-  		  	selftest.measure_state(outputchip.digitalRead(WASH_DETECT_PIN) == HIGH);
-  		    selftest.universal_pin_test();
+  		  	selftest.measured_state = outputchip.digitalRead(WASH_DETECT_PIN) == HIGH;
+  		    redraw_menu = selftest.universal_pin_test();
   		  	break;
   	  case 3:
   		    selftest.ventilation_test(fan_error[0], fan_error[1]);
@@ -700,40 +749,64 @@ void loop() {
   		    fan_duty[1] = selftest.fan2_speed;
   		    break;
   	  case 4:
+  		selftest.cover_down = outputchip.digitalRead(COVER_OPEN_PIN) == LOW;
+  		if(selftest.cover_down){
   		    if(selftest.is_first_loop()){
   		    	outputchip.digitalWrite(LED_RELE_PIN, HIGH); // turn LED on
   		    	int val;
   		    	val = map(LED_PWM_VALUE, 0, 100, 0, 255);
   		    	analogWrite(LED_PWM_PIN, val);
   		    }
-  		    if(selftest.led_test == false){
-  		    	selftest.LED_test();
+  		    if(outputchip.digitalRead(LED_RELE_PIN) == HIGH){
+  		    	if(selftest.led_test == false){
+  		    		selftest.LED_test();
+  		    	} else {
+  		    		outputchip.digitalWrite(LED_RELE_PIN, LOW); // turn LED off
+		        	digitalWrite(LED_PWM_PIN, LOW);
+  		    	}
   		    } else {
-		        outputchip.digitalWrite(LED_RELE_PIN, LOW); // turn LED off
-		        digitalWrite(LED_PWM_PIN, LOW);
+  		    	if(selftest.isCounterRunning){
+  		    		selftest.fail_flag = true;
+  		    		selftest.tCountDown.stop();
+  		    		selftest.isCounterRunning = false;
+  		    		selftest.led_test = true;
+  		    		digitalWrite(LED_PWM_PIN, LOW);
+  		    	}
   		    }
-  		    break;
-
+  		} else {
+  			if(selftest.isCounterRunning)
+  				selftest.tCountDown.pause();
+  		}
+  		break;
   	  case 5:
   		if(!selftest.heater_test){
-  		  	if(selftest.is_first_loop()){
-  		  		pid_mode = true;
-  		  		run_heater();
-  		  		fan_duty[0] = FAN1_MENU_SPEED;
-  		  	    fan_duty[1] = FAN2_MENU_SPEED;
-  		  	}
-  		  	selftest.fan1_speed = outputchip.digitalRead(WASH_DETECT_PIN) == HIGH;	//flag for Wash_tank_pin
-  		  	selftest.heat_test(heater_error);
+  			if(outputchip.digitalRead(WASH_DETECT_PIN) == HIGH){
+  				selftest.fan1_speed = 10;
+  				if(outputchip.digitalRead(COVER_OPEN_PIN) == LOW){
+  					selftest.fan2_speed = 10;
+  					if(selftest.is_first_loop()){
+  		  				pid_mode = true;
+  		  				run_heater();
+  		  				fan_duty[0] = FAN1_MENU_SPEED;
+  		  	    		fan_duty[1] = FAN2_MENU_SPEED;
+  					}
+  		  			selftest.heat_test(heater_error);
+  				} else {
+  					selftest.fan2_speed = 0;
+  					if(selftest.isCounterRunning)
+  						selftest.heat_test(heater_error);
+  				}
+  			} else
+  				selftest.fan1_speed = 0;
   		} else if (heater_running){
   	 		stop_heater();
   	  		fan_duty[0] = FAN1_MENU_SPEED;
   	  		fan_duty[1] = FAN2_MENU_SPEED;
   	  		pid_mode = false;
   		}
-  		    break;
+  		break;
   	  case 6:
   		  if(!selftest.rotation_test && selftest.motor_rotation_timer()){
-  		    static bool mode_flag = true;
   		    if(selftest.is_first_loop()){
   		    	if(mode_flag){
   		    		speed_control.curing_speed = 1;
@@ -757,20 +830,12 @@ void loop() {
   		    			speed_control.speed_configuration(mode_flag);
   		    	}
   		    }
-  		    lcd.setCursor(1, 1);
-  		    lcd.print("Mode/Gear: ");
-  		    lcd.print(mode_flag);
-  		    lcd.print("/");
 
-  		    if(mode_flag){
-  		    	if(speed_control.curing_speed <= 10)
-  		    		lcd.print(speed_control.curing_speed);
-  		    	speed_control.curing_speed++;
-  		    } else {
-  		    	if(speed_control.washing_speed <= 10)
-  		    		lcd.print(speed_control.washing_speed);
-  		    	speed_control.washing_speed++;
-  		    }
+  		    if(mode_flag)
+	    		speed_control.curing_speed++;
+  		    else
+	    		speed_control.washing_speed++;
+
   		    if(mode_flag && speed_control.curing_speed > 11){
   		    	stop_motor();
   		    	selftest.clean_up();
@@ -1321,13 +1386,51 @@ void menu_move(bool sound_echo) {
 
     case SELFTEST:
         if(selftest.phase == 0){
-        generic_menu(2, "Back              ", "Continue          ");
-        lcd_print_back();
-        lcd_print_right(1);
-        } else {
-        	  lcd.setCursor(1, 0);
-        	  lcd.print(selftest.print());
+        	generic_menu(2, "Back              ", "Continue          ");
+        	lcd_print_back();
+        	lcd_print_right(1);
+        } else if(selftest.phase == 1){
+        	lcd.setCursor(1,0);
+        	if(!selftest.cover_test){
+        		if(!selftest.measured_state)
+        			lcd.print("Open the cover");
+        		else
+        			lcd.print("Close the cover");
+        	} else
+        		lcd.print("Test Successful");
+        } else if (selftest.phase == 2){
+        	lcd.setCursor(1,0);
+        	if(!selftest.tank_test){
+        		if(!selftest.measured_state)
+        			lcd.print("Remove IPA tank");
+        		else
+        			lcd.print("Insert IPA tank");
+        	} else
+        		lcd.print("Test Successful");
+        } else{
+      	  lcd.setCursor(1, 0);
+      	  lcd.print(selftest.print());
         }
+
+        if(selftest.phase == 3 && !selftest.vent_test){
+        	lcd.setCursor(1, 1);
+        	lcd.print("FAN1: ");
+        	lcd.setCursor(1, 2);
+        	lcd.print("FAN2: ");
+        	lcd.setCursor(9, 1);
+        	lcd.print("x/100ms");
+        	lcd.setCursor(9, 2);
+        	lcd.print("x/100ms");
+        }
+        if(selftest.phase == 6 && !selftest.rotation_test){
+        	lcd.setCursor(1, 1);
+        	lcd.print("Mode/Gear: ");
+        	lcd.setCursor(13, 1);
+        	lcd.print("/");
+        }
+
+        redraw_selftest_vals();
+
         break;
 
     default:
@@ -2092,46 +2195,49 @@ void button_press() {
         	        	break;
 
         	        case 1:
-        	        	if(selftest.cover_test){
+        	        	if(selftest.cover_test == true){
         	        		selftest.phase++;
         	        		selftest.clean_up();
-        	        		//state = MENU;
         	        	}
         	        	break;
         	        case 2:
-        	            if(selftest.tank_test){
+        	            if(selftest.tank_test == true){
         	            	selftest.phase++;
         	            	selftest.clean_up();
-        	            	//state = MENU;
         	            }
         	            break;
         	        case 3:
         	        	if(selftest.vent_test){
-        	        		selftest.phase++;
+        	        		if(selftest.fail_flag == true){
+        	        			state = MENU;
+        	        		} else
+        	        			selftest.phase++;
         	        		selftest.clean_up();
-        	        		//state = MENU;
         	        	}
         	        	break;
         	        case 4:
         	        	if(selftest.led_test){
-        	        		selftest.phase ++;
+        	        		if(selftest.fail_flag == true){
+        	        			state = MENU;
+        	        		} else
+        	        			selftest.phase++;
         	        		selftest.clean_up();
-        	        		//state = MENU;
         	        	}
         	            break;
         	        case 5:
         	        	if(selftest.heater_test){
-        	        		selftest.phase++;
+          	        		if(selftest.fail_flag == true){
+          	        			state = MENU;
+          	        		} else
+          	        			selftest.phase++;
         	        		selftest.clean_up();
-        	        		//state = MENU;
         	        	}
         	        	break;
 
         	        case 6:
-        	        	if(selftest.rotation_test){
+        	        	if(selftest.rotation_test == true){
         	        		selftest.phase = 0;
         	        		selftest.clean_up();
-        	        		//state = MENU;
         	        	}
         	        	break;
 
@@ -2257,32 +2363,6 @@ SIGNAL(TIMER0_COMPA_vect) //1ms timer
   fan_pwm_control();
 
   fan_rpm();
-
-  if(state == SELFTEST && ms_counter % 1000 == 0){
-	  if(selftest.phase == 3 || selftest.phase == 4 || selftest.phase == 5){
-		  if(selftest.phase == 3 && selftest.vent_test != true){
-			  lcd.setCursor(8, 1);
-			  lcd.print(selftest.fan_tacho[0]);
-			  lcd.setCursor(8, 2);
-			  lcd.print(selftest.fan_tacho[1]);
-	      }
-		  if(selftest.phase == 5 && selftest.heater_test != true){
-			  lcd.setCursor(8, 1);
-			  lcd.print(chamber_temp_celsius, 1);
-		  }
-	      byte lcd_min = selftest.tCountDown.getCurrentMinutes();
-	      byte lcd_sec = selftest.tCountDown.getCurrentSeconds();
-	      if(lcd_min > 9)
-	    	  lcd.setCursor(6, 3);
-	      else
-	    	  lcd.setCursor(7, 3);
-	      lcd.print(lcd_min);
-	      lcd.print(":");
-	      if(lcd_sec < 10)
-	    	  lcd.print("0");
-	      lcd.print(lcd_sec);
-	  }
-  }
 
   if (ms_counter >= 4000) {
 
