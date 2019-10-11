@@ -104,9 +104,6 @@ private:
   uint8_t _initialized;
 
   uint8_t _numlines,_currline;
-
-  uint8_t _escape[8];
-  size_t escape_write(uint8_t value);
   
 };
 

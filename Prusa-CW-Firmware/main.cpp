@@ -17,11 +17,77 @@
 
 using Ter = PrusaLcd::Terminator;
 
+#define FW_VERSION  "2.1.4"
+
 #define EEPROM_OFFSET 128
 #define MAGIC_SIZE 6
 //#define SERIAL_COM_DEBUG	//!< Set up for communication through USB
 
 typedef char Serial_num_t[20]; //!< Null terminated string for serial number
+
+static const char pgmstr_back[] PROGMEM = "Back";
+static const char pgmstr_fan1_curing[] PROGMEM = "FAN1 curing";
+static const char pgmstr_fan1_drying[] PROGMEM = "FAN1 drying";
+static const char pgmstr_fan2_curing[] PROGMEM = "FAN2 curing";
+static const char pgmstr_fan2_drying[] PROGMEM = "FAN2 drying";
+static const char pgmstr_curing[] PROGMEM = "Curing";
+static const char pgmstr_drying[] PROGMEM = "Drying";
+static const char pgmstr_washing[] PROGMEM = "Washing";
+static const char pgmstr_resin_preheat[] PROGMEM = "Resin preheat";
+static const char pgmstr_rotation_speed[] PROGMEM = "Rotation speed";
+static const char pgmstr_run_mode[] PROGMEM = "Run mode";
+static const char pgmstr_preheat[] PROGMEM = "Preheat";
+static const char pgmstr_sound[] PROGMEM = "Sound";
+static const char pgmstr_fans[] PROGMEM = "Fans";
+static const char pgmstr_led_intensity[] PROGMEM = "LED intensity";
+static const char pgmstr_information_error[] PROGMEM = "Information ->!!";
+static const char pgmstr_information[] PROGMEM = "Information";
+static const char pgmstr_unit_system[] PROGMEM = "Unit system";
+static const char pgmstr_fw_version[] PROGMEM = "FW version: "  FW_VERSION;
+static const char pgmstr_fan1_failure[] PROGMEM = "FAN1 failure";
+static const char pgmstr_fan2_failure[] PROGMEM = "FAN2 failure";
+static const char pgmstr_heater_failure[] PROGMEM = "HEATER failure";
+static const char *pgmstr_serial_number = reinterpret_cast<const char *>(0x7fe0);
+static const char pgmstr_build_nr[] PROGMEM = "Build: " FW_BUILDNR;
+static const char pgmstr_fw_hash[] PROGMEM = FW_HASH;
+static const char pgmstr_workspace[] PROGMEM =
+#if FW_LOCAL_CHANGES
+        "Workspace dirty";
+#else
+        "Workspace clean";
+#endif // FW_LOCAL_CHANGES
+static const char pgmstr_start_resin_preheat[] PROGMEM = "Start resin preheat";
+static const char pgmstr_start_washing[] PROGMEM = "Start washing";
+static const char pgmstr_run_time[] PROGMEM = "Run-time";
+static const char pgmstr_settings_error[] PROGMEM = "Settings ->!!";
+static const char pgmstr_settings[] PROGMEM = "Settings";
+static const char pgmstr_start_drying[] PROGMEM = "Start drying";
+static const char pgmstr_start_curing[] PROGMEM = "Start curing";
+static const char pgmstr_start_drying_curing[] PROGMEM = "Start drying/curing";
+static const char pgmstr_selftest[] PROGMEM = "Selftest";
+static const char pgmstr_curing_speed[] PROGMEM = "Curing speed";
+static const char pgmstr_washing_speed[] PROGMEM = "Washing speed";
+static const char pgmstr_preheat_enabled[] PROGMEM = "Preheat enabled";
+static const char pgmstr_preheat_disabled[] PROGMEM = "Preheat disabled";
+static const char pgmstr_drying_curing_temp[] PROGMEM = "Drying/Curing temp";
+static const char pgmstr_resin_preheat_temp[] PROGMEM = "Resin preheat temp";
+static const char pgmstr_sound_response[] PROGMEM = "Sound response";
+static const char pgmstr_finish_beep[] PROGMEM = "Finish beep";
+static const char pgmstr_ipa_tank_removed[] PROGMEM = "IPA tank removed";
+static const char pgmstr_pause[] PROGMEM = "Pause";
+static const char pgmstr_stop[] PROGMEM = "Stop";
+static const char pgmstr_continue[] PROGMEM = "Continue";
+static const char pgmstr_curing_run_time[] PROGMEM = "Curing run-time";
+static const char pgmstr_drying_run_time[] PROGMEM = "Drying run-time";
+static const char pgmstr_washing_run_time[] PROGMEM = "Washing run-time";
+static const char pgmstr_resin_preheat_time[] PROGMEM = "Resin preheat time";
+static const char pgmstr_target_temp[] PROGMEM = "Target temp";
+static const char pgmstr_fan1_curing_speed[] PROGMEM = "FAN1 curing speed";
+static const char pgmstr_fan1_drying_speed[] PROGMEM = "FAN1 drying speed";
+static const char pgmstr_fan2_curing_speed[] PROGMEM = "FAN2 curing speed";
+static const char pgmstr_fan2_drying_speed[] PROGMEM = "FAN2 drying speed";
+
+
 
 
 Countimer tDown;
@@ -74,7 +140,6 @@ enum menu_state : uint8_t {
   SELFTEST
 };
 
-#define FW_VERSION  "2.1.4"
 volatile uint16_t *const bootKeyPtr = (volatile uint16_t *)(RAMEND - 1);
 
 menu_state state = MENU;
@@ -142,8 +207,8 @@ typedef struct
 } eeprom_t;
 
 static_assert(sizeof(eeprom_t) <= EEPROM_OFFSET, "eeprom_t doesn't fit in it's reserved space in the memory.");
-static constexpr eeprom_t * eeprom_base = reinterpret_cast<eeprom_t*> (E2END + 1 - EEPROM_OFFSET);
-static constexpr eeprom_small_t * eeprom_small_base = reinterpret_cast<eeprom_small_t*> (E2END + 1 - EEPROM_OFFSET);
+static eeprom_t * const eeprom_base = reinterpret_cast<eeprom_t*> (E2END + 1 - EEPROM_OFFSET);
+static eeprom_small_t * const eeprom_small_base = reinterpret_cast<eeprom_small_t*> (E2END + 1 - EEPROM_OFFSET);
 
 eeprom_t config = {"CURW1", 10, 1, 4, 3, 3, 1, 1, 0, 35, 95, 0, 1, false, 60, 60, 40, 70, 70, 40, 3, 30};
 
@@ -281,7 +346,6 @@ static void fan_rpm();
 static void preheat();
 static void lcd_time_print(uint8_t dots_column);
 static void therm1_read();
-static void get_serial_num(Serial_num_t &sn);
 
 static inline bool is_error()
 {
@@ -518,13 +582,13 @@ void print_menu_cursor(uint8_t line)
   }
 }
 
-void generic_menu(byte num, ...) {
+void generic_menu_P(byte num, ...) {
   va_list argList;
   va_start(argList, num);
   max_menu_position = 0;
   for (; num; num--) {
     lcd.setCursor(1, max_menu_position++);
-    lcd.print(va_arg(argList, const char *));
+    lcd.printClear_P(va_arg(argList, const char *), 18, Ter::none);
   }
   va_end(argList);
   max_menu_position--;
@@ -543,21 +607,17 @@ void generic_menu(byte num, ...) {
 
 void lcd_print_back() {
   lcd.setCursor(19, 0);
-  lcd.print(" ");
-  lcd.setCursor(19, 0);
   lcd.write(byte(0));
 }
 
-void lcd_print_right(int a) {
-  lcd.setCursor(19, a);
-  lcd.print(" ");
+void lcd_print_right(uint8_t a) {
   lcd.setCursor(19, a);
   lcd.write(byte(1));
 }
 
-void generic_value(const char *label, byte *value, byte min, byte max, const char *units, bool conversion) {
+void generic_value_P(const char *label, byte *value, byte min, byte max, const char *units, bool conversion) {
   lcd.setCursor(1, 0);
-  lcd.print(label);
+  lcd.printClear_P(label, 19, Ter::none);
   if (!conversion) {
     if (rotary_diff > 128) {
       if (*value < max) {
@@ -605,9 +665,9 @@ void generic_value(const char *label, byte *value, byte min, byte max, const cha
   }
 }
 
-void generic_items(const char *label, byte *value, byte num, ...) {
+void generic_items_P(const char *label, byte *value, byte num, ...) {
   lcd.setCursor(1, 0);
-  lcd.print(label);
+  lcd.printClear_P(label, 19, Ter::none);
   const char *items[num];
   if (*value > num) {
     *value = 0;
@@ -634,7 +694,7 @@ void generic_items(const char *label, byte *value, byte num, ...) {
   if (*value < i) {
     byte len = strlen(items[*value]);
     lcd.setCursor(0, 2);
-    lcd.print("                    ");
+    lcd.printClear_P(PSTR(""),20,Ter::none);
     lcd.setCursor((20 - len) / 2, 2);
     lcd.print(items[*value]);
   }
@@ -1008,24 +1068,24 @@ void menu_move(bool sound_echo) {
 
       switch (config.curing_machine_mode) {
         case 3:
-          generic_menu(3, curing_mode ? "Start resin preheat" : "Start washing      ", "Run-time",
-                  is_error() ? "Settings ->!!" : "Settings          ");
+          generic_menu_P(3, curing_mode ? pgmstr_start_resin_preheat : pgmstr_start_washing,
+                  pgmstr_run_time, is_error() ? pgmstr_settings_error : pgmstr_settings);
           lcd_print_right(1);
           lcd_print_right(2);
 
             state = MENU;
           break;
         case 2:
-          generic_menu(3, curing_mode ? "Start drying       " : "Start washing      ", "Run-time",
-                  is_error() ? "Settings ->!!" : "Settings          ");
+          generic_menu_P(3, curing_mode ? pgmstr_start_drying : pgmstr_start_washing, pgmstr_run_time,
+                  is_error() ? pgmstr_settings_error : pgmstr_settings);
           lcd_print_right(1);
           lcd_print_right(2);
 
           state = MENU;
           break;
         case 1:
-        	generic_menu(3, curing_mode ? "Start curing       " : "Start washing      ", "Run-time",
-        	             is_error() ? "Settings ->!!" : "Settings          ");
+        	generic_menu_P(3, curing_mode ? pgmstr_start_curing : pgmstr_start_washing, pgmstr_run_time,
+        	             is_error() ? pgmstr_settings_error : pgmstr_settings);
         	lcd_print_right(1);
         	lcd_print_right(2);
 
@@ -1033,8 +1093,8 @@ void menu_move(bool sound_echo) {
           break;
         case 0:
         default:
-        	generic_menu(4, curing_mode ? "Start drying/curing" : "Start washing", "Run-time",
-        	             is_error() ? "Settings ->!!" : "Settings          ", "Selftest");
+        	generic_menu_P(4, curing_mode ? pgmstr_start_drying_curing : pgmstr_start_washing, pgmstr_run_time,
+        	             is_error() ? pgmstr_settings_error : pgmstr_settings, pgmstr_selftest);
           lcd_print_right(1);
           lcd_print_right(2);
           lcd_print_right(3);
@@ -1047,7 +1107,7 @@ void menu_move(bool sound_echo) {
 
     case SPEED_STATE:
 
-      generic_menu(3, "Back              ", "Curing speed", "Washing speed");
+      generic_menu_P(3, pgmstr_back, pgmstr_curing_speed, pgmstr_washing_speed);
       lcd_print_back();
       lcd_print_right(1);
       lcd_print_right(2);
@@ -1056,13 +1116,13 @@ void menu_move(bool sound_echo) {
 
     case SPEED_CURING:
 
-      generic_value("Curing speed", &speed_control.curing_speed, 1, 10, "/10", 0);
+      generic_value_P(pgmstr_curing_speed, &speed_control.curing_speed, 1, 10, "/10", 0);
 
       break;
 
     case SPEED_WASHING:
 
-      generic_value("Washing speed", &speed_control.washing_speed, 1, 10, "/10", 0);
+      generic_value_P(pgmstr_washing_speed, &speed_control.washing_speed, 1, 10, "/10", 0);
 
       break;
 
@@ -1070,37 +1130,37 @@ void menu_move(bool sound_echo) {
       {
         Scrolling_item items[] =
         {
-          {"Back", true, Ter::back},
-          {"Curing", true, Ter::right},
-          {"Drying", true, Ter::right},
-          {"Washing", true, Ter::right},
-          {"Resin preheat", true, Ter::right},
+          {pgmstr_back, true, Ter::back},
+          {pgmstr_curing, true, Ter::right},
+          {pgmstr_drying, true, Ter::right},
+          {pgmstr_washing, true, Ter::right},
+          {pgmstr_resin_preheat, true, Ter::right},
         };
-        menu_position = scrolling_list(items);
+        menu_position = scrolling_list_P(items);
 
         break;
       }
     case TIME_CURING:
 
-      generic_value("Curing run-time", &config.curing_run_time, 1, 10, " min", 0);
+      generic_value_P(pgmstr_curing_run_time, &config.curing_run_time, 1, 10, " min", 0);
 
       break;
 
     case TIME_DRYING:
 
-      generic_value("Drying run-time", &config.drying_run_time, 1, 10, " min", 0);
+      generic_value_P(pgmstr_drying_run_time, &config.drying_run_time, 1, 10, " min", 0);
 
       break;
 
     case TIME_WASHING:
 
-      generic_value("Washing run-time", &config.washing_run_time, 1, 10, " min", 0);
+      generic_value_P(pgmstr_washing_run_time, &config.washing_run_time, 1, 10, " min", 0);
 
       break;
 
     case TIME_RESIN_PREHEAT:
 
-      generic_value("Resin preheat time", &config.resin_preheat_run_time, 1, 10, " min", 0);
+      generic_value_P(pgmstr_resin_preheat_time, &config.resin_preheat_run_time, 1, 10, " min", 0);
 
       break;
 
@@ -1108,21 +1168,21 @@ void menu_move(bool sound_echo) {
     {
       Scrolling_item items[] =
       {
-        {"Back", true, Ter::back},
-        {"Rotation speed", true, Ter::right},
-        {"Run mode", true, Ter::right},
-        {"Preheat", true, Ter::right},
-        {"Sound", true, Ter::right},
-        {"Fans", true, Ter::right},
-        {"LED intensity", true, Ter::right},
-        {is_error() ? "Information ->!!" : "Information", true, Ter::right},
-        {"Unit system", true, Ter::right},
+        {pgmstr_back, true, Ter::back},
+        {pgmstr_rotation_speed, true, Ter::right},
+        {pgmstr_run_mode, true, Ter::right},
+        {pgmstr_preheat, true, Ter::right},
+        {pgmstr_sound, true, Ter::right},
+        {pgmstr_fans, true, Ter::right},
+        {pgmstr_led_intensity, true, Ter::right},
+        {is_error() ? pgmstr_information_error : pgmstr_information, true, Ter::right},
+        {pgmstr_unit_system, true, Ter::right},
       };
-      menu_position = scrolling_list(items);
+      menu_position = scrolling_list_P(items);
       break;
     }
     case ADVANCED_SETTINGS:
-      generic_menu(4, "Back              ", "Run mode", "Preheat", "Unit system");
+      generic_menu_P(4, pgmstr_back, pgmstr_run_mode, pgmstr_preheat, pgmstr_unit_system);
       lcd_print_back();
       lcd_print_right(1);
       lcd_print_right(2);
@@ -1131,10 +1191,10 @@ void menu_move(bool sound_echo) {
 
     case PREHEAT:
       if (config.heat_to_target_temp) {
-        generic_menu(4, "Back              ", "Preheat enabled", "Drying/Curing temp", "Resin preheat temp" );
+        generic_menu_P(4, pgmstr_back, pgmstr_preheat_enabled, pgmstr_drying_curing_temp, pgmstr_resin_preheat_temp );
       }
       else {
-        generic_menu(4, "Back              ", "Preheat disabled", "Drying/Curing temp", "Resin preheat temp" );
+        generic_menu_P(4, pgmstr_back, pgmstr_preheat_disabled, pgmstr_drying_curing_temp, pgmstr_resin_preheat_temp );
       }
       lcd_print_back();
       lcd_print_right(1);
@@ -1144,38 +1204,38 @@ void menu_move(bool sound_echo) {
 
     case PREHEAT_ENABLE:
 
-      generic_items("Preheat", &config.heat_to_target_temp, 2, "disable >", "< enable");
+      generic_items_P(pgmstr_preheat, &config.heat_to_target_temp, 2, "disable >", "< enable");
 
       break;
 
     case TARGET_TEMP:
       if (config.SI_unit_system) {
-        generic_value("Target temp", &config.target_temp_celsius, 20, 40, " \xDF" "C ", 0);
+        generic_value_P(pgmstr_target_temp, &config.target_temp_celsius, 20, 40, " \xDF" "C ", 0);
       }
       else {
-        generic_value("Target temp", &config.target_temp_celsius, 20, 40, " \xDF" "F ", 1);
+        generic_value_P(pgmstr_target_temp, &config.target_temp_celsius, 20, 40, " \xDF" "F ", 1);
       }
       break;
 
     case RESIN_TARGET_TEMP:
       if (config.SI_unit_system) {
-        generic_value("Target temp", &config.resin_target_temp_celsius, 20, 40, "\xDF" "C", 0);
+        generic_value_P(pgmstr_target_temp, &config.resin_target_temp_celsius, 20, 40, "\xDF" "C", 0);
       }
       else {
-        generic_value("Target temp", &config.resin_target_temp_celsius, 20, 40, "\xDF" "F", 1);
+        generic_value_P(pgmstr_target_temp, &config.resin_target_temp_celsius, 20, 40, "\xDF" "F", 1);
       }
       break;
 
     case UNIT_SYSTEM:
-      generic_items("Unit system", &config.SI_unit_system, 2, "IMPERIAL/ US >", "< SI");
+      generic_items_P(pgmstr_unit_system, &config.SI_unit_system, 2, "IMPERIAL/ US >", "< SI");
       break;
 
     case RUN_MODE:
-      generic_items("Run mode", &config.curing_machine_mode, 4, "Drying & Curing >", "< Curing >", "< Drying >", "< Resin preheat");
+      generic_items_P(pgmstr_run_mode, &config.curing_machine_mode, 4, "Drying & Curing >", "< Curing >", "< Drying >", "< Resin preheat");
       break;
 
     case SOUND_SETTINGS:
-      generic_menu(3, "Back              ", "Sound response", "Finish beep" );
+      generic_menu_P(3, pgmstr_back, pgmstr_sound_response, pgmstr_finish_beep );
       lcd_print_back();
       lcd_print_right(1);
       lcd_print_right(2);
@@ -1183,83 +1243,81 @@ void menu_move(bool sound_echo) {
       break;
 
     case SOUND:
-      generic_items("Sound response", &config.sound_response, 2, "no >", "< yes");
+      generic_items_P(pgmstr_sound_response, &config.sound_response, 2, "no >", "< yes");
       break;
 
     case BEEP:
-      generic_items("Finish beep", &config.finish_beep_mode, 3, "none >", "< once > ", "< continuous");
+      generic_items_P(pgmstr_finish_beep, &config.finish_beep_mode, 3, "none >", "< once > ", "< continuous");
       break;
 
     case FANS:
       {
         Scrolling_item items[] =
         {
-          {"Back", true, Ter::back},
-          {"FAN1 curing", true, Ter::right},
-          {"FAN1 drying", true, Ter::right},
-          {"FAN2 curing", true, Ter::right},
-          {"FAN2 drying", true, Ter::right},
+          {pgmstr_back, true, Ter::back},
+          {pgmstr_fan1_curing, true, Ter::right},
+          {pgmstr_fan1_drying, true, Ter::right},
+          {pgmstr_fan2_curing, true, Ter::right},
+          {pgmstr_fan2_drying, true, Ter::right},
         };
-        menu_position = scrolling_list(items);
+        menu_position = scrolling_list_P(items);
 
         break;
       }
 
     case LED_INTENSITY:
 
-      generic_value("LED intensity", &LED_PWM_VALUE, 1, 100, "% ", 0);
+      generic_value_P(pgmstr_led_intensity, &LED_PWM_VALUE, 1, 100, "% ", 0);
 
       break;
 
     case FAN1_CURING:
 
-      generic_value("FAN1 curing speed", &config.FAN1_CURING_SPEED, 0, 100, " %", 0);
+      generic_value_P(pgmstr_fan1_curing_speed, &config.FAN1_CURING_SPEED, 0, 100, " %", 0);
 
       break;
 
     case FAN1_DRYING:
 
-      generic_value("FAN1 drying speed", &config.FAN1_DRYING_SPEED, 0, 100, " %", 0);
+      generic_value_P(pgmstr_fan1_drying_speed, &config.FAN1_DRYING_SPEED, 0, 100, " %", 0);
 
       break;
 
     case FAN2_CURING:
 
-      generic_value("FAN2 curing speed", &config.FAN2_CURING_SPEED, 0, 100, " %", 0);
+      generic_value_P(pgmstr_fan2_curing_speed, &config.FAN2_CURING_SPEED, 0, 100, " %", 0);
 
       break;
 
     case FAN2_DRYING:
 
-      generic_value("FAN2 drying speed", &config.FAN2_DRYING_SPEED, 0, 100, " %", 0);
+      generic_value_P(pgmstr_fan2_drying_speed, &config.FAN2_DRYING_SPEED, 0, 100, " %", 0);
 
       break;
 
     case INFO:
       {
-        Serial_num_t sn;
-        get_serial_num(sn);
         Scrolling_item items[] =
         {
-          {"FW version: "  FW_VERSION, true, Ter::none},
-          {"FAN1 failure", fan_error[0], Ter::none},
-          {"FAN2 failure", fan_error[1], Ter::none},
-          {"HEATER failure", config.heater_failure, Ter::none},
-          {sn, true, Ter::none},
-          {"Build: " FW_BUILDNR, true, Ter::none},
-          {FW_HASH, true, Ter::none},
-          {FW_LOCAL_CHANGES ? "Workspace dirty" : "Workspace clean", true, Ter::none}
+          {pgmstr_fw_version, true, Ter::none},
+          {pgmstr_fan1_failure, fan_error[0], Ter::none},
+          {pgmstr_fan2_failure, fan_error[1], Ter::none},
+          {pgmstr_heater_failure, config.heater_failure, Ter::none},
+          {pgmstr_serial_number, true, Ter::serialNumber},
+          {pgmstr_build_nr, true, Ter::none},
+          {pgmstr_fw_hash, true, Ter::none},
+          {pgmstr_workspace, true, Ter::none}
         };
-        menu_position = scrolling_list(items);
+        menu_position = scrolling_list_P(items);
 
         break;
       }
     case RUN_MENU:
       if (!curing_mode && paused_time) {
-        generic_menu(3, paused ? "IPA tank removed" : "Pause", "Stop", "Back");
+        generic_menu_P(3, paused ? pgmstr_ipa_tank_removed : pgmstr_pause, pgmstr_stop, pgmstr_back);
       }
       else {
-        generic_menu(3, paused ? "Continue" : "Pause", "Stop", "Back");
+        generic_menu_P(3, paused ? pgmstr_continue : pgmstr_pause, pgmstr_stop, pgmstr_back);
       }
       break;
 
@@ -1386,7 +1444,7 @@ void menu_move(bool sound_echo) {
 
     case SELFTEST:
         if(selftest.phase == 0){
-        	generic_menu(2, "Back              ", "Continue          ");
+        	generic_menu_P(2, pgmstr_back, pgmstr_continue);
         	lcd_print_back();
         	lcd_print_right(1);
         } else if(selftest.phase == 1){
@@ -3077,22 +3135,6 @@ void preheat() {
     }
   }
 
-}
-
-//! @brief Get serial number
-//! @param[out] sn null terminated string containing serial number
-void get_serial_num(Serial_num_t &sn)
-{
-  uint16_t snAddress = 0x7fe0;
-  sn[0] = 'S';
-  sn[1] = 'N';
-  sn[2] = ':';
-  for (uint_least8_t i = 3; i < 19; ++i)
-  {
-    sn[i] = pgm_read_byte(snAddress++);
-  }
-
-  sn[sizeof(Serial_num_t) - 1] = 0;
 }
 
 #if 0
