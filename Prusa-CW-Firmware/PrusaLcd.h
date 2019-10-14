@@ -36,8 +36,9 @@ public:
     {
         if (terminator == Terminator::serialNumber)
         {
-            const char *sn = "SN:";
-            print(sn);
+            print('S');
+            print('N');
+            print(':');
             n = 15;
         }
         else if (terminator != Terminator::none) --n;
