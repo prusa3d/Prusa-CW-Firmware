@@ -227,7 +227,7 @@ static eeprom_small_t * const eeprom_small_base = reinterpret_cast<eeprom_small_
 
 eeprom_t config =
 {
-        "CURW1",    //magic
+        "CURW1",    //magic, change when new fields are added
         10,         //washing_speed
         1,          //curing_speed
         4,          //washing_run_time
