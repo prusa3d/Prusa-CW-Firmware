@@ -144,8 +144,6 @@ volatile uint16_t *const bootKeyPtr = (volatile uint16_t *)(RAMEND - 1);
 
 menu_state state = MENU;
 
-//long lastJob = 0;
-
 uint8_t menu_position = 0;
 uint8_t last_menu_position = 0;
 byte max_menu_position = 0;
@@ -160,6 +158,10 @@ unsigned long therm_read_time_now = 0;
 bool button_released = false;
 volatile uint8_t rotary_diff = 128;
 
+//! @brief legacy configuration store structure
+//!
+//! It is restored when magic read from eeprom equals magic2 "CURWA"
+//! Do not change.
 typedef struct
 {
 	char magic[6];
@@ -179,6 +181,13 @@ typedef struct
 
 } eeprom_small_t;
 
+
+//! @brief configuration store structure
+//!
+//! It is restored when magic read from eeprom equals magic "CURW1"
+//! Do not change. If new items needs to be stored, magic needs to be
+//! changed, this struct needs to be made legacy and new structure needs
+//! to be created.
 typedef struct
 {
 	char magic[6];
@@ -210,14 +219,44 @@ static_assert(sizeof(eeprom_t) <= EEPROM_OFFSET, "eeprom_t doesn't fit in it's r
 static eeprom_t * const eeprom_base = reinterpret_cast<eeprom_t*> (E2END + 1 - EEPROM_OFFSET);
 static eeprom_small_t * const eeprom_small_base = reinterpret_cast<eeprom_small_t*> (E2END + 1 - EEPROM_OFFSET);
 
-eeprom_t config = {"CURW1", 10, 1, 4, 3, 3, 1, 1, 0, 35, 95, 0, 1, false, 60, 60, 40, 70, 70, 40, 3, 30};
+//! @brief configuration
+//!
+//! Default values definition,
+//! it can be overridden by user and stored to
+//! and restored from permanent storage.
+
+eeprom_t config =
+{
+        "CURW1",    //magic, change when new fields are added
+        10,         //washing_speed
+        1,          //curing_speed
+        4,          //washing_run_time
+        3,          //curing_run_time
+        3,          //drying_run_time
+        1,          //finish_beep_mode
+        1,          //sound_response
+        0,          //heat_to_target_temp
+        35,         //target_temp_celsius
+        95,         //target_temp_fahrenheit
+        0,          //curing_machine_mode
+        1,          //SI_unit_system
+        false,      //heater_failure
+        60,         //FAN1_CURING_SPEED
+        60,         //FAN1_DRYING_SPEED
+        40,         //FAN1_PREHEAT_SPEED
+        70,         //FAN2_CURING_SPEED
+        70,         //FAN2_DRYING_SPEED
+        40,         //FAN2_PREHEAT_SPEED
+        3,          //resin_preheat_run_time
+        30,         //resin_target_temp_celsius
+};
 
 byte max_preheat_run_time = 30;
 byte cover_check_enabled = 1;
 byte LED_PWM_VALUE = 100;
 
-bool fan1_pwm_State = LOW;
-bool fan2_pwm_State = LOW;
+bool fan1_pwm_high = false;
+bool fan2_pwm_high = false;
 
 int fan_tacho_count[3];
 int fan_tacho_last_count[3];
@@ -279,7 +318,6 @@ bool therm_read = false;
 
 volatile int divider = 0;
 
-int ms_counter;
 int ams_fan_counter;
 
 unsigned long button_timer = 0;
@@ -291,11 +329,9 @@ bool preheat_complete = false;
 bool pid_mode = false;
 
 double summErr = 0;
-//double oldSpeed = 0;
 
 const uint8_t P = 10;//0.5
 const double I = 0.001; //0.001;
-const uint8_t D = 1; //0.1;
 
 byte Back[8] = {
   B00100,
@@ -549,9 +585,9 @@ void read_config() {
   }
 }
 
-int PID(float & actualTemp, byte targetTemp) {
+uint8_t PI_regulator(float & actualTemp, byte targetTemp) {
 
-  double newSpeed = 0, errValue, diffTemp;
+  double newSpeed = 0, errValue;
 
   errValue = actualTemp - targetTemp;
 
@@ -560,11 +596,9 @@ int PID(float & actualTemp, byte targetTemp) {
   if ((summErr > 10000) || (summErr < -10000))
     summErr = 10000;
 
-  diffTemp = actualTemp;	// "- oldSpeed;" which was always 0
-
-  newSpeed = P * errValue + I * summErr + D * diffTemp;
+  newSpeed = P * errValue + I * summErr;
   if (newSpeed > 100) {
-    return 100;
+    newSpeed = 100;
   }
   return newSpeed;
 }
@@ -999,9 +1033,6 @@ void loop() {
         long_press = true;
         redraw_menu = true;
         menu_move(true);
- //       if (config.sound_response) {
- //			echo();
- //       }
       }
     }
   } else {
@@ -1021,8 +1052,6 @@ void loop() {
     if (state == MENU || state == ADVANCED_SETTINGS || state == PREHEAT || state == SOUND_SETTINGS || state == SPEED_STATE) {
       last_menu_position = menu_position;
     }
-//    if (state == SETTINGS || state == FANS || state == TIME) {
-//    }
 
     time_now = millis();
     lcd.reinit();
@@ -1035,8 +1064,6 @@ void loop() {
       menu_position = last_menu_position;
       print_menu_cursor(menu_position);
     }
-//    if (state == SETTINGS || state == FANS || state == TIME) {
-//    }
   }
 
   if (millis() > therm_read_time_now + 2000) {
@@ -2310,7 +2337,6 @@ void button_press() {
   }
   scrolling_list_set(menu_position);
 
-  //redraw_menu = true;
   rotary_diff = 128;
   redraw_menu = true;
   menu_move(true);
@@ -2395,7 +2421,6 @@ void read_encoder()
 
 SIGNAL(TIMER0_COMPA_vect) //1ms timer
 {
-  ms_counter++;
   if (!heater_error) {
     read_encoder();
   }
@@ -2409,7 +2434,7 @@ SIGNAL(TIMER0_COMPA_vect) //1ms timer
     		tmpTargetTemp = config.resin_target_temp_celsius;
 
     	if (chamber_temp_celsius >= tmpTargetTemp) {
-    		fan_duty[0] = PID(chamber_temp_celsius, tmpTargetTemp);
+    		fan_duty[0] = PI_regulator(chamber_temp_celsius, tmpTargetTemp);
     		fan_duty[1] = fan_duty[0];
     	} else {
     		fan_duty[0] = FAN1_MENU_SPEED;
@@ -2421,16 +2446,6 @@ SIGNAL(TIMER0_COMPA_vect) //1ms timer
   fan_pwm_control();
 
   fan_rpm();
-
-  if (ms_counter >= 4000) {
-
-    //lcd.begin_noclear(20, 4);
-    //redraw_menu = true;
-    //menu_move(true);
-    ms_counter = 0;
-  } else {
-    redraw_menu = false;
-  }
 }
 
 void tDownComplete()
@@ -2896,18 +2911,18 @@ void fan_pwm_control() {
 #if (BOARD == 3)
   unsigned long currentMillis = millis();
   if (fan_duty[0] > 0) {
-    if (fan1_pwm_State == LOW) {
+    if (fan1_pwm_high == false) {
       if (currentMillis - fan1_previous_millis >= ((period) * (1 - ((float)fan_duty[0] / 100)))) {
         fan1_previous_millis = currentMillis;
         PORTC = PORTC | 0x80; //OUTPUT FAN1 HIGH
-        fan1_pwm_State = HIGH;
+        fan1_pwm_high = true;
       }
     }
-    if (fan1_pwm_State == HIGH) {
+    if (fan1_pwm_high == true) {
       if (currentMillis - fan1_previous_millis >= ((period) * ((float)fan_duty[0] / 100))) {
         fan1_previous_millis = currentMillis;
         PORTC = PORTC & 0x7F; //OUTPUT FAN1 LOW
-        fan1_pwm_State = LOW;
+        fan1_pwm_high = false;
       }
     }
   }
@@ -2915,18 +2930,18 @@ void fan_pwm_control() {
     PORTC = PORTC & 0x7F; //OUTPUT FAN1 LOW
   }
   if (fan_duty[1] > 0) {
-    if (fan2_pwm_State == LOW) {
+    if (fan2_pwm_high == false) {
       if (currentMillis - fan2_previous_millis >= ((period) * (1 - ((float)fan_duty[1] / 100)))) {
         fan2_previous_millis = currentMillis;
         PORTB = PORTB | 0x80; //OUTPUT FAN2 HIGH
-        fan2_pwm_State = HIGH;
+        fan2_pwm_high = true;
       }
     }
-    if (fan2_pwm_State == HIGH) {
+    if (fan2_pwm_high == true) {
       if (currentMillis - fan2_previous_millis >= ((period) * ((float)fan_duty[1] / 100))) {
         fan2_previous_millis = currentMillis;
         PORTB = PORTB & 0x7F; //OUTPUT FAN2 LOW
-        fan2_pwm_State = LOW;
+        fan2_pwm_high = false;
       }
     }
   }
@@ -2946,18 +2961,18 @@ void fan_pwm_control() {
       outputchip.digitalWrite(FAN1_PIN, HIGH);
     }
 
-    if (fan1_pwm_State == LOW) {
+    if (fan1_pwm_high == false) {
       if (currentMillis - fan1_previous_millis >= ((period) * (1 - ((float)fan_duty[0] / 100)))) {
         fan1_previous_millis = currentMillis;
         PORTC = PORTC & 0x7F; //OUTPUT FAN1 LOW
-        fan1_pwm_State = HIGH;
+        fan1_pwm_high = true;
       }
     }
-    if (fan1_pwm_State == HIGH) {
+    if (fan1_pwm_high == true) {
       if (currentMillis - fan1_previous_millis >= ((period) * ((float)fan_duty[0] / 100))) {
         fan1_previous_millis = currentMillis;
         PORTC = PORTC | 0x80; //OUTPUT FAN1 HIGH
-        fan1_pwm_State = LOW;
+        fan1_pwm_high = false;
       }
     }
   }
@@ -2973,19 +2988,19 @@ void fan_pwm_control() {
       fan2_on = true;
       outputchip.digitalWrite(FAN2_PIN, HIGH);
     }
-    if (fan2_pwm_State == LOW) {
+    if (fan2_pwm_high == false) {
       if (currentMillis - fan2_previous_millis >= ((period) * (1 - ((float)fan_duty[1] / 100)))) {
         fan2_previous_millis = currentMillis;
         PORTB = PORTB & 0x7F; //OUTPUT FAN2 LOW
-        fan2_pwm_State = HIGH;
+        fan2_pwm_high = true;
 
       }
     }
-    if (fan2_pwm_State == HIGH) {
+    if (fan2_pwm_high == true) {
       if (currentMillis - fan2_previous_millis >= ((period) * ((float)fan_duty[1] / 100))) {
         fan2_previous_millis = currentMillis;
         PORTB = PORTB | 0x80; //OUTPUT FAN2 HIGH
-        fan2_pwm_State = LOW;
+        fan2_pwm_high = false;
       }
     }
   }
@@ -3047,7 +3062,7 @@ void therm2_read() {
 void fan_rpm() {
   ams_fan_counter ++;
   if (ams_fan_counter % 100 == 0) {
-	  for(short j = 0; j < 2; j++){
+	  for(uint8_t j = 0; j < 2; j++){
 		if (fan_tacho_count[j] <= fan_tacho_last_count[j] ) {
 		  	if (fan_duty[j] > 0)
 		  		fan_error[j] = true;
