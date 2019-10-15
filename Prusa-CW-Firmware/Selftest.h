@@ -76,6 +76,8 @@ public:
  */
 	void heat_test(bool);
 
+	static void tCountDownComplete();
+
 
 	uint8_t phase;				/**< Stores which test("phase" of selftest) is running*/
 	uint8_t fan_tacho[2];		/**< Stores measured rotation per 1ms for ventilation_test*/
@@ -92,6 +94,8 @@ public:
 	bool isCounterRunning;		/**< Tells whether counter is running... */
 	bool fail_flag;				/**< Tells whether test passed or failed*/
 	bool measured_state;		/**< Universal bool variable for measurements and flags*/
+	static bool callback;
+	bool helper;
 
 private:
 

@@ -1,24 +1,21 @@
 #include "Selftest.h"
 
-
-bool callback = false;
-bool helper = true;
-
-void tCountDownComplete()
-{
-	callback = true;
-}
-
 CSelftest::CSelftest() : phase(0), cover_test(false), tank_test(false), vent_test(false), heater_test(false),
 						 rotation_test(false), led_test(false), fan1_speed(10), fan2_speed(10), cover_down(false),
-						 isCounterRunning(false), fail_flag(false), measured_state(false), first_loop(true),
+						 isCounterRunning(false), fail_flag(false), measured_state(false), helper(true), first_loop(true),
 						 prev_measured_state(false), counter(0)
 {
 	fan_tacho[0] = fan_tacho[1] = 0;
+	callback = false;
 }
 
 CSelftest::~CSelftest()
 {
+}
+
+void CSelftest::tCountDownComplete()
+{
+	callback = true;
 }
 
 bool CSelftest::universal_pin_test(){
