@@ -61,6 +61,7 @@ set(GITREV_TMP ${CMAKE_BINARY_DIR}/${GITREV_BARE_TMP})
 add_executable(
 	Prusa-CW-Firmware
 	Prusa-CW-Firmware/Countimer.cpp
+	Prusa-CW-Firmware/Selftest.cpp
 	Prusa-CW-Firmware/SpeedControl.cpp
 	Prusa-CW-Firmware/main.cpp
 	Prusa-CW-Firmware/MCP23S17.cpp

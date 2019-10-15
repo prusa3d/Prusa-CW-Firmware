@@ -34,13 +34,13 @@ public:
 
 private:
 
-	const unsigned int rotation_start = 200;	/**< Smaller = faster */
-	const unsigned int min_curing_speed = 220;	/**< Smaller = faster */
-	const unsigned int max_curing_speed = 25;	/**< Smaller = faster */
-	const unsigned int min_washing_speed = 70;	/**< Smaller = faster */
-	const unsigned int max_washing_speed = 16;	/**< Smaller = faster */
-	unsigned int target_curing_period;			/**< Stores wanted time period of microsteps mapped in speed_configuration() */
-	unsigned int target_washing_period;			/**< Stores wanted time period of microsteps mapped in speed_configuration() */
+	const uint8_t rotation_start = 200;	/**< Smaller = faster */
+	const uint8_t min_curing_speed = 220;	/**< Smaller = faster */
+	const uint8_t max_curing_speed = 25;	/**< Smaller = faster */
+	const uint8_t min_washing_speed = 70;	/**< Smaller = faster */
+	const uint8_t max_washing_speed = 16;	/**< Smaller = faster */
+	uint8_t target_curing_period;			/**< Stores wanted time period of microsteps mapped in speed_configuration() */
+	uint8_t target_washing_period;			/**< Stores wanted time period of microsteps mapped in speed_configuration() */
 
 };
 

@@ -45,7 +45,7 @@ static uint_least8_t first_visible(const Scrolling_item *items, uint_least8_t it
 //! Invisible items are not counted, so if there are two invisible items
 //! in the beginning of items and then two visible items,
 //! possible returned indexes are 0 and 1. Not 2 and 3.
-uint_least8_t scrolling_list(const Scrolling_item *items, uint8_t item_count)
+uint_least8_t scrolling_list_P(const Scrolling_item *items, uint8_t item_count)
 {
     const uint_least8_t visible_items = count_visible(items, item_count);
     const uint_least8_t columns = 20;
@@ -89,7 +89,7 @@ uint_least8_t scrolling_list(const Scrolling_item *items, uint8_t item_count)
 
         if (visible_index < item_count)
         {
-            lcd.printClear(items[visible_index].caption, columns - cursor_columns, items[visible_index].last_symbol);
+            lcd.printClear_P(items[visible_index].caption_P, columns - cursor_columns, items[visible_index].last_symbol);
         }
         ++visible_index;
     }

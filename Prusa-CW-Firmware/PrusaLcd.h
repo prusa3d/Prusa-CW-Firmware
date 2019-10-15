@@ -18,22 +18,36 @@ public:
         none,
         back,
         right,
+        serialNumber,
     };
 
     //! Print n characters from null terminated string c
     //! if there are not enough characters, prints ' ' for remaining n.
     //!
-    //! @par c null terminated string to print
-    //! @par n number of characters to print or clear
-    //! @par last_symbol if non-zero print it in the end of line
-    void printClear(const char *c, uint_least8_t n, Terminator terminator)
+    //! @param c null terminated string to print
+    //! @param n number of characters to print or clear
+    //! ignored for terminator Terminator::serialNumber - prints always 18 characters
+    //! @param terminator additional symbol to be printed
+    //!  * Terminator::none none
+    //!  * Terminator::back back arrow
+    //!  * Terminator::right right arrow
+    //!  * Terminator::serialNumber none
+    void printClear_P(const char *c, uint_least8_t n, Terminator terminator)
     {
-        if (terminator != Terminator::none) --n;
+        if (terminator == Terminator::serialNumber)
+        {
+            print('S');
+            print('N');
+            print(':');
+            n = 15;
+        }
+        else if (terminator != Terminator::none) --n;
+
         for (uint_least8_t i = 0; i < n; ++i)
         {
-            if (*c)
+            if ((char)pgm_read_byte(c))
             {
-                print(*c);
+                print((char)pgm_read_byte(c));
                 ++c;
             }
             else
