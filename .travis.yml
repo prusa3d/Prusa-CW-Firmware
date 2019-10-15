@@ -9,7 +9,7 @@ deploy:
   provider: releases
   api_key: $ACCESS_TOKEN
   file:
-    - ../Prusa-CW-Firmware/Prusa-CW-Firmware.hex
+    - ../Prusa-CW-Firmware-build/Prusa-CW-Firmware.hex
   skip_cleanup: true
   on:
     tags: true
