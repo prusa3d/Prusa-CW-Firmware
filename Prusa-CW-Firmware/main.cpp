@@ -158,6 +158,10 @@ unsigned long therm_read_time_now = 0;
 bool button_released = false;
 volatile uint8_t rotary_diff = 128;
 
+//! @brief legacy configuration store structure
+//!
+//! It is restored when magic read from eeprom equals magic2 "CURWA"
+//! Do not change.
 typedef struct
 {
 	char magic[6];
@@ -177,6 +181,13 @@ typedef struct
 
 } eeprom_small_t;
 
+
+//! @brief configuration store structure
+//!
+//! It is restored when magic read from eeprom equals magic "CURW1"
+//! Do not change. If new items needs to be stored, magic needs to be
+//! changed, this struct needs to be made legacy and new structure needs
+//! to be created.
 typedef struct
 {
 	char magic[6];
@@ -208,33 +219,37 @@ static_assert(sizeof(eeprom_t) <= EEPROM_OFFSET, "eeprom_t doesn't fit in it's r
 static eeprom_t * const eeprom_base = reinterpret_cast<eeprom_t*> (E2END + 1 - EEPROM_OFFSET);
 static eeprom_small_t * const eeprom_small_base = reinterpret_cast<eeprom_small_t*> (E2END + 1 - EEPROM_OFFSET);
 
-/*
-DEFAULT VALUES:
+//! @brief configuration
+//!
+//! Default values definition,
+//! it can be overridden by user and stored to
+//! and restored from permanent storage.
 
-magic = "CURW1"
-washing_speed = 10
-curing_speed = 1
-washing_run_time = 4
-curing_run_time = 3
-drying_run_time = 3
-finish_beep_mode = 1
-sound_response = 1
-heat_to_target_temp = 0
-target_temp_celsius = 35
-target_temp_fahrenheit = 95
-curing_machine_mode = 0
-SI_unit_system = 1
-heater_failure = false
-FAN1_CURING_SPEED = 60
-FAN1_DRYING_SPEED = 60
-FAN1_PREHEAT_SPEED = 40
-FAN2_CURING_SPEED = 70
-FAN2_DRYING_SPEED = 70
-FAN2_PREHEAT_SPEED = 40
-resin_preheat_run_time = 3
-resin_target_temp_celsius = 30
-*/
-eeprom_t config = {"CURW1", 10, 1, 4, 3, 3, 1, 1, 0, 35, 95, 0, 1, false, 60, 60, 40, 70, 70, 40, 3, 30};
+eeprom_t config =
+{
+        "CURW1",    //magic
+        10,         //washing_speed
+        1,          //curing_speed
+        4,          //washing_run_time
+        3,          //curing_run_time
+        3,          //drying_run_time
+        1,          //finish_beep_mode
+        1,          //sound_response
+        0,          //heat_to_target_temp
+        35,         //target_temp_celsius
+        95,         //target_temp_fahrenheit
+        0,          //curing_machine_mode
+        1,          //SI_unit_system
+        false,      //heater_failure
+        60,         //FAN1_CURING_SPEED
+        60,         //FAN1_DRYING_SPEED
+        40,         //FAN1_PREHEAT_SPEED
+        70,         //FAN2_CURING_SPEED
+        70,         //FAN2_DRYING_SPEED
+        40,         //FAN2_PREHEAT_SPEED
+        3,          //resin_preheat_run_time
+        30,         //resin_target_temp_celsius
+};
 
 byte max_preheat_run_time = 30;
 byte cover_check_enabled = 1;
