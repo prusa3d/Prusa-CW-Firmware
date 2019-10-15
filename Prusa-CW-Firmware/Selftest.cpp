@@ -1,6 +1,6 @@
 #include "Selftest.h"
 
-bool timer_callback_selftest = false;
+static bool timer_callback_selftest = false;
 
 CSelftest::CSelftest() : phase(0), cover_test(false), tank_test(false), vent_test(false), heater_test(false),
 						 rotation_test(false), led_test(false), fan1_speed(10), fan2_speed(10), cover_down(false),

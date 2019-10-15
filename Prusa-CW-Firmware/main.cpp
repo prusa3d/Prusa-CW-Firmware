@@ -3047,7 +3047,7 @@ void therm2_read() {
 void fan_rpm() {
   ams_fan_counter ++;
   if (ams_fan_counter % 100 == 0) {
-	  for(short j = 0; j < 2; j++){
+	  for(uint8_t j = 0; j < 2; j++){
 		if (fan_tacho_count[j] <= fan_tacho_last_count[j] ) {
 		  	if (fan_duty[j] > 0)
 		  		fan_error[j] = true;
