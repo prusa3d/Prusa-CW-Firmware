@@ -1,12 +1,13 @@
 #include "Selftest.h"
 
+bool timer_callback_selftest = false;
+
 CSelftest::CSelftest() : phase(0), cover_test(false), tank_test(false), vent_test(false), heater_test(false),
 						 rotation_test(false), led_test(false), fan1_speed(10), fan2_speed(10), cover_down(false),
 						 isCounterRunning(false), fail_flag(false), measured_state(false), helper(true), first_loop(true),
 						 prev_measured_state(false), counter(0)
 {
 	fan_tacho[0] = fan_tacho[1] = 0;
-	callback = false;
 }
 
 CSelftest::~CSelftest()
@@ -15,7 +16,7 @@ CSelftest::~CSelftest()
 
 void CSelftest::tCountDownComplete()
 {
-	callback = true;
+	timer_callback_selftest = true;
 }
 
 bool CSelftest::universal_pin_test(){
@@ -41,7 +42,7 @@ void CSelftest::ventilation_test(bool f1_error, bool f2_error){
 		tCountDown.start();
 		first_loop = false;
 	}
-	if(callback == false){
+	if(timer_callback_selftest == false){
 		byte currSec = tCountDown.getCurrentSeconds();
 		if(currSec % 10 == 0){
 			if(fan1_speed + 20 <= 100 && helper){
@@ -130,7 +131,7 @@ void CSelftest::clean_up(){
 	counter = 0;
 	measured_state = prev_measured_state = false;
 	fan1_speed = fan2_speed = 10;
-	callback = false;
+	timer_callback_selftest = false;
 	helper = false;
 	isCounterRunning = false;
 	fail_flag = false;
@@ -138,12 +139,12 @@ void CSelftest::clean_up(){
 
 void CSelftest::LED_test(){
 	if(first_loop == true){
-		tCountDown.setCounter(0, 10, 0, tCountDown.COUNT_DOWN, tCountDownComplete);		//leds will light 10 minutes
+		tCountDown.setCounter(0, 1, 0, tCountDown.COUNT_DOWN, tCountDownComplete);		//leds will light 10 minutes
 		tCountDown.start();
 		isCounterRunning = true;
 		first_loop = false;
 	}
-	if(callback == false){
+	if(timer_callback_selftest == false){
 		if(tCountDown.isStopped()){
 			tCountDown.start();
 			isCounterRunning = true;
@@ -162,8 +163,8 @@ bool CSelftest::motor_rotation_timer(){
 		return true;
 	}
 
-	if(callback == true){
-		callback = false;
+	if(timer_callback_selftest == true){
+		timer_callback_selftest = false;
 		tCountDown.restart();
 		return true;
 	}
@@ -175,12 +176,12 @@ void CSelftest::set_first_loop(const bool tmp){
 
 void CSelftest::heat_test(bool heater_error){
 	if(first_loop == true){
-			tCountDown.setCounter(0, 10, 0, tCountDown.COUNT_DOWN, tCountDownComplete);
+			tCountDown.setCounter(0, 1, 0, tCountDown.COUNT_DOWN, tCountDownComplete);
 			tCountDown.start();
 			first_loop = false;
 			isCounterRunning = true;
 	}
-	if(callback == false){
+	if(timer_callback_selftest == false){
 		if(heater_error){
 			tCountDown.stop();
 			fail_flag = true;

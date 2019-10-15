@@ -94,7 +94,6 @@ public:
 	bool isCounterRunning;		/**< Tells whether counter is running... */
 	bool fail_flag;				/**< Tells whether test passed or failed*/
 	bool measured_state;		/**< Universal bool variable for measurements and flags*/
-	static bool callback;
 	bool helper;
 
 private:
