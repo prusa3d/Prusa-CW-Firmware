@@ -139,7 +139,7 @@ void CSelftest::clean_up(){
 
 void CSelftest::LED_test(){
 	if(first_loop == true){
-		tCountDown.setCounter(0, 1, 0, tCountDown.COUNT_DOWN, tCountDownComplete);		//leds will light 10 minutes
+		tCountDown.setCounter(0, 10, 0, tCountDown.COUNT_DOWN, tCountDownComplete);		//leds will light 10 minutes
 		tCountDown.start();
 		isCounterRunning = true;
 		first_loop = false;
@@ -176,7 +176,7 @@ void CSelftest::set_first_loop(const bool tmp){
 
 void CSelftest::heat_test(bool heater_error){
 	if(first_loop == true){
-			tCountDown.setCounter(0, 1, 0, tCountDown.COUNT_DOWN, tCountDownComplete);
+			tCountDown.setCounter(0, 10, 0, tCountDown.COUNT_DOWN, tCountDownComplete);
 			tCountDown.start();
 			first_loop = false;
 			isCounterRunning = true;
