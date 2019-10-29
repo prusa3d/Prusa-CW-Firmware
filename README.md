@@ -68,7 +68,7 @@ file MM-control-01.hex is generated.
 
 ## Flashing
 ### Windows
-#### Slic3er
+#### PrusaSlicer (previously Slic3er PE)
 Configuration > Flash printer firmware, then fill up the path to generated .hex and hit Flash!
 #### Avrdude
 Board needs to be reset to bootloader. Bootloader has 5 seconds timeout and then returns to the application.
