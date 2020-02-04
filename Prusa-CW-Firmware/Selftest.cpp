@@ -1,4 +1,5 @@
 #include "Selftest.h"
+#include "i18n.h"
 
 static bool timer_callback_selftest = false;
 
@@ -10,50 +11,48 @@ CSelftest::CSelftest() : phase(0), cover_test(false), tank_test(false), vent_tes
 	fan_tacho[0] = fan_tacho[1] = 0;
 }
 
-CSelftest::~CSelftest()
-{
-}
+CSelftest::~CSelftest() {}
 
-void CSelftest::tCountDownComplete()
-{
+void CSelftest::tCountDownComplete() {
 	timer_callback_selftest = true;
 }
 
-bool CSelftest::universal_pin_test(){
-	if(first_loop){
+bool CSelftest::universal_pin_test() {
+	if (first_loop) {
 		prev_measured_state = measured_state;
 	  	first_loop = false;
 	}
-	if(measured_state != prev_measured_state){
+	if (measured_state != prev_measured_state) {
 		prev_measured_state = measured_state;
-	  	counter++;
-	  	if(counter > 5 && phase == 1)
-	  		cover_test = true;
-	  	else if(counter > 5 && phase == 2)
-	  		tank_test = true;
-	  	return true;
+		counter++;
+		if (counter > 5 && phase == 1)
+			cover_test = true;
+		else if (counter > 5 && phase == 2)
+			tank_test = true;
+		return true;
 	}
 	return false;
 }
 
-void CSelftest::ventilation_test(bool f1_error, bool f2_error){
-	if(first_loop == true){
+void CSelftest::ventilation_test(bool f1_error, bool f2_error) {
+	if (first_loop == true) {
 		tCountDown.setCounter(0, 1, 0, tCountDown.COUNT_DOWN, tCountDownComplete);		//fans will do 1 minute
 		tCountDown.start();
 		first_loop = false;
 	}
-	if(timer_callback_selftest == false){
+	if (timer_callback_selftest == false) {
 		byte currSec = tCountDown.getCurrentSeconds();
-		if(currSec % 10 == 0){
-			if(fan1_speed + 20 <= 100 && helper){
+		if (currSec % 10 == 0) {
+			if (fan1_speed + 20 <= 100 && helper) {
 				fan1_speed += 20;
 				fan2_speed += 20;
 				helper = false;
 			}
-		} else
+		} else {
 			helper = true;
+		}
 
-		if(f1_error || f2_error){
+		if (f1_error || f2_error) {
 			tCountDown.stop();
 			fan1_speed = fan2_speed = 10;
 			measured_state = f1_error;			//variable recycling
@@ -67,66 +66,66 @@ void CSelftest::ventilation_test(bool f1_error, bool f2_error){
 	 }
 }
 
-bool CSelftest::is_first_loop(){
+bool CSelftest::is_first_loop() {
 	return first_loop;
 }
 
-const char * CSelftest::print(){
+const char * CSelftest::print() {
 	switch (phase) {
 	case 3:
-		if(!vent_test)
-			return "Fan test";
+		if (!vent_test)
+			return pgmstr_fan_test;
 		else {
 			if (measured_state || prev_measured_state)
-				return "Test Failed!";
+				return pgmstr_test_failed;
 			else
-				return "Test Successful";
+				return pgmstr_test_success;
 		}
 	case 4:
-		if(!led_test){
-			if(cover_down)
-				return "LED test";
+		if (!led_test) {
+			if (cover_down)
+				return pgmstr_led_test;
 			else
-				return "Close the cover";
+				return pgmstr_close_cover;
 		} else {
-			if(fail_flag == true)
-				return "Test Failed";
+			if (fail_flag == true)
+				return pgmstr_test_failed;
 			else
-				return "Test successful";
+				return pgmstr_test_success;
 		}
 		break;
 	case 5:
-		if(!heater_test){
-			if(fan1_speed == 0)
-				return "Remove IPA tank";
+		if (!heater_test) {
+			if (fan1_speed == 0)
+				return pgmstr_remove_tank;
 			else {
-				if(fan2_speed == 0)
-					return "Close the cover";
+				if (fan2_speed == 0)
+					return pgmstr_close_cover;
 				else
-					return "Heater test";
+					return pgmstr_heater_test;
 			}
 		} else {
-			if(fail_flag == true)
-				return "Test failed";
+			if (fail_flag == true)
+				return pgmstr_test_failed;
 			else
-				return "Test Successful";
+				return pgmstr_test_success;
 		}
 		break;
 
 	case 6:
-		if(!rotation_test)
-			return "Rotation test";
+		if (!rotation_test)
+			return pgmstr_rotetion_test;
 		else
-			return "Test Successful";
+			return pgmstr_test_success;
 		break;
 
 	default:
-		return "";
+		return pgmstr_emptystr;
 		break;
 	}
 }
 
-void CSelftest::clean_up(){
+void CSelftest::clean_up() {
 	first_loop = true;
 	counter = 0;
 	measured_state = prev_measured_state = false;
@@ -137,15 +136,15 @@ void CSelftest::clean_up(){
 	fail_flag = false;
 }
 
-void CSelftest::LED_test(){
-	if(first_loop == true){
+void CSelftest::LED_test() {
+	if (first_loop == true) {
 		tCountDown.setCounter(0, 10, 0, tCountDown.COUNT_DOWN, tCountDownComplete);		//leds will light 10 minutes
 		tCountDown.start();
 		isCounterRunning = true;
 		first_loop = false;
 	}
-	if(timer_callback_selftest == false){
-		if(tCountDown.isStopped()){
+	if (timer_callback_selftest == false) {
+		if (tCountDown.isStopped()) {
 			tCountDown.start();
 			isCounterRunning = true;
 		}
@@ -155,34 +154,34 @@ void CSelftest::LED_test(){
 	}
 }
 
-bool CSelftest::motor_rotation_timer(){
-	if(first_loop){
+bool CSelftest::motor_rotation_timer() {
+	if (first_loop) {
 		tCountDown.setCounter(0, 0, 10, tCountDown.COUNT_DOWN, tCountDownComplete);			//10sec time periods
 		tCountDown.start();
 		helper = true;
 		return true;
 	}
 
-	if(timer_callback_selftest == true){
+	if (timer_callback_selftest == true) {
 		timer_callback_selftest = false;
 		tCountDown.restart();
 		return true;
 	}
 	return false;
 }
-void CSelftest::set_first_loop(const bool tmp){
+void CSelftest::set_first_loop(const bool tmp) {
 	first_loop = tmp;
 }
 
-void CSelftest::heat_test(bool heater_error){
-	if(first_loop == true){
-			tCountDown.setCounter(0, 10, 0, tCountDown.COUNT_DOWN, tCountDownComplete);
-			tCountDown.start();
-			first_loop = false;
-			isCounterRunning = true;
+void CSelftest::heat_test(bool heater_error) {
+	if (first_loop == true) {
+		tCountDown.setCounter(0, 10, 0, tCountDown.COUNT_DOWN, tCountDownComplete);
+		tCountDown.start();
+		first_loop = false;
+		isCounterRunning = true;
 	}
-	if(timer_callback_selftest == false){
-		if(heater_error){
+	if (timer_callback_selftest == false) {
+		if (heater_error) {
 			tCountDown.stop();
 			fail_flag = true;
 			heater_test = true;

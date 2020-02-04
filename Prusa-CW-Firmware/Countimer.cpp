@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "Countimer.h"
 #include "Arduino.h"
 

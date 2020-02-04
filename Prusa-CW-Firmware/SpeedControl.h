@@ -1,8 +1,6 @@
 #ifndef SPEED_CONTROL_H
 #define SPEED_CONTROL_H
 
-//#define SERIAL_COM_DEBUG
-
 #include "Arduino.h"
 
 /*! \class CSpeedControl

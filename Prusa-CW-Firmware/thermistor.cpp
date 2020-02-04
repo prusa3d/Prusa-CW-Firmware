@@ -31,7 +31,7 @@ thermistor::thermistor(int pin, int sensorNumber)
 float thermistor::analog2temp() {
   uint8_t e = _sensorNumber;
   int raw  =  0;
-  for(int j=1;j<=OVERSAMPLENR;j++){
+  for (uint8_t j = 1; j <= OVERSAMPLENR; j++) {
     raw += analogRead(_pin);
   }
   float celsius = FLT_MAX;

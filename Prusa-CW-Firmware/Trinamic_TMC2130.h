@@ -124,14 +124,12 @@ public:
   boolean isError();
   boolean isStallguard();
   boolean isStandstill();
-  String debug();
 
 private:
   uint32_t _coolconf;
   uint32_t _pwmconf;
   uint8_t _csPin;
   uint8_t _status;
-  String _debug;
 };
 
 #endif // TRINAMIC_TMC2130_H

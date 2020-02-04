@@ -5,11 +5,11 @@
 #ifndef CW_MAIN_H
 #define CW_MAIN_H
 #include <stdint.h>
-#include "PrusaLcd.h"
+#include "LiquidCrystal_Prusa.h"
 
 extern uint8_t menu_position;
 extern volatile uint8_t rotary_diff;
-extern PrusaLcd lcd;
+extern LiquidCrystal_Prusa lcd;
 
 void print_menu_cursor(uint8_t line);
 

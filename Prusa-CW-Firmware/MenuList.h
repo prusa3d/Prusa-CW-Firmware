@@ -5,14 +5,14 @@
 #ifndef MENULIST_H
 #define MENULIST_H
 
-#include "PrusaLcd.h"
+#include "LiquidCrystal_Prusa.h"
 #include <stdint.h>
 
 struct Scrolling_item
 {
    const char *caption_P;
    bool visible;
-   PrusaLcd::Terminator last_symbol;
+   LiquidCrystal_Prusa::Terminator last_symbol;
 };
 
 uint_least8_t scrolling_list_P(const Scrolling_item items[], uint8_t item_count);

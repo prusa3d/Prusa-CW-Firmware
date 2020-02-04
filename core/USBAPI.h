@@ -31,6 +31,7 @@ typedef unsigned short u16;
 typedef unsigned long u32;
 
 #include "Arduino.h"
+#include "Print.h"
 
 // This definitions is usefull if you want to reduce the EP_SIZE to 16
 // at the moment only 64 and 16 as EP_SIZE for all EPs are supported except the control endpoint
@@ -85,7 +86,7 @@ struct ring_buffer;
 #error Please lower the CDC Buffer size
 #endif
 
-class Serial_ : public Stream
+class Serial_ : public Print
 {
 private:
 	int peek_buffer;

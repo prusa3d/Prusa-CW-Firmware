@@ -13,4 +13,6 @@
 //! @val 1 some local git tracked files has been changed
 #include "dirty.h"
 
+#define FW_VERSION  "2.1.4"
+
 #endif //VERSION_H_

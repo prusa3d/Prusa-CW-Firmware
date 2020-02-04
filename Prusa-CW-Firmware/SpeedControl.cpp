@@ -1,3 +1,4 @@
+#include "config.h"
 #include "SpeedControl.h"
 
 CSpeedControl::CSpeedControl() : microstep_control(200), washing_speed(10), curing_speed(1),
@@ -21,12 +22,12 @@ void CSpeedControl::acceleration50ms(){
 	    	  if(microstep_control > min_washing_speed + 5)
 	    		  microstep_control -= 4;
 	    	  microstep_control--;
-	#ifdef SERIAL_COM_DEBUG
+#ifdef SERIAL_COM_DEBUG
 	        SerialUSB.print(microstep_control);
 	        SerialUSB.write('.');
 	        SerialUSB.print(target_washing_period);
 	        SerialUSB.write('\n');
-	#endif
+#endif
 	} else {
 		acceleration_flag = false;
 	}

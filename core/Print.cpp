@@ -24,7 +24,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-#include "Arduino.h"
 
 #include "Print.h"
 
@@ -39,24 +38,6 @@ size_t Print::write(const uint8_t *buffer, size_t size)
     else break;
   }
   return n;
-}
-
-size_t Print::print(const __FlashStringHelper *ifsh)
-{
-  PGM_P p = reinterpret_cast<PGM_P>(ifsh);
-  size_t n = 0;
-  while (1) {
-    unsigned char c = pgm_read_byte(p++);
-    if (c == 0) break;
-    if (write(c)) n++;
-    else break;
-  }
-  return n;
-}
-
-size_t Print::print(const String &s)
-{
-  return write(s.c_str(), s.length());
 }
 
 size_t Print::print(const char str[])
@@ -111,28 +92,9 @@ size_t Print::print(double n, int digits)
   return printFloat(n, digits);
 }
 
-size_t Print::println(const __FlashStringHelper *ifsh)
-{
-  size_t n = print(ifsh);
-  n += println();
-  return n;
-}
-
-size_t Print::print(const Printable& x)
-{
-  return x.printTo(*this);
-}
-
 size_t Print::println(void)
 {
   return write("\r\n");
-}
-
-size_t Print::println(const String &s)
-{
-  size_t n = print(s);
-  n += println();
-  return n;
 }
 
 size_t Print::println(const char c[])
@@ -187,13 +149,6 @@ size_t Print::println(unsigned long num, int base)
 size_t Print::println(double num, int digits)
 {
   size_t n = print(num, digits);
-  n += println();
-  return n;
-}
-
-size_t Print::println(const Printable& x)
-{
-  size_t n = print(x);
   n += println();
   return n;
 }

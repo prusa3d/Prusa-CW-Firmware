@@ -26,7 +26,6 @@ Trinamic_TMC2130::Trinamic_TMC2130(uint8_t csPin)
 {
   _csPin=csPin;
   _status=0;
-  _debug="";
 }
 
 // initialize the driver with its CS/SS pin
@@ -55,7 +54,7 @@ uint8_t Trinamic_TMC2130::read_STAT()
   _status = SPI.transfer(0x00);
 
   // flush 4 bytes
-  for(int i=0;i<4;i++){
+  for(uint8_t i=0;i<4;i++){
     SPI.transfer(0x00);
   }
 
@@ -74,7 +73,7 @@ uint8_t Trinamic_TMC2130::read_REG(uint8_t address, uint32_t *data)
   _status = SPI.transfer(address&~TMC_WRITE);
 
   // flush 4 bytes
-  for(int i=0;i<4;i++){
+  for(uint8_t i=0;i<4;i++){
     SPI.transfer(0x00);
   }
 
@@ -899,10 +898,4 @@ boolean Trinamic_TMC2130::isStallguard()
 boolean Trinamic_TMC2130::isStandstill()
 {
   return _status&TMC_SPISTATUS_STANDSTILL_MASK ? true : false;
-}
-
-// get debug messages
-String Trinamic_TMC2130::debug()
-{
-  return _debug;
 }
