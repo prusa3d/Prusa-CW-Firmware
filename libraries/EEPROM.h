@@ -140,6 +140,17 @@ struct EEPROMClass{
         for( int count = sizeof(T) ; count ; --count, ++e )  (*e).update( *ptr++ );
         return source;
     }
+
+	void get( int eeprom_source, uint8_t* destination, int count ){
+        EEPtr e = eeprom_source;
+		for( ; count ; --count, ++e )  *destination++ = *e;
+	}
+
+	void put( int eeprom_destination, uint8_t* source, int count ){
+        EEPtr e = eeprom_destination;
+        for( ; count ; --count, ++e )  (*e).update( *source++ );
+	}
+
 };
 
 static EEPROMClass EEPROM;

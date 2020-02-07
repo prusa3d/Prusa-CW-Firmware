@@ -4,6 +4,7 @@
 #define SELFTEST_H
 
 #include "Countimer.h"
+#include "main.h"
 
 /*! \class CSelftest
     \brief A class runs series of tests that should check, with help of an operator, that all vital elements are fully functioning.
@@ -28,7 +29,7 @@
 class CSelftest {
 public:
 /**
- * Constructor sets everything to false apart from fan1_speed and fan2_speed, because ventilation test starts on 10%
+ * Constructor sets everything to false apart from fans_speed, because ventilation test starts on 10%
  */
 	CSelftest();
 	~CSelftest();
@@ -78,7 +79,6 @@ public:
 
 	static void tCountDownComplete();
 
-
 	uint8_t phase;				/**< Stores which test("phase" of selftest) is running*/
 	uint8_t fan_tacho[2];		/**< Stores measured rotation per 1ms for ventilation_test*/
 	bool cover_test;			/**< Stores if cover test is finished*/
@@ -87,8 +87,7 @@ public:
 	bool heater_test;			/**< Stores if heater test is finished*/
 	bool rotation_test;			/**< Stores if rotation test is finished*/
 	bool led_test;				/**< Stores if LED test is finished*/
-	uint8_t fan1_speed;			/**< Stores duty of fan1 (0-100%)*/
-	uint8_t fan2_speed;			/**< Stores duty of fan2 (0-100%)*/
+	fans_duty_t fans_speed;		/**< Stores duty of fans (0-100%)*/
 	Countimer tCountDown;		/**< Counts down time periods in tests, where is needed*/
 	bool cover_down;			/**< Tells if cover is down(eye's safe measurement)*/
 	bool isCounterRunning;		/**< Tells whether counter is running... */

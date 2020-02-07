@@ -2,7 +2,7 @@
 #include <avr/wdt.h>
 #include <avr/pgmspace.h>
 
-#include "Main.h"
+#include "main.h"
 #include "EEPROM.h"
 #include "Trinamic_TMC2130.h"
 #include "MCP23S17.h"
@@ -15,15 +15,8 @@
 #include "Selftest.h"
 #include "SpeedControl.h"
 #include "i18n.h"
-#include "LiquidCrystal_Prusa.h"
 
 using Ter = LiquidCrystal_Prusa::Terminator;
-
-#define EEPROM_OFFSET 128
-#define MAGIC_SIZE 6
-
-typedef char Serial_num_t[20]; //!< Null terminated string for serial number
-static const char *pgmstr_serial_number = reinterpret_cast<const char *>(0x7fe0); //!< 15 characters
 
 Countimer tDown;
 Countimer tUp;
@@ -37,11 +30,10 @@ Trinamic_TMC2130 myStepper(CS_PIN);
 
 MCP outputchip(0, 8);
 
-
 LiquidCrystal_Prusa lcd(LCD_PINS_RS, LCD_PINS_ENABLE, LCD_PINS_D4, LCD_PINS_D5, LCD_PINS_D6, LCD_PINS_D7);
 
 enum menu_state : uint8_t {
-	MENU,
+	HOME,
 	SPEED_STATE,
 	SPEED_CURING,
 	SPEED_WASHING,
@@ -78,85 +70,62 @@ enum units : uint8_t {
 	XOFTEN,
 	MINUTES,
 	PERCENT,
-	TEMPERATURE
+	TEMPERATURE_C,
+	TEMPERATURE_F,
 };
-
-volatile uint16_t *const bootKeyPtr = (volatile uint16_t *)(RAMEND - 1);
-
-menu_state state = MENU;
-
-uint8_t menu_position = 0;
-uint8_t last_menu_position = 0;
-uint8_t max_menu_position = 0;
-bool redraw_menu = true;
-bool redraw_ms = true;
-bool mode_flag = true;	//helping var for selftesting
-
-unsigned long time_now = 0;
-unsigned long therm_read_time_now = 0;
-
-bool button_released = false;
-volatile uint8_t rotary_diff = 128;
 
 //! @brief legacy configuration store structure
 //!
-//! It is restored when magic read from eeprom equals magic2 "CURWA"
+//! It is restored when magic read from eeprom equals magic "CURWA".
 //! Do not change.
-typedef struct
-{
-	char magic[6];
+typedef struct {
 	byte washing_speed;
 	byte curing_speed;
 	byte washing_run_time;
 	byte curing_run_time;
-	byte drying_run_time;
 	byte finish_beep_mode;
+	byte drying_run_time;
 	byte sound_response;
+	byte curing_machine_mode;
 	byte heat_to_target_temp;
 	byte target_temp_celsius;
-	byte reserved1;
-	byte curing_machine_mode;
+	byte target_temp_fahrenheit;
 	byte SI_unit_system;
 	bool heater_failure;
-} eeprom_small_t;
-
+} eeprom_v1_t;
 
 //! @brief configuration store structure
 //!
-//! It is restored when magic read from eeprom equals magic "CURW1"
+//! It is restored when magic read from eeprom equals magic "CW1v2"
 //! Do not change. If new items needs to be stored, magic needs to be
 //! changed, this struct needs to be made legacy and new structure needs
 //! to be created.
-typedef struct
-{
-	char magic[6];
+typedef struct {
 	byte washing_speed;
 	byte curing_speed;
 	byte washing_run_time;
 	byte curing_run_time;
-	byte drying_run_time;
 	byte finish_beep_mode;
+	byte drying_run_time;
 	byte sound_response;
-	byte heat_to_target_temp;
-	byte target_temp_celsius;
-	byte reserved1;
 	byte curing_machine_mode;
+	byte heat_to_target_temp;
+	byte target_temp;
+	byte resin_target_temp;		// v1 change!
 	byte SI_unit_system;
 	bool heater_failure;
 
-	byte FAN1_CURING_SPEED;
-	byte FAN1_DRYING_SPEED;
-	byte FAN1_PREHEAT_SPEED;
-	byte FAN2_CURING_SPEED;
-	byte FAN2_DRYING_SPEED;
-	byte FAN2_PREHEAT_SPEED;
 	byte resin_preheat_run_time;
-	byte resin_target_temp_celsius;
-} eeprom_t;
+	byte led_pwm_value;
+	fans_duty_t fans_curing_speed;
+	fans_duty_t fans_drying_speed;
+	fans_duty_t fans_preheat_speed;
+} eeprom_v2_t;
 
-static_assert(sizeof(eeprom_t) <= EEPROM_OFFSET, "eeprom_t doesn't fit in it's reserved space in the memory.");
-static eeprom_t * const eeprom_base = reinterpret_cast<eeprom_t*> (E2END + 1 - EEPROM_OFFSET);
-static eeprom_small_t * const eeprom_small_base = reinterpret_cast<eeprom_small_t*> (E2END + 1 - EEPROM_OFFSET);
+#define EEPROM_OFFSET	128
+#define MAGIC_SIZE		6
+#define EEPROM_BASE		E2END + 1 - EEPROM_OFFSET
+static_assert(sizeof(eeprom_v2_t) <= EEPROM_OFFSET, "eeprom_t doesn't fit in it's reserved space in the memory.");
 
 //! @brief configuration
 //!
@@ -164,95 +133,35 @@ static eeprom_small_t * const eeprom_small_base = reinterpret_cast<eeprom_small_
 //! it can be overridden by user and stored to
 //! and restored from permanent storage.
 
-eeprom_t config =
-{
-	"CURW1",	// magic, change when new fields are added
+eeprom_v2_t config = {
 	10,			// washing_speed
 	1,			// curing_speed
 	4,			// washing_run_time
 	3,			// curing_run_time
-	3,			// drying_run_time
 	1,			// finish_beep_mode
+	3,			// drying_run_time
 	1,			// sound_response
-	0,			// heat_to_target_temp
-	35,			// target_temp_celsius
-	0,			// reserved1
 	0,			// curing_machine_mode
+	0,			// heat_to_target_temp
+	35,			// target_temp (celsius)
+	30,			// resin_target_temp (celsius)
 	1,			// SI_unit_system
 	false,		// heater_failure
-	60,			// FAN1_CURING_SPEED
-	60,			// FAN1_DRYING_SPEED
-	40,			// FAN1_PREHEAT_SPEED
-	70,			// FAN2_CURING_SPEED
-	70,			// FAN2_DRYING_SPEED
-	40,			// FAN2_PREHEAT_SPEED
+
 	3,			// resin_preheat_run_time
-	30,			// resin_target_temp_celsius
+	100,		// led_pwm_value
+	{60, 70},	// fans_curing_speed
+	{60, 70},	// fans_drying_speed
+	{40, 40},	// fans_preheat_speed
 };
 
-uint8_t max_preheat_run_time = 30;
-uint8_t LED_PWM_VALUE = 100;
+fans_duty_t fan_duty;
 
-bool fan1_pwm_high = false;
-bool fan2_pwm_high = false;
+typedef char Serial_num_t[20]; //!< Null terminated string for serial number
+static const char* pgmstr_serial_number = reinterpret_cast<const char*>(0x7fe0); //!< 15 characters
 
-int fan_tacho_count[3];
-int fan_tacho_last_count[3];
-
-bool fan1_on = false;
-bool fan2_on = false;
-
-unsigned long fan1_previous_millis = 0;
-unsigned long fan2_previous_millis = 0;
-
-bool heater_error = false;
-bool fan_error[2] = {false, false};
-
-// constants won't change:
-const float period = (1 / FAN_FREQUENCY) * 1000; //
-uint8_t fan_duty[2]; //%
-
-//fan1_duty = 0-100%
-uint8_t FAN1_MENU_SPEED = 30;
-uint8_t FAN1_WASHING_SPEED = 60;//70
-
-//fan2_duty = 0-100%
-uint8_t FAN2_MENU_SPEED = 30;
-uint8_t FAN2_WASHING_SPEED = 70;//70
-
-long remain = 0;
-unsigned long us_last = 0;
-unsigned long last_remain = 0;
-unsigned long last_millis = 0;
-uint8_t last_seconds = 0;
-unsigned long led_time_now = 0;
-bool heater_running = false;
-bool curing_mode = false;
-bool drying_mode = false;
-bool last_curing_mode = false;
-bool paused = false;
-bool cover_open = false;
-bool gastro_pan = false;
-bool paused_time = false;
-bool led_start = false;
-uint8_t running_count = 0;
-
-float chamber_temp_celsius;
-float chamber_temp_fahrenheit;
-bool therm_read = false;
-
-volatile int divider = 0;
-
-int ams_fan_counter;
-
-unsigned long button_timer = 0;
-bool button_active = false;
-bool long_press_active = false;
-bool long_press = false;
-bool preheat_complete = false;
-bool pid_mode = false;
-
-double summErr = 0;
+volatile uint16_t* const bootKeyPtr = (volatile uint16_t *)(RAMEND - 1);
+static volatile uint16_t bootKeyPtrVal __attribute__ ((section (".noinit")));
 
 uint8_t Back[8] = {
 	B00100,
@@ -276,12 +185,84 @@ uint8_t Right[8] = {
 	B00000
 };
 
-static volatile uint16_t bootKeyPtrVal __attribute__ ((section (".noinit")));
+uint8_t Backslash[8] = {
+	B00000,
+	B10000,
+	B01000,
+	B00100,
+	B00010,
+	B00001,
+	B00000,
+	B00000
+};
 
+// constants won't change:
+const float period = (1 / FAN_FREQUENCY) * 1000;
+const uint8_t max_preheat_run_time = 30;
 
-const char magic[MAGIC_SIZE] = "CURWA";
-const char magic2[MAGIC_SIZE] = "CURW1";
+volatile uint8_t rotary_diff = 128;
 
+fans_duty_t fans_menu_speed = {30, 30};		// 0-100 %
+fans_duty_t fans_washing_speed = {60, 70};	// 0-100 %
+
+bool redraw_menu = true;
+bool redraw_ms = true;
+bool mode_flag = true;	//helping var for selftesting
+
+char config_magic[MAGIC_SIZE] = "CW1v2";
+
+menu_state state = HOME;
+
+int fan_tacho_count[3];
+int fan_tacho_last_count[3];
+
+float chamber_temp;
+
+int ams_fan_counter;
+
+uint8_t menu_position = 0;
+uint8_t last_menu_position = 0;
+uint8_t max_menu_position = 0;
+uint8_t last_seconds = 0;
+
+unsigned long time_now = 0;
+unsigned long therm_read_time_now = 0;
+
+unsigned long fan1_previous_millis = 0;
+unsigned long fan2_previous_millis = 0;
+
+unsigned long us_last = 0;
+unsigned long led_time_now = 0;
+
+unsigned long button_timer = 0;
+
+long remain = 0;
+
+bool button_released = false;
+bool fan1_pwm_high = false;
+bool fan2_pwm_high = false;
+
+bool fan1_on = false;
+bool fan2_on = false;
+
+bool heater_error = false;
+bool fan_error[2] = {false, false};
+
+bool heater_running = false;
+bool curing_mode = false;
+bool drying_mode = false;
+bool last_curing_mode = false;
+bool paused = false;
+bool cover_open = false;
+bool gastro_pan = false;
+bool paused_time = false;
+bool led_start = false;
+
+bool button_active = false;
+bool long_press_active = false;
+bool long_press = false;
+bool preheat_complete = false;
+bool pid_mode = false;
 
 static void motor_configuration();
 static void read_config();
@@ -300,15 +281,17 @@ static void tUpComplete();
 static void fan_pwm_control();
 static void fan_rpm();
 static void preheat();
-static void lcd_time_print(uint8_t dots_column);
+static void lcd_time_print();
 static void therm1_read();
+static float celsius2fahrenheit(float);
+static float fahrenheit2celsius(float);
 
-static inline bool is_error()
-{
+static inline bool is_error() {
 	return (fan_error[0] || fan_error[1] || config.heater_failure);
 }
 
-void setupTimer0() { //timmer for fan pwm
+//timmer for fan pwm
+void setupTimer0() {
 	noInterrupts();
 	OCR0A = 0xAF;
 	TIMSK0 |= _BV(OCIE0A);
@@ -333,7 +316,8 @@ void setupTimer4() {
 	interrupts();
 }
 
-void setupTimer3() { //timmer for stepper move
+//timmer for stepper move
+void setupTimer3() {
 	noInterrupts();
 	// Clear registers
 	TCCR3A = 0;
@@ -424,13 +408,11 @@ void setup() {
 	attachInterrupt(1, fan_tacho2, RISING);
 	attachInterrupt(3, fan_tacho3, RISING);
 
-	fan_duty[0] = FAN1_MENU_SPEED;
-	fan_duty[1] = FAN2_MENU_SPEED;
+	fan_duty = fans_menu_speed;
 
 	outputchip.digitalWrite(LED_RELE_PIN, LOW); // turn off led
 	pinMode(LED_PWM_PIN, OUTPUT);
 	digitalWrite(LED_PWM_PIN, LOW);
-
 
 	// stepper driver init
 	myStepper.init();
@@ -450,50 +432,57 @@ void setup() {
 
 	lcd.createChar(0, Back);
 	lcd.createChar(1, Right);
+	lcd.createChar(2, Backslash);
 	redraw_menu = true;
 	menu_move(true);
 }
 
 void write_config() {
-
 	config.washing_speed = speed_control.washing_speed;
 	config.curing_speed = speed_control.curing_speed;
-
-	EEPROM.put(*eeprom_base, config);
+	EEPROM.put(EEPROM_BASE, reinterpret_cast<uint8_t*>(config_magic), MAGIC_SIZE);
+	EEPROM.put(EEPROM_BASE + MAGIC_SIZE, reinterpret_cast<uint8_t*>(&config), sizeof(config));
 }
+
 /*! \brief This function loads user-defined values from eeprom.
- *
  *
  *	It loads different amount of variables, depending on the magic variable from eeprom.
  *	If magic is not set in the eeprom, variables keep their default values.
- *	If magic from eeprom is equal to magic, it loads only variables customizable in older firmware and keeps new variables default.
- *	If magic from eeprom is equal to magic2, it loads all variables including those added in new firmware.
+ *	If magic from eeprom is equal to lagacy magic, it loads only variables customizable in older firmware and keeps new variables default.
+ *	If magic from eeprom is equal to config_magic, it loads all variables including those added in new firmware.
  *	It won't load undefined (new) variables after flashing new firmware.
  */
 void read_config() {
 	char test_magic[MAGIC_SIZE];
-	EEPROM.get(eeprom_base->magic, test_magic);
-	if (!strncmp(magic, test_magic, MAGIC_SIZE)) {
-		EEPROM.get(*eeprom_small_base, *(reinterpret_cast<eeprom_small_t*>(&config)));
-		speed_control.washing_speed = config.washing_speed;
-		speed_control.curing_speed = config.curing_speed;
-	} else if (!strncmp(magic2, test_magic, MAGIC_SIZE)) {
-		EEPROM.get(*eeprom_base, config);
-		speed_control.washing_speed = config.washing_speed;
-		speed_control.curing_speed = config.curing_speed;
+	EEPROM.get(EEPROM_BASE, reinterpret_cast<uint8_t*>(test_magic), MAGIC_SIZE);
+	if (!strncmp(config_magic, test_magic, MAGIC_SIZE)) {
+		// latest magic
+		EEPROM.get(EEPROM_BASE + MAGIC_SIZE, reinterpret_cast<uint8_t*>(&config), sizeof(config));
+	} else if (!strncmp("CURWA", test_magic, MAGIC_SIZE)) {
+		// legacy magic
+		uint8_t tmp = config.resin_target_temp;	// remember default
+		EEPROM.get(EEPROM_BASE + MAGIC_SIZE, reinterpret_cast<uint8_t*>(&config), sizeof(eeprom_v1_t));
+		if (config.SI_unit_system) {
+			config.resin_target_temp = tmp;
+		} else {
+			config.target_temp = round(celsius2fahrenheit(config.target_temp));
+			config.resin_target_temp = round(celsius2fahrenheit(tmp));
+		}
 	}
+	speed_control.washing_speed = config.washing_speed;
+	speed_control.curing_speed = config.curing_speed;
 }
 
 uint8_t PI_regulator(float & actualTemp, uint8_t targetTemp) {
-	double newSpeed = 0, errValue;
-	errValue = actualTemp - targetTemp;
-	summErr = errValue + summErr;
+	static double summErr = 0;
+	double errValue = actualTemp - targetTemp;
+	summErr += errValue;
 
 	if ((summErr > 10000) || (summErr < -10000)) {
 		summErr = 10000;
 	}
 
-	newSpeed = P * errValue + I * summErr;
+	double newSpeed = P * errValue + I * summErr;
 	if (newSpeed > 100) {
 		newSpeed = 100;
 	}
@@ -545,6 +534,11 @@ void lcd_print_right(uint8_t a) {
 	lcd.write(uint8_t(1));
 }
 
+void lcd_clear_time_boundaries() {
+	lcd.print_P(pgmstr_double_space, LAYOUT_TIME_GT, LAYOUT_TIME_Y);
+	lcd.print_P(pgmstr_double_space, LAYOUT_TIME_LT, LAYOUT_TIME_Y);
+}
+
 void generic_value_P(const char *label, uint8_t *value, uint8_t min, uint8_t max, units units) {
 	if (rotary_diff > 128 && *value < max)
 		(*value)++;
@@ -557,7 +551,7 @@ void generic_value_P(const char *label, uint8_t *value, uint8_t min, uint8_t max
 	lcd.setCursor(1, 0);
 	lcd.printClear_P(label, 19, Ter::none);
 
-	lcd.print(*value, 7, 2);
+	lcd.print(*value, 5, 2);
 	switch (units) {
 
 		case XOFTEN:
@@ -572,11 +566,12 @@ void generic_value_P(const char *label, uint8_t *value, uint8_t min, uint8_t max
 			lcd.print_P(pgmstr_percent);
 			break;
 
-		case TEMPERATURE:
-			if (config.SI_unit_system)
-				lcd.print_P(pgmstr_celsius);
-			else
-				lcd.print_P(pgmstr_fahrenheit);
+		case TEMPERATURE_C:
+			lcd.print_P(pgmstr_celsius);
+			break;
+
+		case TEMPERATURE_F:
+			lcd.print_P(pgmstr_fahrenheit);
 			break;
 
 		default:
@@ -663,8 +658,8 @@ void redraw_selftest_vals() {
 		lcd.print(selftest.fan_tacho[1], 7, 2);
 	}
 	if (selftest.phase == 5 && selftest.heater_test != true) {
-		lcd.print(chamber_temp_celsius, 7, 1);
-		lcd.print_P(pgmstr_celsius);
+		lcd.print(chamber_temp, 7, 1);
+		lcd.print_P(config.SI_unit_system ? pgmstr_celsius : pgmstr_fahrenheit);
 	}
 	if (selftest.phase == 6 && selftest.rotation_test != true) {
 		lcd.print((uint8_t)mode_flag, 12, 1);
@@ -712,72 +707,70 @@ void loop() {
 				break;
 			case 3:
 				selftest.ventilation_test(fan_error[0], fan_error[1]);
-				fan_duty[0] = selftest.fan1_speed;
-				fan_duty[1] = selftest.fan2_speed;
+				fan_duty = selftest.fans_speed;
 				break;
 			case 4:
 				selftest.cover_down = outputchip.digitalRead(COVER_OPEN_PIN) == LOW;
 				if (selftest.cover_down) {
-				if (selftest.is_first_loop()) {
-					outputchip.digitalWrite(LED_RELE_PIN, HIGH); // turn LED on
-					int val;
-					val = map(LED_PWM_VALUE, 0, 100, 0, 255);
-					analogWrite(LED_PWM_PIN, val);
-				}
-				if (outputchip.digitalRead(LED_RELE_PIN) == HIGH) {
-					if (selftest.led_test == false) {
-						selftest.LED_test();
+					if (selftest.is_first_loop()) {
+						outputchip.digitalWrite(LED_RELE_PIN, HIGH); // turn LED on
+						analogWrite(LED_PWM_PIN, map(config.led_pwm_value, 0, 100, 0, 255));
+					}
+					if (outputchip.digitalRead(LED_RELE_PIN) == HIGH) {
+						if (selftest.led_test == false) {
+							selftest.LED_test();
+						} else {
+							outputchip.digitalWrite(LED_RELE_PIN, LOW); // turn LED off
+							digitalWrite(LED_PWM_PIN, LOW);
+						}
 					} else {
-						outputchip.digitalWrite(LED_RELE_PIN, LOW); // turn LED off
-						digitalWrite(LED_PWM_PIN, LOW);
+						if (selftest.isCounterRunning) {
+							selftest.fail_flag = true;
+							selftest.tCountDown.stop();
+							selftest.isCounterRunning = false;
+							selftest.led_test = true;
+							digitalWrite(LED_PWM_PIN, LOW);
+						}
 					}
 				} else {
-					if (selftest.isCounterRunning) {
-						selftest.fail_flag = true;
-						selftest.tCountDown.stop();
-						selftest.isCounterRunning = false;
-						selftest.led_test = true;
-						digitalWrite(LED_PWM_PIN, LOW);
-					}
+					if (selftest.isCounterRunning)
+						selftest.tCountDown.pause();
 				}
-		} else {
-			if (selftest.isCounterRunning)
-				selftest.tCountDown.pause();
-		}
-		break;
+				break;
+
 		case 5:
-		if (!selftest.heater_test) {
-			if (outputchip.digitalRead(WASH_DETECT_PIN) == HIGH) {
-				selftest.fan1_speed = 10;
-				if (outputchip.digitalRead(COVER_OPEN_PIN) == LOW) {
-					selftest.fan2_speed = 10;
-					if (selftest.is_first_loop()) {
+			if (!selftest.heater_test) {
+				if (outputchip.digitalRead(WASH_DETECT_PIN) == HIGH) {
+					selftest.fans_speed.fan1 = 10;
+					if (outputchip.digitalRead(COVER_OPEN_PIN) == LOW) {
+						selftest.fans_speed.fan2 = 10;
+						if (selftest.is_first_loop()) {
 							pid_mode = true;
 							run_heater();
-							fan_duty[0] = FAN1_MENU_SPEED;
-								fan_duty[1] = FAN2_MENU_SPEED;
+							fan_duty = fans_menu_speed;
+						}
+						selftest.heat_test(heater_error);
+					} else {
+						selftest.fans_speed.fan2 = 0;
+						if (selftest.isCounterRunning)
+							selftest.heat_test(heater_error);
 					}
-						selftest.heat_test(heater_error);
 				} else {
-					selftest.fan2_speed = 0;
-					if (selftest.isCounterRunning)
-						selftest.heat_test(heater_error);
+					selftest.fans_speed.fan1 = 0;
 				}
-			} else
-				selftest.fan1_speed = 0;
-		} else if (heater_running) {
-			stop_heater();
-				fan_duty[0] = FAN1_MENU_SPEED;
-				fan_duty[1] = FAN2_MENU_SPEED;
+			} else if (heater_running) {
+				stop_heater();
+				fan_duty = fans_menu_speed;
 				pid_mode = false;
-		}
-		break;
+			}
+			break;
+
 		case 6:
 			if (!selftest.rotation_test && selftest.motor_rotation_timer()) {
 				if (selftest.is_first_loop()) {
 					if (mode_flag) {
 						speed_control.curing_speed = 1;
-						myStepper.set_IHOLD_IRUN(10, 10, 0);		//motor_configuration for curing mode;
+						myStepper.set_IHOLD_IRUN(10, 10, 0);			//motor_configuration for curing mode;
 						myStepper.set_mres(256);
 					} else {
 						speed_control.washing_speed = 1;
@@ -793,8 +786,9 @@ void loop() {
 							uint8_t backup = speed_control.microstep_control;	 //needed for smooth gear-up of the motor
 							speed_control.speed_configuration(mode_flag);
 							speed_control.microstep_control = backup;
-						} else
+						} else {
 							speed_control.speed_configuration(mode_flag);
+						}
 					}
 				}
 
@@ -806,12 +800,12 @@ void loop() {
 				if (mode_flag && speed_control.curing_speed > 11) {
 					stop_motor();
 					selftest.clean_up();
-					speed_control.curing_speed = 1;	 //default val
+					speed_control.curing_speed = 1;	 //default value
 					mode_flag = false;
 				}
 				if (!mode_flag && speed_control.washing_speed > 11) {
 					stop_motor();
-					speed_control.washing_speed = 10; //default val
+					speed_control.washing_speed = 10; //default value
 					selftest.rotation_test = true;
 				}
 			}
@@ -825,17 +819,15 @@ void loop() {
 	if (heater_error) {
 		if (config.heat_to_target_temp) {
 			tDown.stop();
-		}
-		else {
+		} else {
 			tUp.stop();
 		}
 		stop_heater(); // turn off heater and fan
 		stop_motor(); // turn off motor
-		fan_duty[0] = FAN1_MENU_SPEED;
-		fan_duty[1] = FAN2_MENU_SPEED;
+		fan_duty = fans_menu_speed;
 	}
 
-	if (state == MENU) {
+	if (state == HOME) {
 		if (outputchip.digitalRead(WASH_DETECT_PIN) == HIGH) {
 			curing_mode = true;
 		} else {
@@ -847,7 +839,6 @@ void loop() {
 		lcd.print_P(pgmstr_heater_error, 1, 0);
 		lcd.print_P(pgmstr_please_restart, 1, 2);
 		state = ERROR;
-
 	}
 
 	if (state == CONFIRM) {
@@ -863,7 +854,8 @@ void loop() {
 		redraw_menu = true;
 	}
 
-	if (speed_control.acceleration_flag == true) { //stepper motor speed up function
+	// stepper motor speed up function
+	if (speed_control.acceleration_flag == true) {
 		unsigned long us_now = millis();
 		if (us_now - us_last > 50) {
 			speed_control.acceleration50ms();
@@ -890,7 +882,7 @@ void loop() {
 		}
 		if ((millis() - button_timer > LONG_PRESS_TIME) && (long_press_active == false)) {
 			long_press_active = true;
-			if (state == MENU || state == SETTINGS || state == PREHEAT || state == SOUND_SETTINGS || state == TIME || state == SPEED_STATE) {
+			if (state == HOME || state == SETTINGS || state == PREHEAT || state == SOUND_SETTINGS || state == TIME || state == SPEED_STATE) {
 				state = RUN_MODE;
 				long_press = true;
 				redraw_menu = true;
@@ -910,8 +902,9 @@ void loop() {
 		}
 	}
 
+	// FIXME s this needed to fix ESD shock? Any better solution?
 	if (millis() > time_now + 5500) {
-		if (state == MENU || state == PREHEAT || state == SOUND_SETTINGS || state == SPEED_STATE) {
+		if (state == HOME || state == PREHEAT || state == SOUND_SETTINGS || state == SPEED_STATE) {
 			last_menu_position = menu_position;
 		}
 
@@ -919,19 +912,16 @@ void loop() {
 		lcd.reinit();
 		lcd.createChar(0, Back);
 		lcd.createChar(1, Right);
+		lcd.createChar(2, Backslash);
 		redraw_menu = true;
 		menu_move(false);
 
-		if (state == MENU || state == PREHEAT || state == SOUND_SETTINGS || state == SPEED_STATE) {
+		if (state == HOME || state == PREHEAT || state == SOUND_SETTINGS || state == SPEED_STATE) {
 			menu_position = last_menu_position;
 			print_menu_cursor(menu_position);
 		}
 	}
 
-	if (millis() > therm_read_time_now + 2000) {
-		therm_read_time_now = millis();
-		therm1_read();
-	}
 	if (millis() > therm_read_time_now + 2000) {
 		therm_read_time_now = millis();
 		therm1_read();
@@ -950,7 +940,7 @@ void menu_move(bool sound_echo) {
 	redraw_menu = false;
 
 	switch (state) {
-		case MENU:
+		case HOME:
 			switch (config.curing_machine_mode) {
 				case 3:
 					generic_menu_P(3, curing_mode ? pgmstr_start_resin_preheat : pgmstr_start_washing,
@@ -958,7 +948,7 @@ void menu_move(bool sound_echo) {
 					lcd_print_right(1);
 					lcd_print_right(2);
 
-						state = MENU;
+					state = HOME;
 					break;
 				case 2:
 					generic_menu_P(3, curing_mode ? pgmstr_start_drying : pgmstr_start_washing, pgmstr_run_time,
@@ -966,7 +956,7 @@ void menu_move(bool sound_echo) {
 					lcd_print_right(1);
 					lcd_print_right(2);
 
-					state = MENU;
+					state = HOME;
 					break;
 				case 1:
 					generic_menu_P(3, curing_mode ? pgmstr_start_curing : pgmstr_start_washing, pgmstr_run_time,
@@ -974,7 +964,7 @@ void menu_move(bool sound_echo) {
 					lcd_print_right(1);
 					lcd_print_right(2);
 
-					state = MENU;
+					state = HOME;
 					break;
 				case 0:
 				default:
@@ -984,7 +974,7 @@ void menu_move(bool sound_echo) {
 					lcd_print_right(2);
 					lcd_print_right(3);
 
-					state = MENU;
+					state = HOME;
 					break;
 			}
 			break;
@@ -1006,13 +996,12 @@ void menu_move(bool sound_echo) {
 
 		case TIME:
 			{
-				Scrolling_item items[] =
-				{
+				Scrolling_item items[] = {
 					{pgmstr_back, true, Ter::back},
-					{pgmstr_curing, true, Ter::right},
-					{pgmstr_drying, true, Ter::right},
-					{pgmstr_washing, true, Ter::right},
-					{pgmstr_resin_preheat, true, Ter::right},
+					{pgmstr_curing_run_time, true, Ter::right},
+					{pgmstr_drying_run_time, true, Ter::right},
+					{pgmstr_washing_run_time, true, Ter::right},
+					{pgmstr_resin_preheat_time, true, Ter::right},
 				};
 				menu_position = scrolling_list_P(items);
 
@@ -1036,31 +1025,27 @@ void menu_move(bool sound_echo) {
 			break;
 
 		case SETTINGS:
-		{
-			Scrolling_item items[] =
 			{
-				{pgmstr_back, true, Ter::back},
-				{pgmstr_rotation_speed, true, Ter::right},
-				{pgmstr_run_mode, true, Ter::right},
-				{pgmstr_preheat, true, Ter::right},
-				{pgmstr_sound, true, Ter::right},
-				{pgmstr_fans, true, Ter::right},
-				{pgmstr_led_intensity, true, Ter::right},
-				{pgmstr_unit_system, true, Ter::right},
-				{is_error() ? pgmstr_information_error : pgmstr_information, true, Ter::right},
-			};
-			menu_position = scrolling_list_P(items);
-			break;
-		}
+				Scrolling_item items[] = {
+					{pgmstr_back, true, Ter::back},
+					{pgmstr_rotation_speed, true, Ter::right},
+					{pgmstr_run_mode, true, Ter::right},
+					{pgmstr_preheat, true, Ter::right},
+					{pgmstr_sound, true, Ter::right},
+					{pgmstr_fans, true, Ter::right},
+					{pgmstr_led_intensity, true, Ter::right},
+					{pgmstr_unit_system, true, Ter::right},
+					{is_error() ? pgmstr_information_error : pgmstr_information, true, Ter::right},
+				};
+				menu_position = scrolling_list_P(items);
+				break;
+			}
 
 		case PREHEAT:
-			// FIXME
-			if (config.heat_to_target_temp) {
-				generic_menu_P(4, pgmstr_back, pgmstr_preheat_enabled, pgmstr_drying_curing_temp, pgmstr_resin_preheat_temp );
-			}
-			else {
-				generic_menu_P(4, pgmstr_back, pgmstr_preheat_disabled, pgmstr_drying_curing_temp, pgmstr_resin_preheat_temp );
-			}
+			generic_menu_P(4, pgmstr_back,
+				config.heat_to_target_temp ? pgmstr_preheat_enabled : pgmstr_preheat_disabled,
+				pgmstr_drying_curing_temp,
+				pgmstr_resin_preheat_temp);
 			lcd_print_back();
 			lcd_print_right(1);
 			lcd_print_right(2);
@@ -1072,11 +1057,19 @@ void menu_move(bool sound_echo) {
 			break;
 
 		case TARGET_TEMP:
-			generic_value_P(pgmstr_target_temp, &config.target_temp_celsius, 20, 40, TEMPERATURE);
+			if (config.SI_unit_system) {
+				generic_value_P(pgmstr_target_temp, &config.target_temp, MIN_TARGET_TEMP_C, MAX_TARGET_TEMP_C, TEMPERATURE_C);
+			} else {
+				generic_value_P(pgmstr_target_temp, &config.target_temp, MIN_TARGET_TEMP_F, MAX_TARGET_TEMP_F, TEMPERATURE_F);
+			}
 			break;
 
 		case RESIN_TARGET_TEMP:
-			generic_value_P(pgmstr_target_temp, &config.resin_target_temp_celsius, 20, 40, TEMPERATURE);
+			if (config.SI_unit_system) {
+				generic_value_P(pgmstr_target_temp, &config.resin_target_temp, MIN_TARGET_TEMP_C, MAX_TARGET_TEMP_C, TEMPERATURE_C);
+			} else {
+				generic_value_P(pgmstr_target_temp, &config.resin_target_temp, MIN_TARGET_TEMP_F, MAX_TARGET_TEMP_F, TEMPERATURE_F);
+			}
 			break;
 
 		case UNIT_SYSTEM:
@@ -1104,8 +1097,7 @@ void menu_move(bool sound_echo) {
 
 		case FANS:
 			{
-				Scrolling_item items[] =
-				{
+				Scrolling_item items[] = {
 					{pgmstr_back, true, Ter::back},
 					{pgmstr_fan1_curing_speed, true, Ter::right},
 					{pgmstr_fan1_drying_speed, true, Ter::right},
@@ -1117,29 +1109,28 @@ void menu_move(bool sound_echo) {
 			}
 
 		case LED_INTENSITY:
-			generic_value_P(pgmstr_led_intensity, &LED_PWM_VALUE, 1, 100, PERCENT);
+			generic_value_P(pgmstr_led_intensity, &config.led_pwm_value, 1, 100, PERCENT);
 			break;
 
 		case FAN1_CURING:
-			generic_value_P(pgmstr_fan1_curing_speed, &config.FAN1_CURING_SPEED, 0, 100, PERCENT);
+			generic_value_P(pgmstr_fan1_curing_speed, &config.fans_curing_speed.fan1, 0, 100, PERCENT);
 			break;
 
 		case FAN1_DRYING:
-			generic_value_P(pgmstr_fan1_drying_speed, &config.FAN1_DRYING_SPEED, 0, 100, PERCENT);
+			generic_value_P(pgmstr_fan1_drying_speed, &config.fans_drying_speed.fan1, 0, 100, PERCENT);
 			break;
 
 		case FAN2_CURING:
-			generic_value_P(pgmstr_fan2_curing_speed, &config.FAN2_CURING_SPEED, 0, 100, PERCENT);
+			generic_value_P(pgmstr_fan2_curing_speed, &config.fans_curing_speed.fan2, 0, 100, PERCENT);
 			break;
 
 		case FAN2_DRYING:
-			generic_value_P(pgmstr_fan2_drying_speed, &config.FAN2_DRYING_SPEED, 0, 100, PERCENT);
+			generic_value_P(pgmstr_fan2_drying_speed, &config.fans_drying_speed.fan2, 0, 100, PERCENT);
 			break;
 
 		case INFO:
 			{
-				Scrolling_item items[] =
-				{
+				Scrolling_item items[] = {
 					{pgmstr_fw_version, true, Ter::none},
 					{pgmstr_fan1_failure, fan_error[0], Ter::none},
 					{pgmstr_fan2_failure, fan_error[1], Ter::none},
@@ -1185,60 +1176,39 @@ void menu_move(bool sound_echo) {
 				lcd.print_P(cover_open ? pgmstr_cover_is_open : (paused ? pgmstr_paused : pgmstr_washing));
 			}
 			if (curing_mode && drying_mode && config.heat_to_target_temp && !preheat_complete) {
-				lcd.print_P(pgmstr_space, 14, 2);
-				lcd.print_P(pgmstr_space, 5, 2);
+				lcd_clear_time_boundaries();
 			} else {
 				if (rotary_diff > 128) {
 					if (tDown.getCurrentMinutes() <= 9) {
 						uint8_t mins = tDown.getCurrentMinutes();
 						uint8_t secs = tDown.getCurrentSeconds();
-						lcd.print_P(pgmstr_double_gt, 14, 2);
-						if (paused || cover_open) {
-							delay(100);
-							lcd.print_P(pgmstr_double_space, 14, 2);
-							lcd.print_P(pgmstr_double_space, 5, 2);
-						}
+						lcd_clear_time_boundaries();
+						lcd.print_P(pgmstr_double_gt, LAYOUT_TIME_GT, LAYOUT_TIME_Y);
 
-						running_count = 0;
 						if (secs <= 30) {
 							tDown.setCounter(0, mins, secs + 30, tDown.COUNT_DOWN, tDownComplete);
 						} else {
 							tDown.setCounter(0, mins + 1, 30 - (60 - secs), tDown.COUNT_DOWN, tDownComplete);
 						}
 					} else {
-						lcd.print_P(pgmstr_x, 14, 2);
-						running_count = 0;
-						if (paused || cover_open) {
-							delay(100);
-							lcd.print_P(pgmstr_double_space, 14, 2);
-							lcd.print_P(pgmstr_double_space, 5, 2);
-						}
+						lcd_clear_time_boundaries();
+						lcd.print_P(pgmstr_max_symb, LAYOUT_TIME_GT, LAYOUT_TIME_Y);
 					}
 				} else if (rotary_diff < 128) {
 					if (tDown.getCurrentSeconds() >= 30 || tDown.getCurrentMinutes() >= 1) {
 						uint8_t mins = tDown.getCurrentMinutes();
 						uint8_t secs = tDown.getCurrentSeconds();
-						lcd.print_P(pgmstr_double_lt, 5, 2);
-						if (paused || cover_open) {
-							delay(100);
-							lcd.print_P(pgmstr_double_space, 14, 2);
-							lcd.print_P(pgmstr_double_space, 5, 2);
-						}
+						lcd_clear_time_boundaries();
+						lcd.print_P(pgmstr_double_lt, LAYOUT_TIME_LT, LAYOUT_TIME_Y);
 
-						running_count = 0;
 						if (secs >= 30) {
 							tDown.setCounter(0, mins, secs - 30, tDown.COUNT_DOWN, tDownComplete);
 						} else {
 							tDown.setCounter(0, mins - 1, 60 - (30 - secs), tDown.COUNT_DOWN, tDownComplete);
 						}
 					} else {
-						lcd.print_P(pgmstr_x, 5, 2);
-						running_count = 0;
-						if (paused || cover_open) {
-							delay(100);
-							lcd.print_P(pgmstr_double_space, 14, 2);
-							lcd.print_P(pgmstr_double_space, 5, 2);
-						}
+						lcd_clear_time_boundaries();
+						lcd.print_P(pgmstr_min_symb, LAYOUT_TIME_LT, LAYOUT_TIME_Y);
 					}
 				}
 			}
@@ -1300,22 +1270,20 @@ void machine_running() {
 
 	if (curing_mode) { //curing mode
 		if (outputchip.digitalRead(COVER_OPEN_PIN) == HIGH) { //cover check
-
 			if (!cover_open) {
 				if (!paused) {
 					lcd.print_P(pgmstr_cover_is_open, 1, 0);
 				}
-				running_count = 0;
 				redraw_menu = true;
 				cover_open = true;
 			}
-		}
-		else {
+		} else {
 			if (cover_open) {
 				redraw_menu = true;
 				cover_open = false;
 			}
 		}
+
 		if (cover_open == true) {
 			stop_motor();
 			motor_configuration();
@@ -1323,14 +1291,13 @@ void machine_running() {
 			stop_heater(); // turn off heat fan
 			outputchip.digitalWrite(LED_RELE_PIN, LOW); // turn off led
 			digitalWrite(LED_PWM_PIN, LOW);
-		}
-
-		else if (!paused) { // cover closed
+		} else if (!paused) { // cover closed
 			run_motor();
 			unsigned long us_now = millis();
 			remain -= us_now - us_last ;
 			us_last = us_now;
 		}
+
 		switch (config.curing_machine_mode) {
 			case 3: // Resin preheat
 				if (!preheat_complete) {
@@ -1340,8 +1307,7 @@ void machine_running() {
 							redraw_menu = true;
 						}
 						start_drying();
-					}
-					else {
+					} else {
 						if (drying_mode) {
 							//drying_mode = false;
 							redraw_menu = true;
@@ -1351,26 +1317,25 @@ void machine_running() {
 							tDown.start();
 						}
 					}
-				}
-				else {
+				} else {
 					if (tDown.isCounterCompleted() == false) {
 						if (!drying_mode) {
 							drying_mode = true;
 							redraw_menu = true;
 						}
 						start_drying();
-					}
-					else {
+					} else {
 						if (drying_mode) {
 							drying_mode = false;
 							redraw_menu = true;
 						}
 						preheat_complete = false;
-						stop_curing_drying ();
+						stop_curing_drying();
 					}
 				}
 
 				break;
+
 			case 2: // Drying
 				if (!config.heat_to_target_temp) {
 					if (tDown.isCounterCompleted() == false) {
@@ -1379,16 +1344,14 @@ void machine_running() {
 							redraw_menu = true;
 						}
 						start_drying();
-					}
-					else {
+					} else {
 						if (drying_mode) {
 							drying_mode = false;
 							redraw_menu = true;
 						}
-						stop_curing_drying ();
+						stop_curing_drying();
 					}
-				}
-				else {
+				} else {
 					if (!preheat_complete) {
 						if (tUp.isCounterCompleted() == false) {
 							if (!drying_mode) {
@@ -1396,8 +1359,7 @@ void machine_running() {
 								redraw_menu = true;
 							}
 							start_drying();
-						}
-						else {
+						} else {
 							if (drying_mode) {
 								//drying_mode = false;
 								redraw_menu = true;
@@ -1407,26 +1369,25 @@ void machine_running() {
 								tDown.start();
 							}
 						}
-					}
-					else {
+					} else {
 						if (tDown.isCounterCompleted() == false) {
 							if (!drying_mode) {
 								drying_mode = true;
 								redraw_menu = true;
 							}
 							start_drying();
-						}
-						else {
+						} else {
 							if (drying_mode) {
 								drying_mode = false;
 								redraw_menu = true;
 							}
 							preheat_complete = false;
-							stop_curing_drying ();
+							stop_curing_drying();
 						}
 					}
 				}
 				break;
+
 			case 1: // Curing
 				if (tDown.isCounterCompleted() == false) {
 					if (drying_mode) {
@@ -1434,22 +1395,20 @@ void machine_running() {
 						redraw_menu = true;
 					}
 					start_curing();
-				}
-				else {
-					stop_curing_drying ();
+				} else {
+					stop_curing_drying();
 				}
 				break;
+
 			case 0: // Drying and curing
 			default:
 				if (!config.heat_to_target_temp) {
 					if ((drying_mode == true) && (tDown.isCounterCompleted() == false)) {
 						start_drying();
-					}
-					else {
+					} else {
 						if (drying_mode) {
 							drying_mode = false;
 							remain = config.curing_run_time;
-							running_count = 0;
 							tDown.setCounter(0, remain, 0, tDown.COUNT_DOWN, tDownComplete);
 							tDown.start();
 							redraw_menu = true;
@@ -1457,15 +1416,12 @@ void machine_running() {
 						}
 						if (tDown.isCounterCompleted() == false) {
 							start_curing();
-							fan_duty[0] = config.FAN1_CURING_SPEED;
-							fan_duty[1] = config.FAN2_CURING_SPEED;
-						}
-						else {
-							stop_curing_drying ();
+							fan_duty = config.fans_curing_speed;
+						} else {
+							stop_curing_drying();
 						}
 					}
-				}
-				else {
+				} else {
 					if (!preheat_complete) {
 						if (tUp.isCounterCompleted() == false) {
 							if (!drying_mode) {
@@ -1473,8 +1429,7 @@ void machine_running() {
 								redraw_menu = true;
 							}
 							start_drying();
-						}
-						else {
+						} else {
 							if (drying_mode) {
 								//drying_mode = false;
 								redraw_menu = true;
@@ -1484,17 +1439,13 @@ void machine_running() {
 								tDown.start();
 							}
 						}
-					}
-					else {
+					} else {
 						if ((drying_mode == true) && (tDown.isCounterCompleted() == false)) {
-
 							start_drying();
-						}
-						else {
+						} else {
 							if (drying_mode) {
 								drying_mode = false;
 								remain = config.curing_run_time;
-								running_count = 0;
 								tDown.setCounter(0, remain, 0, tDown.COUNT_DOWN, tDownComplete);
 								tDown.start();
 								redraw_menu = true;
@@ -1502,14 +1453,12 @@ void machine_running() {
 							}
 							if (tDown.isCounterCompleted() == false) {
 								start_curing();
-							}
-							else {
-								stop_curing_drying ();
+							} else {
+								stop_curing_drying();
 							}
 						}
 					}
 				}
-
 				break;
 		}
 	}
@@ -1523,13 +1472,12 @@ void button_press() {
 		echo();
 	}
 	switch (state) {
-		case MENU:
+		case HOME:
 			switch (menu_position) {
 				case 0:
 					if (curing_mode) { // curing_mode
 						motor_configuration();
 						speed_control.speed_configuration(curing_mode);
-						running_count = 0;
 
 						switch (config.curing_machine_mode) {
 							case 3: // Resin preheat
@@ -1537,13 +1485,13 @@ void button_press() {
 								remain = max_preheat_run_time;
 								tUp.setCounter(0, remain, 0, tUp.COUNT_UP, tUpComplete);
 								tUp.start();
-								fan_duty[0] = config.FAN1_PREHEAT_SPEED;
-								fan_duty[1] = config.FAN2_PREHEAT_SPEED;
+								fan_duty = config.fans_preheat_speed;
 								outputchip.digitalWrite(LED_RELE_PIN, LOW); //turn off LED
 								digitalWrite(LED_PWM_PIN, LOW);
 								drying_mode = true;
 								preheat_complete = false;
 								break;
+
 							case 2: // Drying
 								preheat_complete = false;
 								drying_mode = true;
@@ -1552,32 +1500,28 @@ void button_press() {
 									remain = config.drying_run_time;
 									tDown.setCounter(0, remain, 0, tDown.COUNT_DOWN, tDownComplete);
 									tDown.start();
-									fan_duty[0] = config.FAN1_DRYING_SPEED;
-									fan_duty[1] = config.FAN2_DRYING_SPEED;
+									fan_duty = config.fans_drying_speed;
 								} else {
 									pid_mode = true;
 									remain = max_preheat_run_time;
 									tUp.setCounter(0, remain, 0, tUp.COUNT_UP, tUpComplete);
 									tUp.start();
-									fan_duty[0] = config.FAN1_PREHEAT_SPEED;
-									fan_duty[1] = config.FAN2_PREHEAT_SPEED;
+									fan_duty = config.fans_preheat_speed;
 								}
-
 								outputchip.digitalWrite(LED_RELE_PIN, LOW); //turn off LED
 								digitalWrite(LED_PWM_PIN, LOW);
 								drying_mode = true;
 								break;
+
 							case 1: // Curing
 								pid_mode = false;
 								remain = config.curing_run_time;
 								tDown.setCounter(0, remain, 0, tDown.COUNT_DOWN, tDownComplete);
 								tDown.start();
-
-								fan_duty[0] = config.FAN1_CURING_SPEED;
-								fan_duty[1] = config.FAN2_CURING_SPEED;
+								fan_duty = config.fans_curing_speed;
 								drying_mode = false;
-
 								break;
+
 							case 0: // Drying and curing
 							default:
 								tDown.stop();
@@ -1589,17 +1533,14 @@ void button_press() {
 									remain = config.drying_run_time;
 									tDown.setCounter(0, remain, 0, tDown.COUNT_DOWN, tDownComplete);
 									tDown.start();
-									fan_duty[0] = config.FAN1_DRYING_SPEED;
-									fan_duty[1] = config.FAN2_DRYING_SPEED;
+									fan_duty = config.fans_drying_speed;
 								} else {
 									pid_mode = true;
 									remain = max_preheat_run_time;
 									tUp.setCounter(0, remain, 0, tUp.COUNT_UP, tUpComplete);
 									tUp.start();
-									fan_duty[0] = config.FAN1_PREHEAT_SPEED;
-									fan_duty[1] = config.FAN2_PREHEAT_SPEED;
+									fan_duty = config.fans_preheat_speed;
 								}
-
 								break;
 						}
 					} else { // washing_mode
@@ -1607,12 +1548,10 @@ void button_press() {
 						run_motor();
 						motor_configuration();
 						speed_control.speed_configuration(curing_mode);
-						running_count = 0;
 						remain = config.washing_run_time;
 						tDown.setCounter(0, remain, 0, tDown.COUNT_DOWN, tDownComplete);
 						tDown.start();
-						fan_duty[0] = FAN1_WASHING_SPEED;
-						fan_duty[1] = FAN2_WASHING_SPEED;
+						fan_duty = fans_washing_speed;
 					}
 
 					us_last = millis();
@@ -1647,7 +1586,7 @@ void button_press() {
 			switch (menu_position) {
 				case 0:
 					menu_position = 2;
-					state = MENU;
+					state = HOME;
 					break;
 
 				case 1:
@@ -1823,12 +1762,11 @@ void button_press() {
 			state = SPEED_STATE;
 			break;
 
-
 		case TIME:
 			switch (menu_position) {
 				case 0:
 					menu_position = 1;
-					state = MENU;
+					state = HOME;
 					break;
 
 				case 1:
@@ -1852,40 +1790,48 @@ void button_press() {
 					break;
 			}
 			break;
+
 		case BEEP:
 			write_config();
 			menu_position = 2;
 			state = SOUND_SETTINGS;
 			break;
+
 		case SOUND:
 			write_config();
 			menu_position = 1;
 			state = SOUND_SETTINGS;
 			break;
+
 		case TIME_CURING:
 			write_config();
 			menu_position = 1;
 			state = TIME;
 			break;
+
 		case TIME_DRYING:
 			write_config();
 			menu_position = 2;
 			state = TIME;
 			break;
+
 		case TIME_WASHING:
 			write_config();
 			menu_position = 3;
 			state = TIME;
 			break;
+
 		case TIME_RESIN_PREHEAT:
 			write_config();
 			menu_position = 4;
 			state = TIME;
 			break;
+
 		case INFO:
-			menu_position = 7;
+			menu_position = 8;
 			state = SETTINGS;
 			break;
+
 		case RUN_MODE:
 			write_config();
 			if (!long_press) {
@@ -1894,14 +1840,16 @@ void button_press() {
 			} else {
 				long_press = false;
 				menu_position = 0;
-				state = MENU;
+				state = HOME;
 			}
 			break;
+
 		case PREHEAT_ENABLE:
 			write_config();
 			menu_position = 1;
 			state = PREHEAT;
 			break;
+
 		case TARGET_TEMP:
 			write_config();
 			menu_position = 2;
@@ -1913,15 +1861,23 @@ void button_press() {
 			menu_position = 3;
 			state = PREHEAT;
 			break;
+
 		case UNIT_SYSTEM:
+			if (config.SI_unit_system) {
+				config.target_temp = round(fahrenheit2celsius(config.target_temp));
+				config.resin_target_temp = round(fahrenheit2celsius(config.resin_target_temp));
+			} else {
+				config.target_temp = round(celsius2fahrenheit(config.target_temp));
+				config.resin_target_temp = round(celsius2fahrenheit(config.resin_target_temp));
+			}
 			write_config();
-			menu_position = 8;
+			menu_position = 7;
 			state = SETTINGS;
 			break;
 
 		case CONFIRM:
 			menu_position = 0;
-			state = MENU;
+			state = HOME;
 			break;
 
 		case RUN_MENU:
@@ -1932,22 +1888,17 @@ void button_press() {
 							paused ^= 1;
 							if (paused) {
 								stop_motor();
-								running_count = 0;
 								stop_heater(); // turn off heat fan
-								fan_duty[0] = FAN1_MENU_SPEED;
-								fan_duty[1] = FAN2_MENU_SPEED;
+								fan_duty = fans_menu_speed;
 							} else {
 								run_motor();
 								motor_configuration();
 								speed_control.speed_configuration(curing_mode);
-								running_count = 0;
 
 								if (!config.heat_to_target_temp) {
-									fan_duty[0] = config.FAN1_CURING_SPEED;
-									fan_duty[1] = config.FAN2_CURING_SPEED;
+									fan_duty = config.fans_curing_speed;
 								} else {
-									fan_duty[0] = config.FAN1_PREHEAT_SPEED;
-									fan_duty[1] = config.FAN2_PREHEAT_SPEED;
+									fan_duty = config.fans_preheat_speed;
 								}
 							}
 							menu_position = 0;
@@ -1958,18 +1909,13 @@ void button_press() {
 							paused ^= 1;
 							if (paused) {
 								stop_motor();
-								running_count = 0;
 								stop_heater(); // turn off heat fan
-								//fan1_duty = FAN1_MENU_SPEED;
-								//fan2_duty = FAN2_MENU_SPEED;
+								//fan_duty = fans_menu_speed;
 							} else {
 								run_motor();
-							motor_configuration();
+								motor_configuration();
 								speed_control.speed_configuration(curing_mode);
-								running_count = 0;
-
-								fan_duty[0] = FAN1_WASHING_SPEED;
-								fan_duty[1] = FAN2_WASHING_SPEED;
+								fan_duty = fans_washing_speed;
 							}
 							menu_position = 0;
 							state = RUNNING;
@@ -1980,16 +1926,14 @@ void button_press() {
 				case 1:
 					menu_position = 0;
 					pid_mode = false;
-					state = MENU;
-					running_count = 0;
+					state = HOME;
 					stop_motor();
 					paused = false;
 					cover_open = false;
 
 					outputchip.digitalWrite(EN_PIN, HIGH); // disable driver
 					stop_heater(); // turn off heat fan
-					fan_duty[0] = FAN1_MENU_SPEED;
-					fan_duty[1] = FAN2_MENU_SPEED;
+					fan_duty = fans_menu_speed;
 					outputchip.digitalWrite(LED_RELE_PIN, LOW); // turn off led
 					digitalWrite(LED_PWM_PIN, LOW);
 					tDown.stop();
@@ -1997,7 +1941,6 @@ void button_press() {
 					break;
 
 				case 2:
-					running_count = 0;
 					menu_position = 0;
 					state = RUNNING;
 					break;
@@ -2018,7 +1961,7 @@ void button_press() {
 					if (menu_position) {
 						selftest.phase++;
 					} else {
-						state = MENU;
+						state = HOME;
 					}
 					break;
 
@@ -2037,7 +1980,7 @@ void button_press() {
 				case 3:
 					if (selftest.vent_test) {
 						if (selftest.fail_flag == true) {
-							state = MENU;
+							state = HOME;
 						} else {
 							selftest.phase++;
 						}
@@ -2047,7 +1990,7 @@ void button_press() {
 				case 4:
 					if (selftest.led_test) {
 						if (selftest.fail_flag == true) {
-							state = MENU;
+							state = HOME;
 						} else {
 							selftest.phase++;
 						}
@@ -2057,7 +2000,7 @@ void button_press() {
 				case 5:
 					if (selftest.heater_test) {
 						if (selftest.fail_flag == true) {
-							state = MENU;
+							state = HOME;
 						} else {
 							selftest.phase++;
 						}
@@ -2151,25 +2094,18 @@ SIGNAL(TIMER0_COMPA_vect) {
 	}
 
 	if (pid_mode) {
-		uint8_t tmpTargetTemp;
 		if (config.curing_machine_mode == 0 || config.curing_machine_mode == 2 || config.curing_machine_mode == 3 || (selftest.phase == 5 && state == SELFTEST)) {
-			if (config.curing_machine_mode != 3)
-				tmpTargetTemp = config.target_temp_celsius;
-			else
-				tmpTargetTemp = config.resin_target_temp_celsius;
-
-			if (chamber_temp_celsius >= tmpTargetTemp) {
-				fan_duty[0] = PI_regulator(chamber_temp_celsius, tmpTargetTemp);
-				fan_duty[1] = fan_duty[0];
+			uint8_t tmpTargetTemp = config.curing_machine_mode == 3 ? config.resin_target_temp : config.target_temp;
+			if (chamber_temp >= tmpTargetTemp) {
+				fan_duty.fan1 = PI_regulator(chamber_temp, tmpTargetTemp);
+				fan_duty.fan2 = fan_duty.fan1;
 			} else {
-				fan_duty[0] = FAN1_MENU_SPEED;
-				fan_duty[1] = FAN2_MENU_SPEED;
+				fan_duty = fans_menu_speed;
 			}
 		}
 	}
 
 	fan_pwm_control();
-
 	fan_rpm();
 }
 
@@ -2233,7 +2169,6 @@ void start_drying() {
 	}
 	if (outputchip.digitalRead(WASH_DETECT_PIN) == LOW) { //Gastro Pen check
 		lcd.print_P(pgmstr_remove_tank, 1, 0);
-		running_count = 0;
 		paused = true;
 		if (!paused_time) {
 			paused_time = true;
@@ -2253,15 +2188,7 @@ void start_drying() {
 			gastro_pan = false;
 		}
 	}
-	if (config.heat_to_target_temp || (config.curing_machine_mode == 3)) {
-		if (!preheat_complete) {
-			lcd_time_print(8);
-		} else {
-			lcd_time_print(7);
-		}
-	} else {
-		lcd_time_print(7);
-	}
+	lcd_time_print();
 }
 
 void start_curing() {
@@ -2273,9 +2200,7 @@ void start_curing() {
 		}
 		if (millis() > led_time_now + LED_DELAY) {
 			outputchip.digitalWrite(LED_RELE_PIN, HIGH); // turn LED on
-			int val;
-			val = map(LED_PWM_VALUE, 0, 100, 0, 255);
-			analogWrite(LED_PWM_PIN, val);
+			analogWrite(LED_PWM_PIN, map(config.led_pwm_value, 0, 100, 0, 255));
 		}
 	} else {
 		if (led_start) {
@@ -2299,7 +2224,6 @@ void start_curing() {
 	}
 	if (outputchip.digitalRead(WASH_DETECT_PIN) == LOW) { //Gastro Pen check
 		lcd.print_P(pgmstr_remove_tank, 1, 0);
-		running_count = 0;
 		paused = true;
 		if (!paused_time) {
 			paused_time = true;
@@ -2319,7 +2243,7 @@ void start_curing() {
 			gastro_pan = false;
 		}
 	}
-	lcd_time_print(7);
+	lcd_time_print();
 }
 
 void start_washing() {
@@ -2329,7 +2253,6 @@ void start_washing() {
 	}
 	if (outputchip.digitalRead(WASH_DETECT_PIN) == HIGH) { //Gastro Pen check
 		lcd.print_P(pgmstr_ipa_tank_removed, 1, 0);
-		running_count = 0;
 		paused = true;
 		if (!paused_time) {
 			paused_time = true;
@@ -2360,13 +2283,12 @@ void start_washing() {
 				tDown.pause();
 			}
 
-			lcd_time_print(8);
+			lcd_time_print();
 		}
 	} else {
 		menu_position = 0;
 		stop_motor();
-		fan_duty[0] = FAN1_MENU_SPEED;
-		fan_duty[1] = FAN2_MENU_SPEED;
+		fan_duty = fans_menu_speed;
 		stop_heater(); // turn off heat fan
 		redraw_menu = true;
 		rotary_diff = 128;
@@ -2378,12 +2300,12 @@ void start_washing() {
 				break;
 			case 1:
 				beep();
-				state = MENU;
+				state = HOME;
 				break;
 
 			case 0:
 			default:
-				state = MENU;
+				state = HOME;
 				break;
 		}
 		menu_move(true);
@@ -2397,8 +2319,7 @@ void stop_curing_drying() {
 	digitalWrite(LED_PWM_PIN, LOW);
 	stop_motor();
 	stop_heater(); // turn off heat fan
-	fan_duty[0] = FAN1_MENU_SPEED;
-	fan_duty[1] = FAN2_MENU_SPEED;
+	fan_duty = fans_menu_speed;
 	redraw_menu = true;
 	rotary_diff = 128;
 	switch (config.finish_beep_mode) {
@@ -2409,22 +2330,20 @@ void stop_curing_drying() {
 
 		case 1:
 			beep();
-			state = MENU;
+			state = HOME;
 			break;
 
 		case 0:
 		default:
-			state = MENU;
+			state = HOME;
 			break;
 	}
 	menu_move(true);
 }
 
 //! @brief Display remaining time
-//!
-//! @param dots_column Zero indexed column of first line
-//! where to to start printing progress dots.
-void lcd_time_print(uint8_t dots_column) {
+void lcd_time_print() {
+	static uint8_t running_count = 0;
 	uint8_t mins;
 	uint8_t secs;
 	if (config.heat_to_target_temp || (config.curing_machine_mode == 3)) {
@@ -2445,55 +2364,28 @@ void lcd_time_print(uint8_t dots_column) {
 		secs = tDown.getCurrentSeconds();
 	}
 
-
 	if (state == RUNNING && (secs != last_seconds || redraw_ms)) {
 		redraw_ms = false;
 		last_seconds = secs;
-		lcd.printTime(mins, secs, 8, 2);
+		lcd.printTime(mins, secs, LAYOUT_TIME_X, LAYOUT_TIME_Y);
 
 		if (!paused && !paused_time) {
 			lcd.print_P(pgmstr_space, 19, 1);
 
 			if (curing_mode) {
 				if (outputchip.digitalRead(COVER_OPEN_PIN) == LOW) {
-					lcd.setCursor(13, 0);
-					if (config.SI_unit_system) {
-						lcd.print(chamber_temp_celsius);
-						lcd.print_P(pgmstr_celsius);
-					} else {
-						lcd.print(chamber_temp_fahrenheit);
-						lcd.print_P(pgmstr_fahrenheit);
-					}
+					lcd.print(chamber_temp, LAYOUT_TEMP_X, LAYOUT_TEMP_Y);
+					lcd.print_P(config.SI_unit_system ? pgmstr_celsius : pgmstr_fahrenheit);
 				}
 			}
 
-			lcd.setCursor(dots_column, 0);
-			switch (running_count) {
-				case 0:
-					lcd.print_P(pgmstr_double_space);
-					break;
-
-				case 1:
-					lcd.print_P(pgmstr_dot1);
-					break;
-
-				case 2:
-					lcd.print_P(pgmstr_dot2);
-					lcd.print_P(pgmstr_double_space, 14, 2);
-					lcd.print_P(pgmstr_double_space, 5, 2);
-					break;
-
-				default:	// 3
-					lcd.print_P(pgmstr_dot3);
-					break;
-			}
-
+			lcd.setCursor(19, 0);
+			uint8_t c = pgm_read_byte(pgmstr_progress + running_count);
+			lcd.write(c);
 		}
-		running_count++;
 
-		if (running_count > 4) {
-			lcd.print_P(pgmstr_double_space, 14, 2);
-			lcd.print_P(pgmstr_double_space, 5, 2);
+		if (++running_count > sizeof(pgmstr_progress)) {
+			lcd_clear_time_boundaries();
 			running_count = 0;
 			redraw_menu = true;
 		}
@@ -2502,21 +2394,22 @@ void lcd_time_print(uint8_t dots_column) {
 
 void fan_pwm_control() {
 	//rev 0.4 - inverted PWM FAN1, FAN2
+	// FIXME refactoring needed
 	unsigned long currentMillis = millis();
-	if (fan_duty[0] > 0) {
+	if (fan_duty.fan1 > 0) {
 		if (!fan1_on) {
 			fan1_on = true;
 			outputchip.digitalWrite(FAN1_PIN, HIGH);
 		}
 		if (fan1_pwm_high == false) {
-			if (currentMillis - fan1_previous_millis >= ((period) * (1 - ((float)fan_duty[0] / 100)))) {
+			if (currentMillis - fan1_previous_millis >= ((period) * (1 - ((float)fan_duty.fan1 / 100)))) {
 				fan1_previous_millis = currentMillis;
 				PORTC = PORTC & 0x7F; //OUTPUT FAN1 LOW
 				fan1_pwm_high = true;
 			}
 		}
 		if (fan1_pwm_high == true) {
-			if (currentMillis - fan1_previous_millis >= ((period) * ((float)fan_duty[0] / 100))) {
+			if (currentMillis - fan1_previous_millis >= ((period) * ((float)fan_duty.fan1 / 100))) {
 				fan1_previous_millis = currentMillis;
 				PORTC = PORTC | 0x80; //OUTPUT FAN1 HIGH
 				fan1_pwm_high = false;
@@ -2530,20 +2423,20 @@ void fan_pwm_control() {
 		}
 	}
 
-	if (fan_duty[1] > 0) {
+	if (fan_duty.fan2 > 0) {
 		if (!fan2_on) {
 			fan2_on = true;
 			outputchip.digitalWrite(FAN2_PIN, HIGH);
 		}
 		if (fan2_pwm_high == false) {
-			if (currentMillis - fan2_previous_millis >= ((period) * (1 - ((float)fan_duty[1] / 100)))) {
+			if (currentMillis - fan2_previous_millis >= ((period) * (1 - ((float)fan_duty.fan2 / 100)))) {
 				fan2_previous_millis = currentMillis;
 				PORTB = PORTB & 0x7F; //OUTPUT FAN2 LOW
 				fan2_pwm_high = true;
 			}
 		}
 		if (fan2_pwm_high == true) {
-			if (currentMillis - fan2_previous_millis >= ((period) * ((float)fan_duty[1] / 100))) {
+			if (currentMillis - fan2_previous_millis >= ((period) * ((float)fan_duty.fan2 / 100))) {
 				fan2_previous_millis = currentMillis;
 				PORTB = PORTB | 0x80; //OUTPUT FAN2 HIGH
 				fan2_pwm_high = false;
@@ -2562,9 +2455,15 @@ void therm1_read() {
 	// FIXME WTF?
 	outputchip.digitalWrite(9, LOW);
 	outputchip.digitalWrite(10, LOW);
+	chamber_temp = config.SI_unit_system ? therm1.analog2temp() : celsius2fahrenheit(therm1.analog2temp());
+}
 
-	chamber_temp_celsius = therm1.analog2temp();
-	chamber_temp_fahrenheit = (1.8 * chamber_temp_celsius) + 32;
+float celsius2fahrenheit(float celsius) {
+	return 1.8 * celsius + 32;
+}
+
+float fahrenheit2celsius(float fahrenheit) {
+	return (fahrenheit - 32) / 1.8;
 }
 
 void fan_rpm() {
@@ -2572,7 +2471,7 @@ void fan_rpm() {
 	if (ams_fan_counter % 100 == 0) {
 		for (uint8_t j = 0; j < 2; j++) {
 			if (fan_tacho_count[j] <= fan_tacho_last_count[j]) {
-				if (fan_duty[j] > 0)
+				if (j ? fan_duty.fan2 : fan_duty.fan1 > 0)
 					fan_error[j] = true;
 			} else {
 				fan_error[j] = false;
@@ -2617,39 +2516,12 @@ void fan_tacho3() {
 }
 
 void preheat() {
-	if (config.curing_machine_mode == 0 || config.curing_machine_mode == 2) {
-		if (config.SI_unit_system) {
-			if (chamber_temp_celsius < config.target_temp_celsius) {
-				run_heater();
-			} else {
-				stop_heater();
-				tUp.setCounter(0, 0, 0, tUp.COUNT_UP, tUpComplete);
-			}
-		} else {
-			if (chamber_temp_fahrenheit < ((config.target_temp_celsius * 1.8) + 32)) {
-				run_heater();
-			} else {
-				stop_heater();
-				tUp.setCounter(0, 0, 0, tUp.COUNT_UP, tUpComplete);
-			}
-		}
-	}
-	if (config.curing_machine_mode == 3) {
-		if (config.SI_unit_system) {
-			if (chamber_temp_celsius < config.resin_target_temp_celsius) {
-				run_heater();
-			} else {
-				stop_heater();
-				tUp.setCounter(0, 0, 0, tUp.COUNT_UP, tUpComplete);
-			}
-		} else {
-			if (chamber_temp_fahrenheit < ((config.resin_target_temp_celsius * 1.8) + 32)) {
-				run_heater();
-			} else {
-				stop_heater();
-				tUp.setCounter(0, 0, 0, tUp.COUNT_UP, tUpComplete);
-			}
-		}
+	uint8_t tmpTargetTemp = config.curing_machine_mode == 3 ? config.resin_target_temp : config.target_temp;
+	if (chamber_temp < tmpTargetTemp) {
+		run_heater();
+	} else {
+		stop_heater();
+		tUp.setCounter(0, 0, 0, tUp.COUNT_UP, tUpComplete);
 	}
 }
 

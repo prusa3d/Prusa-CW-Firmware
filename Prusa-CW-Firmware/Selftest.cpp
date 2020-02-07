@@ -4,7 +4,7 @@
 static bool timer_callback_selftest = false;
 
 CSelftest::CSelftest() : phase(0), cover_test(false), tank_test(false), vent_test(false), heater_test(false),
-						 rotation_test(false), led_test(false), fan1_speed(10), fan2_speed(10), cover_down(false),
+						 rotation_test(false), led_test(false), fans_speed({10, 10}), cover_down(false),
 						 isCounterRunning(false), fail_flag(false), measured_state(false), helper(true), first_loop(true),
 						 prev_measured_state(false), counter(0)
 {
@@ -43,9 +43,9 @@ void CSelftest::ventilation_test(bool f1_error, bool f2_error) {
 	if (timer_callback_selftest == false) {
 		byte currSec = tCountDown.getCurrentSeconds();
 		if (currSec % 10 == 0) {
-			if (fan1_speed + 20 <= 100 && helper) {
-				fan1_speed += 20;
-				fan2_speed += 20;
+			if (fans_speed.fan1 + 20 <= 100 && helper) {
+				fans_speed.fan1 += 20;
+				fans_speed.fan2 += 20;
 				helper = false;
 			}
 		} else {
@@ -54,14 +54,14 @@ void CSelftest::ventilation_test(bool f1_error, bool f2_error) {
 
 		if (f1_error || f2_error) {
 			tCountDown.stop();
-			fan1_speed = fan2_speed = 10;
+			fans_speed = {10, 10};
 			measured_state = f1_error;			//variable recycling
 			prev_measured_state = f2_error;
 			fail_flag = true;
 			vent_test = true;
 		}
 	 } else {
-		 fan1_speed = fan2_speed = 10;
+		 fans_speed = {10, 10};
 		 vent_test = true;
 	 }
 }
@@ -96,10 +96,10 @@ const char * CSelftest::print() {
 		break;
 	case 5:
 		if (!heater_test) {
-			if (fan1_speed == 0)
+			if (fans_speed.fan1 == 0)
 				return pgmstr_remove_tank;
 			else {
-				if (fan2_speed == 0)
+				if (fans_speed.fan2 == 0)
 					return pgmstr_close_cover;
 				else
 					return pgmstr_heater_test;
@@ -129,7 +129,7 @@ void CSelftest::clean_up() {
 	first_loop = true;
 	counter = 0;
 	measured_state = prev_measured_state = false;
-	fan1_speed = fan2_speed = 10;
+	fans_speed = {10, 10};
 	timer_callback_selftest = false;
 	helper = false;
 	isCounterRunning = false;

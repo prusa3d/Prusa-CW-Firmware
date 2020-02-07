@@ -13,7 +13,7 @@ CPPSTANDARD = -std=gnu++11
 
 WARN = -Wall -Wextra
 CPPTUNING = -fno-exceptions -fno-threadsafe-statics
-OPT = -g -Os -ffunction-sections -fdata-sections -flto -fno-fat-lto-objects -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -fno-inline-small-functions -ffunction-sections -fdata-sections -mcall-prologues -fno-split-wide-types
+OPT = -g -Os -ffunction-sections -fdata-sections -flto -fno-fat-lto-objects -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -fno-inline-small-functions -mcall-prologues -fno-split-wide-types
 MCU = -mmcu=atmega32u4
 
 DEFS = -DF_CPU=16000000 -DARDUINO=10805 -DUSB_VID=0x2c99 -DUSB_PID=0x0008 -DUSB_MANUFACTURER='"Prusa Research prusa3d.com"' -DUSB_PRODUCT='"Original Prusa CW1"'

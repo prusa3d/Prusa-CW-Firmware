@@ -3,7 +3,7 @@
 //! @author Marek Bel
 
 #include "MenuList.h"
-#include "Main.h"
+#include "main.h"
 #include <stdint.h>
 
 static const int rows = 4;

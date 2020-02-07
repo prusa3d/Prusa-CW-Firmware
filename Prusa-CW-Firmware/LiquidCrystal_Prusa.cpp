@@ -285,15 +285,16 @@ void LiquidCrystal_Prusa::print(uint8_t number, uint8_t col, uint8_t row, uint8_
 }
 
 void LiquidCrystal_Prusa::print(float number, uint8_t col, uint8_t row) {
+	number += 0.05;
 	uint8_t integer = (uint8_t)number;
-	print(integer, col, row, 10, ' ');
+	print(integer, col, row, 100, ' ');
 	write('.');
 	integer = (number - integer) * 10;
 	print(integer, 255, 255, 1);
 }
 
 void LiquidCrystal_Prusa::printTime(uint8_t min, uint8_t sec, uint8_t col, uint8_t row) {
-	print(min, col, row, 10, ' ');
+	print(min, col, row, 10, '0');
 	write(':');
 	print(sec, 255, 255, 10, '0');
 }
