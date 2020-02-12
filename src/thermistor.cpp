@@ -1,9 +1,9 @@
 #include "thermistor.h"
 #include "Arduino.h"
 #include "stdint.h"
-#include "src/Configuration.h"
-#include "src/Conditionals.h"
-#include "src/Thermistortables.h"
+#include "ttables/Configuration.h"
+#include "ttables/Conditionals.h"
+#include "ttables/Thermistortables.h"
 #include "float.h"
 
 #define HOTENDS  1

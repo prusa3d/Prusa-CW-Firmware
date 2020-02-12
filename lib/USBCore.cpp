@@ -240,7 +240,7 @@ int USB_Recv(u8 ep, void* d, int len)
 //	Recv 1 byte if ready
 int USB_Recv(u8 ep)
 {
-	u8 c;
+	u8 c = -1;
 	if (USB_Recv(ep,&c,1) != 1)
 		return -1;
 	return c;

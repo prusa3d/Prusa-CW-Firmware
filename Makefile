@@ -1,5 +1,5 @@
-PROJECT = Prusa-CW-Firmware
-DIRS = Prusa-CW-Firmware board core libraries
+PROJECT = Prusa-CW1-Firmware
+DIRS = lib src
 I18N = i18n
 LANG_TEMPLATE = ${I18N}/${PROJECT}.pot
 LANGS = en #cs
@@ -40,7 +40,8 @@ default: ${HEXS}
 
 %.hex: %.elf
 	${OBJCOPY} -O ihex -R .eeprom $< $@.tmp
-	cat ${PROJECT}.hex.in $@.tmp > $@
+	@echo -e "; device = cw1\n" > $@
+	cat $@.tmp >> $@
 	rm $@.tmp
 
 %.elf: version.h Makefile ${OBJS}
