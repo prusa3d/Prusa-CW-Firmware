@@ -4,7 +4,7 @@
 #define SELFTEST_H
 
 #include "Countimer.h"
-#include "main.h"
+#include "hardware.h"
 
 /*! \class CSelftest
     \brief A class runs series of tests that should check, with help of an operator, that all vital elements are fully functioning.
@@ -40,10 +40,9 @@ public:
 /**
 * Ventilation test counts down 1 minute and every 10sec it rises fan1 and fan2 duty by 20% (starting at 10%). When it triggers fan error, it stops the test.
 * Possible improvements in the future: Print out which fan failed the test (measure_state, prev_measure_state).
-* @param fan1_error - triggers wrong fan behavior
-* @param fan2_error - triggers wrong fan behavior
+* @param fan_error - triggers wrong fan behavior
 */
-	void ventilation_test(bool, bool);
+	void ventilation_test(bool);
 /**
  * According to selftest's phase and state of the test it sends appropriate message
  * @return it returns message right in lcd.print();
@@ -87,7 +86,7 @@ public:
 	bool heater_test;			/**< Stores if heater test is finished*/
 	bool rotation_test;			/**< Stores if rotation test is finished*/
 	bool led_test;				/**< Stores if LED test is finished*/
-	fans_duty_t fans_speed;		/**< Stores duty of fans (0-100%)*/
+	uint8_t fans_speed[2];		/**< Stores duty of fans (0-100%)*/
 	Countimer tCountDown;		/**< Counts down time periods in tests, where is needed*/
 	bool cover_down;			/**< Tells if cover is down(eye's safe measurement)*/
 	bool isCounterRunning;		/**< Tells whether counter is running... */

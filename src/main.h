@@ -12,10 +12,5 @@ extern LiquidCrystal_Prusa lcd;
 
 void print_menu_cursor(uint8_t line);
 
-typedef struct {
-	uint8_t fan1;
-	uint8_t fan2;
-} fans_duty_t;
-
 
 #endif /* CW_MAIN_H */

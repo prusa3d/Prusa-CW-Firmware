@@ -6,7 +6,7 @@ static const char pgmstr_heating[] PROGMEM = _("Heating");
 static const char pgmstr_resin_preheat[] PROGMEM = _("Resin preheat");
 static const char pgmstr_rotation_speed[] PROGMEM = _("Rotation speed");
 static const char pgmstr_run_mode[] PROGMEM = _("Run mode");
-static const char pgmstr_preheat[] PROGMEM = _("Preheat");
+static const char pgmstr_temperatures[] PROGMEM = _("Temperatures");
 static const char pgmstr_sound[] PROGMEM = _("Sound");
 static const char pgmstr_fans[] PROGMEM = _("Fans");
 static const char pgmstr_led_intensity[] PROGMEM = _("LED intensity");
@@ -20,27 +20,22 @@ static const char pgmstr_fan2_failure[] PROGMEM = _("FAN2 failure");
 static const char pgmstr_heater_failure[] PROGMEM = _("HEATER failure");
 static const char pgmstr_build_nr[] PROGMEM = _("Build: ") FW_BUILDNR;
 static const char pgmstr_fw_hash[] PROGMEM = FW_HASH;
-static const char pgmstr_workspace[] PROGMEM =
-#if FW_LOCAL_CHANGES
-        _("Workspace dirty");
-#else
-        _("Workspace clean");
-#endif // FW_LOCAL_CHANGES
-static const char pgmstr_start_resin_preheat[] PROGMEM = _("Start resin preheat");
-static const char pgmstr_start_washing[] PROGMEM = _("Start washing");
+static const char pgmstr_workspace_dirty[] PROGMEM = _("Workspace dirty");
+static const char pgmstr_start_resin_preheat[] PROGMEM = _("Do resin preheat");
+static const char pgmstr_start_washing[] PROGMEM = _("Do washing");
 static const char pgmstr_run_time[] PROGMEM = _("Run-time");
 static const char pgmstr_settings_error[] PROGMEM = _("Settings") " ->!!";
 static const char pgmstr_settings[] PROGMEM = _("Settings");
-static const char pgmstr_start_drying[] PROGMEM = _("Start drying");
-static const char pgmstr_start_curing[] PROGMEM = _("Start curing");
-static const char pgmstr_start_drying_curing[] PROGMEM = _("Start drying/curing");
+static const char pgmstr_start_drying[] PROGMEM = _("Do drying");
+static const char pgmstr_start_curing[] PROGMEM = _("Do curing");
+static const char pgmstr_start_drying_curing[] PROGMEM = _("Do drying/curing");
 static const char pgmstr_drying_curing[] PROGMEM = _("Drying/curing");
 static const char pgmstr_selftest[] PROGMEM = _("Run selftest");
 static const char pgmstr_curing_speed[] PROGMEM = _("Curing speed");
 static const char pgmstr_washing_speed[] PROGMEM = _("Washing speed");
-static const char pgmstr_preheat_on[] PROGMEM = _("Preheat") " [on]";
-static const char pgmstr_preheat_off[] PROGMEM = _("Preheat") " [off]";
-static const char pgmstr_drying_curing_temp[] PROGMEM = _("Drying/curing temp.");
+static const char pgmstr_warmup_on[] PROGMEM = _("Warm-up") " [on]";
+static const char pgmstr_warmup_off[] PROGMEM = _("Warm-up") " [off]";
+static const char pgmstr_drying_warmup_temp[] PROGMEM = _("Drying warm-up temp.");
 static const char pgmstr_resin_preheat_temp[] PROGMEM = _("Resin preheat temp.");
 static const char pgmstr_control_echo_on[] PROGMEM = _("Control echo") " [on]";
 static const char pgmstr_control_echo_off[] PROGMEM = _("Control echo") " [off]";

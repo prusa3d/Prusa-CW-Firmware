@@ -25,39 +25,40 @@
 // can't assume that it's in that state when a sketch starts (and the
 // LiquidCrystal_Prusa constructor is called).
 
-LiquidCrystal_Prusa::LiquidCrystal_Prusa(uint8_t rs, uint8_t rw, uint8_t enable,
-					 uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3,
-					 uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7)
+LiquidCrystal_Prusa::LiquidCrystal_Prusa(uint8_t rs, uint8_t rw, uint8_t enable, uint8_t pwm,
+			uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3,
+			uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7)
 {
-	init(0, rs, rw, enable, d0, d1, d2, d3, d4, d5, d6, d7);
+	init(0, rs, rw, enable, pwm, d0, d1, d2, d3, d4, d5, d6, d7);
 }
 
-LiquidCrystal_Prusa::LiquidCrystal_Prusa(uint8_t rs, uint8_t enable,
-					 uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3,
-					 uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7)
+LiquidCrystal_Prusa::LiquidCrystal_Prusa(uint8_t rs, uint8_t enable, uint8_t pwm,
+			uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3,
+			uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7)
 {
-	init(0, rs, 255, enable, d0, d1, d2, d3, d4, d5, d6, d7);
+	init(0, rs, 255, enable, pwm, d0, d1, d2, d3, d4, d5, d6, d7);
 }
 
-LiquidCrystal_Prusa::LiquidCrystal_Prusa(uint8_t rs, uint8_t rw, uint8_t enable,
-					 uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3)
+LiquidCrystal_Prusa::LiquidCrystal_Prusa(uint8_t rs, uint8_t rw, uint8_t enable, uint8_t pwm,
+			uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3)
 {
-	init(1, rs, rw, enable, d0, d1, d2, d3, 0, 0, 0, 0);
+	init(1, rs, rw, enable, pwm, d0, d1, d2, d3, 0, 0, 0, 0);
 }
 
-LiquidCrystal_Prusa::LiquidCrystal_Prusa(uint8_t rs, uint8_t enable,
-					 uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3)
+LiquidCrystal_Prusa::LiquidCrystal_Prusa(uint8_t rs, uint8_t enable, uint8_t pwm,
+			uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3)
 {
-	init(1, rs, 255, enable, d0, d1, d2, d3, 0, 0, 0, 0);
+	init(1, rs, 255, enable, pwm, d0, d1, d2, d3, 0, 0, 0, 0);
 }
 
-void LiquidCrystal_Prusa::init(uint8_t fourbitmode, uint8_t rs, uint8_t rw, uint8_t enable,
+void LiquidCrystal_Prusa::init(uint8_t fourbitmode, uint8_t rs, uint8_t rw, uint8_t enable, uint8_t pwm,
 			 uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3,
 			 uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7)
 {
 	_rs_pin = rs;
 	_rw_pin = rw;
 	_enable_pin = enable;
+	_pwm_pin = pwm;
 
 	_data_pins[0] = d0;
 	_data_pins[1] = d1;
@@ -73,6 +74,13 @@ void LiquidCrystal_Prusa::init(uint8_t fourbitmode, uint8_t rs, uint8_t rw, uint
 	if (_rw_pin != 255) {
 		pinMode(_rw_pin, OUTPUT);
 	}
+
+	if (_pwm_pin != 255) {
+		pinMode(_pwm_pin, OUTPUT);
+		// TODO method for PWM brightness control
+		digitalWrite(_pwm_pin, HIGH);
+	}
+
 	pinMode(_enable_pin, OUTPUT);
 
 	if (fourbitmode)

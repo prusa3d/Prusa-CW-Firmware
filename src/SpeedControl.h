@@ -1,12 +1,11 @@
-#ifndef SPEED_CONTROL_H
-#define SPEED_CONTROL_H
+#pragma once
 
 #include "Arduino.h"
 
 /*! \class CSpeedControl
-    \brief A class that handles variables and functions related to rotation speed.
+	\brief A class that handles variables and functions related to rotation speed.
 
-    It keeps all those variables and functions on one spot.
+	It keeps all those variables and functions on one spot.
 */
 
 class CSpeedControl {
@@ -28,11 +27,10 @@ public:
 	byte washing_speed;			/**< User-defined value from 1 to 10, loaded from eeprom. */
 	byte curing_speed;			/**< User-defined value from 1 to 10, loaded from eeprom. */
 	bool acceleration_flag;		/**< Activates acceleration process */
-	bool motor_running;			/**< Determines if motor is running (for stepper) */
 
 private:
 
-	const uint8_t rotation_start = 200;	/**< Smaller = faster */
+	const uint8_t rotation_start = 200;		/**< Smaller = faster */
 	const uint8_t min_curing_speed = 220;	/**< Smaller = faster */
 	const uint8_t max_curing_speed = 25;	/**< Smaller = faster */
 	const uint8_t min_washing_speed = 70;	/**< Smaller = faster */
@@ -41,5 +39,3 @@ private:
 	uint8_t target_washing_period;			/**< Stores wanted time period of microsteps mapped in speed_configuration() */
 
 };
-
-#endif  //SPEED_CONTROL_H

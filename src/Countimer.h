@@ -9,7 +9,6 @@
 #include <WProgram.h>
 #endif
 
-#define COUNTIMER_MAX_HOURS 999
 #define COUNTIMER_MAX_MINUTES_SECONDS 59
 
 typedef void(*timer_callback)(void);
@@ -20,18 +19,17 @@ public:
 	Countimer();
 	~Countimer();
 
-	enum CountType
-	{
+	enum CountType {
 		COUNT_NONE = 0,
 		COUNT_UP = 1,
 		COUNT_DOWN = 2
 	};
 
 	// Set up counter time(hours, minutes, seconds), count mode and function to execute if count is completed.
-	void setCounter(uint16_t hours, uint8_t minutes, uint8_t seconds, CountType countType, timer_callback onComplete);
+	void setCounter(uint8_t hours, uint8_t minutes, uint8_t seconds, CountType countType, timer_callback onComplete);
 
 	// Set up counter time(hours, minutes, seconds) for existing timer.
-	void setCounter(uint16_t hours, uint8_t minutes, uint8_t seconds);
+	void setCounter(uint8_t hours, uint8_t minutes, uint8_t seconds);
 
 	// Returns timer's current hours.
 	uint16_t getCurrentHours();
@@ -43,9 +41,6 @@ public:
 	uint8_t getCurrentSeconds();
 
 	void setInterval(timer_callback callback, uint32_t interval);
-
-	// Returns current timer as formatted string HH:MM:SS
-	char* getCurrentTime();
 
 	// Returns true if counter is completed, otherwise returns false.
 	bool isCounterCompleted();
@@ -99,7 +94,6 @@ private:
 	timer_callback _onComplete;
 	bool _isCounterCompleted;
 	bool _isStopped;
-	char _formatted_time[10];
 	CountType _countType;
 };
 
