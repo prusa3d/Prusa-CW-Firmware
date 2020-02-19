@@ -4,7 +4,10 @@
 #include "thermistor.h"
 #include "MCP23S17.h"
 #include "Trinamic_TMC2130.h"
-#include "config.h"
+#include "defines.h"
+
+float celsius2fahrenheit(float);
+float fahrenheit2celsius(float);
 
 class hardware {
 public:

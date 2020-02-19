@@ -1,41 +1,21 @@
 #pragma once
 
-#include "Arduino.h"
+#include "config.h"
+#include "hardware.h"
 
-/*! \class CSpeedControl
-	\brief A class that handles variables and functions related to rotation speed.
 
-	It keeps all those variables and functions on one spot.
-*/
-
-class CSpeedControl {
+class Speed_Control {
 public:
-
-	CSpeedControl();
-	~CSpeedControl();
-/**
-* Speed_configuration calculates user-defined time period of microsteps and sets up acceleration process (washing mode).
-* @param curing_mode - devides function into two states: curing_mode & washing mode.
-*/
+	Speed_Control(hardware& hw, eeprom_v2_t& config);
 	void speed_configuration(bool curing_mode);
-/**
-* acceleration50ms handles acceleration of the motor every 50 ms. There is an option to print out "current.wanted" values through USB (SERIAL_COM_DEBUG macro)
-*/
-	void acceleration50ms();
+	void acceleration();
 
-	byte microstep_control;		/**< Universal variable for passing current speed of rotation. Must be byte because it is passed in interuption process.*/
-	byte washing_speed;			/**< User-defined value from 1 to 10, loaded from eeprom. */
-	byte curing_speed;			/**< User-defined value from 1 to 10, loaded from eeprom. */
-	bool acceleration_flag;		/**< Activates acceleration process */
+	uint8_t microstep_control;
 
 private:
-
-	const uint8_t rotation_start = 200;		/**< Smaller = faster */
-	const uint8_t min_curing_speed = 220;	/**< Smaller = faster */
-	const uint8_t max_curing_speed = 25;	/**< Smaller = faster */
-	const uint8_t min_washing_speed = 70;	/**< Smaller = faster */
-	const uint8_t max_washing_speed = 16;	/**< Smaller = faster */
-	uint8_t target_curing_period;			/**< Stores wanted time period of microsteps mapped in speed_configuration() */
-	uint8_t target_washing_period;			/**< Stores wanted time period of microsteps mapped in speed_configuration() */
-
+	hardware& hw;
+	eeprom_v2_t& config;
+	uint8_t target_washing_period;
+	bool do_acceleration;
+	unsigned long us_last;
 };

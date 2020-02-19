@@ -1,6 +1,14 @@
 #include <avr/wdt.h>
 #include "hardware.h"
 
+float celsius2fahrenheit(float celsius) {
+	return 1.8 * celsius + 32;
+}
+
+float fahrenheit2celsius(float fahrenheit) {
+	return (fahrenheit - 32) / 1.8;
+}
+
 hardware::hardware() :
 		fan_tacho_count{0, 0, 0},
 		therm1(THERM_READ_PIN, 5),

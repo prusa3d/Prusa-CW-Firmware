@@ -1,34 +1,51 @@
-#include "config.h"
+#include "defines.h"
 #include "SpeedControl.h"
+#include "hardware.h"
 
-CSpeedControl::CSpeedControl() : microstep_control(200), washing_speed(10), curing_speed(1),
-								 acceleration_flag(false), target_curing_period(220), target_washing_period(200) {}
+Speed_Control::Speed_Control(hardware& hw, eeprom_v2_t& config) :
+		microstep_control(WASHING_ROTATION_START),
+		hw(hw),
+		config(config),
+		target_washing_period(WASHING_ROTATION_START),
+		do_acceleration(false),
+		us_last(0)
+{ }
 
-CSpeedControl::~CSpeedControl() {}
-
-void CSpeedControl::speed_configuration(bool curing_mode) {
-	if (curing_mode == true) {
-		target_curing_period = map(curing_speed, 1, 10, min_curing_speed, max_curing_speed);
-		microstep_control = target_curing_period;
+void Speed_Control::speed_configuration(bool curing_mode) {
+	hw.motor_configuration(curing_mode);
+	if (curing_mode) {
+		microstep_control = map(config.curing_speed, 1, 10, MIN_CURING_SPEED, MAX_CURING_SPEED);
 	} else {
-		target_washing_period = map(washing_speed, 1, 10, min_washing_speed, max_washing_speed);
-		microstep_control = rotation_start;
-		acceleration_flag = true;
+		target_washing_period = map(config.washing_speed, 1, 10, MIN_WASHING_SPEED, MAX_WASHING_SPEED);
+		microstep_control = WASHING_ROTATION_START;
+		us_last = millis();
 	}
+	do_acceleration = !curing_mode;
 }
 
-void CSpeedControl::acceleration50ms() {
+void Speed_Control::acceleration() {
+	if (!do_acceleration)
+		return;
+
+	unsigned long us_now = millis();
+	if (us_now - us_last < 50)
+		return;
+
+	us_last = us_now;
+
 	if (microstep_control > target_washing_period) {
-		if (microstep_control > min_washing_speed + 5)
+		// step is 5 to MIN_WASHING_SPEED+5, then step is 1
+		if (microstep_control > MIN_WASHING_SPEED + 5)
 			microstep_control -= 4;
 		microstep_control--;
 #ifdef SERIAL_COM_DEBUG
 		SerialUSB.print(microstep_control);
-		SerialUSB.write('.');
+		SerialUSB.print("->");
 		SerialUSB.print(target_washing_period);
-		SerialUSB.write('\n');
+		SerialUSB.print("\r\n");
 #endif
 	} else {
-		acceleration_flag = false;
+		do_acceleration = false;
+		hw.motor_noaccel_settings();
 	}
 }

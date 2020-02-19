@@ -2,9 +2,8 @@
 #include <avr/wdt.h>
 #include <avr/pgmspace.h>
 
-#include "EEPROM.h"
 #include "version.h"
-#include "config.h"
+#include "defines.h"
 #include "main.h"
 #include "hardware.h"
 #include "Countimer.h"
@@ -13,16 +12,17 @@
 #include "Selftest.h"
 #include "SpeedControl.h"
 #include "i18n.h"
+#include "config.h"
 
 using Ter = LiquidCrystal_Prusa::Terminator;
 
 Countimer tDown;
 Countimer tUp;
 
-CSelftest selftest;
-CSpeedControl speed_control;
-
 hardware hw;
+Speed_Control speed_control(hw, config);
+
+CSelftest selftest;
 
 LiquidCrystal_Prusa lcd(LCD_PINS_RS, LCD_PINS_ENABLE, LCD_PWM_PIN, LCD_PINS_D4, LCD_PINS_D5, LCD_PINS_D6, LCD_PINS_D7);
 
@@ -63,87 +63,6 @@ enum units : uint8_t {
 	PERCENT,
 	TEMPERATURE_C,
 	TEMPERATURE_F,
-};
-
-//! @brief legacy configuration store structure
-//!
-//! It is restored when magic read from eeprom equals magic "CURWA".
-//! Do not change.
-typedef struct {
-	byte washing_speed;
-	byte curing_speed;
-	byte washing_run_time;
-	byte curing_run_time;
-	byte finish_beep_mode;
-	byte drying_run_time;
-	byte sound_response;
-	byte curing_machine_mode;
-	byte heat_to_target_temp;
-	byte target_temp_celsius;
-	byte target_temp_fahrenheit;
-	byte SI_unit_system;
-	bool heater_failure;
-} eeprom_v1_t;
-
-//! @brief configuration store structure
-//!
-//! It is restored when magic read from eeprom equals magic "CW1v2"
-//! Do not change. If new items needs to be stored, magic needs to be
-//! changed, this struct needs to be made legacy and new structure needs
-//! to be created.
-typedef struct {
-	byte washing_speed;
-	byte curing_speed;
-	byte washing_run_time;
-	byte curing_run_time;
-	byte finish_beep_mode;
-	byte drying_run_time;
-	byte sound_response;
-	byte curing_machine_mode;
-	byte heat_to_target_temp;
-	byte target_temp;
-	byte resin_target_temp;		// v1 change!
-	byte SI_unit_system;
-	bool heater_failure;
-
-	byte resin_preheat_run_time;
-	byte led_pwm_value;
-	byte fans_curing_speed[2];
-	byte fans_drying_speed[2];
-	byte fans_preheat_speed[2];
-} eeprom_v2_t;
-
-#define EEPROM_OFFSET	128
-#define MAGIC_SIZE		6
-#define EEPROM_BASE		E2END + 1 - EEPROM_OFFSET
-static_assert(sizeof(eeprom_v2_t) <= EEPROM_OFFSET, "eeprom_t doesn't fit in it's reserved space in the memory.");
-
-//! @brief configuration
-//!
-//! Default values definition,
-//! it can be overridden by user and stored to
-//! and restored from permanent storage.
-
-eeprom_v2_t config = {
-	10,			// washing_speed
-	1,			// curing_speed
-	4,			// washing_run_time
-	3,			// curing_run_time
-	1,			// finish_beep_mode
-	3,			// drying_run_time
-	1,			// sound_response
-	0,			// curing_machine_mode (0=drying/curing, 1=curing, 2=drying, 3=resin preheat)
-	0,			// heat_to_target_temp
-	35,			// target_temp (celsius)
-	30,			// resin_target_temp (celsius)
-	1,			// SI_unit_system
-	false,		// heater_failure
-
-	10,			// resin_preheat_run_time
-	100,		// led_pwm_value
-	{60, 70},	// fans_curing_speed
-	{60, 70},	// fans_drying_speed
-	{40, 40},	// fans_preheat_speed
 };
 
 static const char* pgmstr_serial_number = reinterpret_cast<const char*>(0x7fe0); //!< 15 characters
@@ -194,8 +113,6 @@ uint8_t fans_washing_speed[2] = {60, 70};	// 0-100 %
 bool redraw_menu = true;
 bool redraw_ms = true;
 bool mode_flag = true;	//helping var for selftesting
-
-char config_magic[MAGIC_SIZE] = "CW1v2";
 
 menu_state state = HOME;
 
@@ -252,7 +169,6 @@ void fan_tacho3() {
 	hw.fan_tacho_count[2]++;
 }
 
-static void read_config();
 static void menu_move(bool sound_echo);
 static void machine_running();
 static void button_press();
@@ -265,8 +181,6 @@ static void start_washing();
 static void tUpComplete();
 static void preheat();
 static void lcd_time_print();
-static float celsius2fahrenheit(float);
-static float fahrenheit2celsius(float);
 
 static bool is_error() {
 	return hw.get_fans_error() || config.heater_failure;
@@ -333,42 +247,6 @@ void setup() {
 	lcd.createChar(2, Backslash);
 	redraw_menu = true;
 	menu_move(true);
-}
-
-void write_config() {
-	config.washing_speed = speed_control.washing_speed;
-	config.curing_speed = speed_control.curing_speed;
-	EEPROM.put(EEPROM_BASE, reinterpret_cast<uint8_t*>(config_magic), MAGIC_SIZE);
-	EEPROM.put(EEPROM_BASE + MAGIC_SIZE, reinterpret_cast<uint8_t*>(&config), sizeof(config));
-}
-
-/*! \brief This function loads user-defined values from eeprom.
- *
- *	It loads different amount of variables, depending on the magic variable from eeprom.
- *	If magic is not set in the eeprom, variables keep their default values.
- *	If magic from eeprom is equal to lagacy magic, it loads only variables customizable in older firmware and keeps new variables default.
- *	If magic from eeprom is equal to config_magic, it loads all variables including those added in new firmware.
- *	It won't load undefined (new) variables after flashing new firmware.
- */
-void read_config() {
-	char test_magic[MAGIC_SIZE];
-	EEPROM.get(EEPROM_BASE, reinterpret_cast<uint8_t*>(test_magic), MAGIC_SIZE);
-	if (!strncmp(config_magic, test_magic, MAGIC_SIZE)) {
-		// latest magic
-		EEPROM.get(EEPROM_BASE + MAGIC_SIZE, reinterpret_cast<uint8_t*>(&config), sizeof(config));
-	} else if (!strncmp("CURWA", test_magic, MAGIC_SIZE)) {
-		// legacy magic
-		uint8_t tmp = config.resin_target_temp;	// remember default
-		EEPROM.get(EEPROM_BASE + MAGIC_SIZE, reinterpret_cast<uint8_t*>(&config), sizeof(eeprom_v1_t));
-		if (config.SI_unit_system) {
-			config.resin_target_temp = tmp;
-		} else {
-			config.target_temp = round(celsius2fahrenheit(config.target_temp));
-			config.resin_target_temp = round(celsius2fahrenheit(tmp));
-		}
-	}
-	speed_control.washing_speed = config.washing_speed;
-	speed_control.curing_speed = config.curing_speed;
 }
 
 uint8_t PI_regulator(float & actualTemp, uint8_t targetTemp) {
@@ -536,6 +414,7 @@ void redraw_selftest_vals() {
 	if (selftest.phase == 6 && selftest.rotation_test != true) {
 		lcd.print((uint8_t)mode_flag, 12, 1);
 		lcd.setCursor(14,1);
+		/* FIXME do it better!
 		if (mode_flag) {
 			if (speed_control.curing_speed <= 11)
 				lcd.print((uint8_t)(speed_control.curing_speed - 1));
@@ -543,6 +422,7 @@ void redraw_selftest_vals() {
 			if (speed_control.washing_speed <= 11)
 				lcd.print(uint8_t(speed_control.washing_speed - 1));
 		}
+		*/
 	}
 	if (selftest.phase == 3 || selftest.phase == 4 || selftest.phase == 5) {
 		uint8_t lcd_min = selftest.tCountDown.getCurrentMinutes();
@@ -636,6 +516,7 @@ void loop() {
 				break;
 
 			case 6:
+				/* FIXME do it better!
 				if (!selftest.rotation_test && selftest.motor_rotation_timer()) {
 					if (selftest.is_first_loop()) {
 						hw.motor_configuration(mode_flag);
@@ -673,6 +554,7 @@ void loop() {
 						selftest.rotation_test = true;
 					}
 				}
+				*/
 				break;
 
 			default:
@@ -681,14 +563,14 @@ void loop() {
 	}
 
 	if (hw.get_heater_error()) {
-		if (config.heat_to_target_temp) {
-			tDown.stop();
-		} else {
-			tUp.stop();
-		}
+		tDown.stop();
+		tUp.stop();
 		hw.stop_heater();
 		hw.stop_motor();
 		hw.set_fans_duty(fans_menu_speed);
+		lcd.print_P(pgmstr_heater_error, 1, 0);
+		lcd.print_P(pgmstr_please_restart, 1, 2);
+		state = ERROR;
 	}
 
 	if (state == HOME) {
@@ -697,12 +579,6 @@ void loop() {
 		} else {
 			curing_mode = false;
 		}
-	}
-
-	if (hw.get_heater_error()) {
-		lcd.print_P(pgmstr_heater_error, 1, 0);
-		lcd.print_P(pgmstr_please_restart, 1, 2);
-		state = ERROR;
 	}
 
 	if (state == CONFIRM) {
@@ -718,20 +594,10 @@ void loop() {
 		redraw_menu = true;
 	}
 
-	// stepper motor speed up function
-	if (speed_control.acceleration_flag == true) {
-		unsigned long us_now = millis();
-		if (us_now - us_last > 50) {
-			speed_control.acceleration50ms();
-			us_last = us_now;
-		}
-		if (speed_control.acceleration_flag == false) {
-			hw.motor_noaccel_settings();
-		}
-	}
+	speed_control.acceleration();
 
 	// rotary "click" is 4 "micro steps"
-	if (rotary_diff <= 124 || rotary_diff >= 132 || redraw_menu) { //124, 132
+	if (rotary_diff <= 124 || rotary_diff >= 132 || redraw_menu) {
 		menu_move(true);
 	}
 
@@ -853,11 +719,11 @@ void menu_move(bool sound_echo) {
 			break;
 
 		case SPEED_CURING:
-			generic_value_P(pgmstr_curing_speed, &speed_control.curing_speed, 1, 10, XOFTEN);
+			generic_value_P(pgmstr_curing_speed, &config.curing_speed, 1, 10, XOFTEN);
 			break;
 
 		case SPEED_WASHING:
-			generic_value_P(pgmstr_washing_speed, &speed_control.washing_speed, 1, 10, XOFTEN);
+			generic_value_P(pgmstr_washing_speed, &config.washing_speed, 1, 10, XOFTEN);
 			break;
 
 		case TIME:
@@ -1152,7 +1018,6 @@ void machine_running() {
 
 		if (cover_open == true) {
 			hw.stop_motor();
-			hw.motor_configuration(curing_mode);
 			speed_control.speed_configuration(curing_mode);
 			hw.stop_heater();
 			hw.stop_led();
@@ -1342,7 +1207,6 @@ void button_press() {
 				case 0:
 					if (curing_mode) {
 						// curing mode
-						hw.motor_configuration(curing_mode);
 						speed_control.speed_configuration(curing_mode);
 
 						switch (config.curing_machine_mode) {
@@ -1410,7 +1274,6 @@ void button_press() {
 					} else {
 						// washing mode
 						drying_mode = false;
-						hw.motor_configuration(curing_mode);
 						speed_control.speed_configuration(curing_mode);
 						hw.run_motor();
 						remain = config.washing_run_time;
@@ -1737,7 +1600,6 @@ void button_press() {
 								hw.stop_heater();
 								hw.set_fans_duty(fans_menu_speed);
 							} else {
-								hw.motor_configuration(curing_mode);
 								speed_control.speed_configuration(curing_mode);
 								hw.run_motor();
 								hw.set_fans_duty(config.heat_to_target_temp ? config.fans_preheat_speed : config.fans_curing_speed);
@@ -1753,7 +1615,6 @@ void button_press() {
 								hw.stop_motor();
 								hw.stop_heater();
 							} else {
-								hw.motor_configuration(curing_mode);
 								speed_control.speed_configuration(curing_mode);
 								hw.run_motor();
 								hw.set_fans_duty(fans_washing_speed);
@@ -2145,14 +2006,6 @@ void lcd_time_print() {
 			redraw_menu = true;
 		}
 	}
-}
-
-float celsius2fahrenheit(float celsius) {
-	return 1.8 * celsius + 32;
-}
-
-float fahrenheit2celsius(float fahrenheit) {
-	return (fahrenheit - 32) / 1.8;
 }
 
 void preheat() {

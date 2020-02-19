@@ -40,7 +40,7 @@ void CSelftest::ventilation_test(bool fan_error) {
 		first_loop = false;
 	}
 	if (timer_callback_selftest == false) {
-		byte currSec = tCountDown.getCurrentSeconds();
+		uint8_t currSec = tCountDown.getCurrentSeconds();
 		if (currSec % 10 == 0) {
 			if (fans_speed[0] + 20 <= 100 && helper) {
 				fans_speed[0] += 20;
