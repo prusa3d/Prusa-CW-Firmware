@@ -13,20 +13,15 @@
 
 typedef void(*timer_callback)(void);
 
-class Countimer
-{
+class Countimer {
 public:
-	Countimer();
-	~Countimer();
-
 	enum CountType {
 		COUNT_NONE = 0,
 		COUNT_UP = 1,
 		COUNT_DOWN = 2
 	};
 
-	// Set up counter time(hours, minutes, seconds), count mode and function to execute if count is completed.
-	void setCounter(uint8_t hours, uint8_t minutes, uint8_t seconds, CountType countType, timer_callback onComplete);
+	Countimer(CountType countType);
 
 	// Set up counter time(hours, minutes, seconds) for existing timer.
 	void setCounter(uint8_t hours, uint8_t minutes, uint8_t seconds);
@@ -77,7 +72,7 @@ private:
 	// Counting down timer.
 	void countUp();
 
-	uint32_t _interval = 1;
+	uint32_t _interval;
 	uint32_t _previousMillis;
 
 	// Stores current counter value in milliseconds.

@@ -16,13 +16,13 @@
 
 using Ter = LiquidCrystal_Prusa::Terminator;
 
-Countimer tDown;
-Countimer tUp;
+Countimer tDown(Countimer::COUNT_DOWN);
+Countimer tUp(Countimer::COUNT_UP);
 
 hardware hw;
 Speed_Control speed_control(hw, config);
 
-CSelftest selftest;
+Selftest selftest;
 
 LiquidCrystal_Prusa lcd(LCD_PINS_RS, LCD_PINS_ENABLE, LCD_PWM_PIN, LCD_PINS_D4, LCD_PINS_D5, LCD_PINS_D6, LCD_PINS_D7);
 
@@ -172,13 +172,11 @@ void fan_tacho3() {
 static void menu_move(bool sound_echo);
 static void machine_running();
 static void button_press();
-static void tDownComplete();
 static void start_drying();
 static void stop_curing_drying();
 static void leave_action();
 static void start_curing();
 static void start_washing();
-static void tUpComplete();
 static void preheat();
 static void lcd_time_print();
 
@@ -474,6 +472,7 @@ void loop() {
 							hw.stop_led();
 						}
 					} else {
+						/* FIXME do it better!
 						if (selftest.isCounterRunning) {
 							selftest.fail_flag = true;
 							selftest.tCountDown.stop();
@@ -481,10 +480,13 @@ void loop() {
 							selftest.led_test = true;
 							hw.stop_led();
 						}
+						*/
 					}
 				} else {
+					/* FIXME do it better!
 					if (selftest.isCounterRunning)
 						selftest.tCountDown.pause();
+					*/
 				}
 				break;
 
@@ -502,8 +504,10 @@ void loop() {
 							selftest.heat_test(hw.get_heater_error());
 						} else {
 							selftest.fans_speed[1] = 0;
+							/* FIXME do it better!
 							if (selftest.isCounterRunning)
 								selftest.heat_test(hw.get_heater_error());
+							*/
 						}
 					} else {
 						selftest.fans_speed[0] = 0;
@@ -914,9 +918,9 @@ void menu_move(bool sound_echo) {
 						lcd.print_P(pgmstr_double_gt, LAYOUT_TIME_GT, LAYOUT_TIME_Y);
 
 						if (secs <= 30) {
-							tDown.setCounter(0, mins, secs + 30, tDown.COUNT_DOWN, tDownComplete);
+							tDown.setCounter(0, mins, secs + 30);
 						} else {
-							tDown.setCounter(0, mins + 1, 30 - (60 - secs), tDown.COUNT_DOWN, tDownComplete);
+							tDown.setCounter(0, mins + 1, 30 - (60 - secs));
 						}
 					} else {
 						lcd_clear_time_boundaries();
@@ -930,9 +934,9 @@ void menu_move(bool sound_echo) {
 						lcd.print_P(pgmstr_double_lt, LAYOUT_TIME_LT, LAYOUT_TIME_Y);
 
 						if (secs >= 30) {
-							tDown.setCounter(0, mins, secs - 30, tDown.COUNT_DOWN, tDownComplete);
+							tDown.setCounter(0, mins, secs - 30);
 						} else {
-							tDown.setCounter(0, mins - 1, 60 - (30 - secs), tDown.COUNT_DOWN, tDownComplete);
+							tDown.setCounter(0, mins - 1, 60 - (30 - secs));
 						}
 					} else {
 						lcd_clear_time_boundaries();
@@ -1043,7 +1047,7 @@ void machine_running() {
 							redraw_menu = true;
 							preheat_complete = true;
 							remain = config.resin_preheat_run_time;
-							tDown.setCounter(0, remain, 0, tDown.COUNT_DOWN, tDownComplete);
+							tDown.setCounter(0, remain, 0);
 							tDown.start();
 						}
 					}
@@ -1095,7 +1099,7 @@ void machine_running() {
 								redraw_menu = true;
 								preheat_complete = true;
 								remain = config.drying_run_time;
-								tDown.setCounter(0, remain, 0, tDown.COUNT_DOWN, tDownComplete);
+								tDown.setCounter(0, remain, 0);
 								tDown.start();
 							}
 						}
@@ -1139,7 +1143,7 @@ void machine_running() {
 						if (drying_mode) {
 							drying_mode = false;
 							remain = config.curing_run_time;
-							tDown.setCounter(0, remain, 0, tDown.COUNT_DOWN, tDownComplete);
+							tDown.setCounter(0, remain, 0);
 							tDown.start();
 							redraw_menu = true;
 							menu_move(true);
@@ -1165,7 +1169,7 @@ void machine_running() {
 								redraw_menu = true;
 								preheat_complete = true;
 								remain = config.drying_run_time;
-								tDown.setCounter(0, remain, 0, tDown.COUNT_DOWN, tDownComplete);
+								tDown.setCounter(0, remain, 0);
 								tDown.start();
 							}
 						}
@@ -1176,7 +1180,7 @@ void machine_running() {
 							if (drying_mode) {
 								drying_mode = false;
 								remain = config.curing_run_time;
-								tDown.setCounter(0, remain, 0, tDown.COUNT_DOWN, tDownComplete);
+								tDown.setCounter(0, remain, 0);
 								tDown.start();
 								redraw_menu = true;
 								menu_move(true);
@@ -1213,7 +1217,7 @@ void button_press() {
 							case 3: // Resin preheat
 								pid_mode = true;
 								remain = max_preheat_run_time;
-								tUp.setCounter(0, remain, 0, tUp.COUNT_UP, tUpComplete);
+								tUp.setCounter(0, remain, 0);
 								tUp.start();
 								hw.set_fans_duty(config.fans_preheat_speed);
 								hw.stop_led();
@@ -1227,13 +1231,13 @@ void button_press() {
 								if (!config.heat_to_target_temp) {
 									pid_mode = false;
 									remain = config.drying_run_time;
-									tDown.setCounter(0, remain, 0, tDown.COUNT_DOWN, tDownComplete);
+									tDown.setCounter(0, remain, 0);
 									tDown.start();
 									hw.set_fans_duty(config.fans_drying_speed);
 								} else {
 									pid_mode = true;
 									remain = max_preheat_run_time;
-									tUp.setCounter(0, remain, 0, tUp.COUNT_UP, tUpComplete);
+									tUp.setCounter(0, remain, 0);
 									tUp.start();
 									hw.set_fans_duty(config.fans_preheat_speed);
 								}
@@ -1244,7 +1248,7 @@ void button_press() {
 							case 1: // Curing
 								pid_mode = false;
 								remain = config.curing_run_time;
-								tDown.setCounter(0, remain, 0, tDown.COUNT_DOWN, tDownComplete);
+								tDown.setCounter(0, remain, 0);
 								tDown.start();
 								hw.set_fans_duty(config.fans_curing_speed);
 								drying_mode = false;
@@ -1259,13 +1263,13 @@ void button_press() {
 								if (!config.heat_to_target_temp) {
 									pid_mode = false;
 									remain = config.drying_run_time;
-									tDown.setCounter(0, remain, 0, tDown.COUNT_DOWN, tDownComplete);
+									tDown.setCounter(0, remain, 0);
 									tDown.start();
 									hw.set_fans_duty(config.fans_drying_speed);
 								} else {
 									pid_mode = true;
 									remain = max_preheat_run_time;
-									tUp.setCounter(0, remain, 0, tUp.COUNT_UP, tUpComplete);
+									tUp.setCounter(0, remain, 0);
 									tUp.start();
 									hw.set_fans_duty(config.fans_preheat_speed);
 								}
@@ -1277,7 +1281,7 @@ void button_press() {
 						speed_control.speed_configuration(curing_mode);
 						hw.run_motor();
 						remain = config.washing_run_time;
-						tDown.setCounter(0, remain, 0, tDown.COUNT_DOWN, tDownComplete);
+						tDown.setCounter(0, remain, 0);
 						tDown.start();
 						hw.set_fans_duty(fans_washing_speed);
 					}
@@ -1749,14 +1753,6 @@ ISR(TIMER0_COMPA_vect) {
 	}
 }
 
-void tDownComplete() {
-	tDown.stop();
-}
-
-void tUpComplete() {
-	tUp.stop();
-}
-
 void start_drying() {
 	if (cover_open == false && paused == false) {
 		if (config.heat_to_target_temp || (config.curing_machine_mode == 3)) {
@@ -2014,7 +2010,7 @@ void preheat() {
 		hw.run_heater();
 	} else {
 		hw.stop_heater();
-		tUp.setCounter(0, 0, 0, tUp.COUNT_UP, tUpComplete);
+		tUp.setCounter(0, 0, 0);
 	}
 }
 

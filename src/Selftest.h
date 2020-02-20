@@ -6,7 +6,7 @@
 #include "Countimer.h"
 #include "hardware.h"
 
-/*! \class CSelftest
+/*! \class Selftest
     \brief A class runs series of tests that should check, with help of an operator, that all vital elements are fully functioning.
 
     It will be used as the initial test before CW1 is passed to a customer.
@@ -26,13 +26,12 @@
 							  !LCD ALWAYS SAYS SUCCESS! TESTER NEEDED to see if motor spins the plate properly and rotations rise properly.
 */
 
-class CSelftest {
+class Selftest {
 public:
 /**
  * Constructor sets everything to false apart from fans_speed, because ventilation test starts on 10%
  */
-	CSelftest();
-	~CSelftest();
+	Selftest();
 /**
 * Universal pin test triggers change in sensors state and counts it up. It is used on Cover test and IPA tank test.
 */
@@ -47,7 +46,7 @@ public:
  * According to selftest's phase and state of the test it sends appropriate message
  * @return it returns message right in lcd.print();
  */
-	const char * print();
+	const char* print();
 /**
  * Cleans up handy variables between the phases of the selftest. Enables to recycle variables across tests.
  */
@@ -76,8 +75,6 @@ public:
  */
 	void heat_test(bool);
 
-	static void tCountDownComplete();
-
 	uint8_t phase;				/**< Stores which test("phase" of selftest) is running*/
 	uint8_t fan_tacho[2];		/**< Stores measured rotation per 1ms for ventilation_test*/
 	bool cover_test;			/**< Stores if cover test is finished*/
@@ -89,7 +86,6 @@ public:
 	uint8_t fans_speed[2];		/**< Stores duty of fans (0-100%)*/
 	Countimer tCountDown;		/**< Counts down time periods in tests, where is needed*/
 	bool cover_down;			/**< Tells if cover is down(eye's safe measurement)*/
-	bool isCounterRunning;		/**< Tells whether counter is running... */
 	bool fail_flag;				/**< Tells whether test passed or failed*/
 	bool measured_state;		/**< Universal bool variable for measurements and flags*/
 	bool helper;

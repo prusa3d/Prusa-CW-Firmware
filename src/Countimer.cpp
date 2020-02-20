@@ -2,24 +2,18 @@
 #include "Countimer.h"
 #include "Arduino.h"
 
-Countimer::Countimer() {
-	_previousMillis = 0;
-	_currentCountTime = 0;
-	_countTime = 0;
-	_isCounterCompleted = false;
-	_isStopped = true;
-	_countType = COUNT_NONE;
-	_startCountTime = 0;
-}
-
-Countimer::~Countimer() {
-}
-
-void Countimer::setCounter(uint8_t hours, uint8_t minutes, uint8_t seconds, CountType countType, timer_callback onComplete) {
-	_onComplete = onComplete;
-	_countType = countType;
-	setCounter(hours, minutes, seconds);
-}
+Countimer::Countimer(CountType countType) :
+	_interval(1),
+	_previousMillis(0),
+	_currentCountTime(0),
+	_startCountTime(0),
+	_countTime(0),
+	_callback(NULL),
+	_onComplete(NULL),
+	_isCounterCompleted(false),
+	_isStopped(true),
+	_countType(countType)
+{ }
 
 void Countimer::setCounter(uint8_t hours, uint8_t minutes, uint8_t seconds) {
 	if (minutes > COUNTIMER_MAX_MINUTES_SECONDS) {
