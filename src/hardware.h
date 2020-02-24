@@ -12,7 +12,6 @@ float fahrenheit2celsius(float);
 class hardware {
 public:
 	hardware();
-	~hardware();
 
 	float therm1_read();
 	void run_motor();
@@ -39,7 +38,7 @@ public:
 	bool is_button_pressed();
 
 	void set_fans_duty(uint8_t*);
-	bool fan_rpm();
+	void fan_rpm();
 	bool get_heater_error();
 	uint8_t get_fans_error();
 
@@ -58,5 +57,5 @@ private:
 
 	int rpm_fan_counter;
 	int fan_tacho_last_count[3];
-	bool fan_error[3];
+	uint8_t fan_errors;
 };

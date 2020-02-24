@@ -39,6 +39,7 @@ void Speed_Control::acceleration() {
 			microstep_control -= 4;
 		microstep_control--;
 #ifdef SERIAL_COM_DEBUG
+		SerialUSB.print("acceleration: ");
 		SerialUSB.print(microstep_control);
 		SerialUSB.print("->");
 		SerialUSB.print(target_washing_period);

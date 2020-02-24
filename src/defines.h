@@ -7,6 +7,10 @@
 #define LAYOUT_TEMP_X		12
 #define LAYOUT_TEMP_Y		2
 
+#define FAN1_ERROR_MASK		B001
+#define FAN2_ERROR_MASK		B010
+#define FAN3_ERROR_MASK		B100
+
 // various constants
 #define LED_DELAY			1000
 #define LONG_PRESS_TIME		1000

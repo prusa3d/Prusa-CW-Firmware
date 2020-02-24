@@ -19,7 +19,7 @@ typedef struct {
 	uint8_t target_temp_celsius;
 	uint8_t target_temp_fahrenheit;
 	uint8_t SI_unit_system;
-	bool heater_failure;
+//	bool heater_failure;	this is not used any more and may be forgotten
 } eeprom_v1_t;
 
 //! @brief configuration store structure
@@ -41,7 +41,6 @@ typedef struct {
 	uint8_t target_temp;
 	uint8_t resin_target_temp;		// v1 change!
 	uint8_t SI_unit_system;
-	bool heater_failure;
 
 	uint8_t resin_preheat_run_time;
 	uint8_t led_pwm_value;

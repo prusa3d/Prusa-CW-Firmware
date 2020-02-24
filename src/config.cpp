@@ -28,7 +28,6 @@ eeprom_v2_t config = {
 	35,			// target_temp (celsius)
 	30,			// resin_target_temp (celsius)
 	1,			// SI_unit_system
-	false,		// heater_failure
 
 	10,			// resin_preheat_run_time
 	100,		// led_pwm_value

@@ -19,7 +19,7 @@ hardware::hardware() :
 		fans_pwm_pins{FAN1_PWM_PIN, FAN2_PWM_PIN},
 		fans_enable_pins{FAN1_PIN, FAN2_PIN},
 		fan_tacho_last_count{0, 0, 0},
-		fan_error{false, false, false} {
+		fan_errors(0) {
 
 	outputchip.begin();
 	outputchip.pinMode(0B0000000010010111);
@@ -52,9 +52,6 @@ hardware::hardware() :
 	myStepper.set_tbl(1);					// ([0-3]) set comparator blank time to 16, 24, 36 or 54 clocks, 1 or 2 is recommended
 	myStepper.set_toff(8);					// ([0-15]) 0: driver disable, 1: use only with TBL>2, 2-15: off time setting during slow decay phase
 	myStepper.set_en_pwm_mode(1);			// 0: driver disable PWM mode, 1: driver enable PWM mode
-}
-
-hardware::~hardware() {
 }
 
 float hardware::therm1_read() {
@@ -217,15 +214,12 @@ void hardware::set_fans_duty(uint8_t* duties) {
 	}
 }
 
-bool hardware::fan_rpm() {
-	bool rc = false;
+void hardware::fan_rpm() {
 	if (++rpm_fan_counter % 500 == 0) {
 		for (uint8_t i = 0; i < 3; ++i) {
 			if (fans_duty[i] > 0) {
-				fan_error[i] = fan_tacho_count[i] <= fan_tacho_last_count[i];
-				if (i == 2) {
-					rc = fan_error[i];
-				}
+				fan_errors &= ~(1 << i);
+				fan_errors |= (fan_tacho_count[i] <= fan_tacho_last_count[i]) << i;
 			}
 			if (fan_tacho_count[i] >= 10000) {
 				fan_tacho_count[i] = 0;
@@ -233,19 +227,20 @@ bool hardware::fan_rpm() {
 			fan_tacho_last_count[i] = fan_tacho_count[i];
 		}
 		rpm_fan_counter = 0;
+/*
+#ifdef SERIAL_COM_DEBUG
+	SerialUSB.print("fan_errors: ");
+	SerialUSB.print(fan_errors);
+	SerialUSB.print("\r\n");
+#endif
+*/
 	}
-	return rc;
 }
 
 bool hardware::get_heater_error() {
-	return fan_error[2];
+	return (bool)(fan_errors & FAN3_ERROR_MASK);
 }
 
 uint8_t hardware::get_fans_error() {
-	uint8_t rc = fan_error[2];
-	rc = rc << 1;
-	rc |= fan_error[1];
-	rc = rc << 1;
-	rc |= fan_error[0];
-	return rc;
+	return fan_errors;
 }

@@ -180,10 +180,6 @@ static void start_washing();
 static void preheat();
 static void lcd_time_print();
 
-static bool is_error() {
-	return hw.get_fans_error() || config.heater_failure;
-}
-
 // timer for read controls and fan rpm
 void setupTimer0() {
 	OCR0A = 0xAF;
@@ -710,7 +706,7 @@ void menu_move(bool sound_echo) {
 			} else {
 				first_line = pgmstr_start_washing;
 			}
-			generic_menu_P(3, first_line, pgmstr_run_time, is_error() ? pgmstr_settings_error : pgmstr_settings);
+			generic_menu_P(3, first_line, pgmstr_run_time, hw.get_fans_error() ? pgmstr_settings_error : pgmstr_settings);
 			lcd_print_right(1);
 			lcd_print_right(2);
 			break;
@@ -769,7 +765,7 @@ void menu_move(bool sound_echo) {
 					{pgmstr_sound, true, Ter::right},
 					{pgmstr_fans, true, Ter::right},
 					{pgmstr_led_intensity, true, Ter::right},
-					{is_error() ? pgmstr_information_error : pgmstr_information, true, Ter::right},
+					{hw.get_fans_error() ? pgmstr_information_error : pgmstr_information, true, Ter::right},
 				};
 				menu_position = scrolling_list_P(items);
 				break;
@@ -858,9 +854,9 @@ void menu_move(bool sound_echo) {
 				uint8_t fans_error = hw.get_fans_error();
 				Scrolling_item items[] = {
 					{pgmstr_fw_version, true, Ter::none},
-					{pgmstr_fan1_failure, (bool)(fans_error & B001), Ter::none},
-					{pgmstr_fan2_failure, (bool)(fans_error & B010), Ter::none},
-					{pgmstr_heater_failure, config.heater_failure || fans_error & B100, Ter::none},
+					{pgmstr_fan1_failure, (bool)(fans_error & FAN1_ERROR_MASK), Ter::none},
+					{pgmstr_fan2_failure, (bool)(fans_error & FAN2_ERROR_MASK), Ter::none},
+					{pgmstr_heater_failure, (bool)(fans_error & FAN3_ERROR_MASK), Ter::none},
 					{pgmstr_serial_number, true, Ter::serialNumber},
 					{pgmstr_build_nr, true, Ter::none},
 					{pgmstr_fw_hash, true, Ter::none},
@@ -1745,12 +1741,7 @@ ISR(TIMER0_COMPA_vect) {
 		}
 	}
 
-	// write to EEPROM only if state is changed for heater
-	bool heater_error = hw.fan_rpm();
-	if (heater_error != config.heater_failure) {
-		config.heater_failure = heater_error;
-		write_config();
-	}
+	hw.fan_rpm();
 }
 
 void start_drying() {
