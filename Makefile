@@ -3,6 +3,7 @@ DIRS = lib src
 I18N = i18n
 LANG_TEMPLATE = ${I18N}/${PROJECT}.pot
 LANGS = en #cs
+BUILD_DIR := build
 
 CC = avr-gcc
 CPP = avr-g++
@@ -17,7 +18,7 @@ OPT = -g -Os -ffunction-sections -fdata-sections -flto -fno-fat-lto-objects -fun
 MCU = -mmcu=atmega32u4
 
 DEFS = -DF_CPU=16000000 -DARDUINO=10805 -DUSB_VID=0x2c99 -DUSB_PID=0x0008 -DUSB_MANUFACTURER='"Prusa Research prusa3d.com"' -DUSB_PRODUCT='"Original Prusa CW1"'
-INCLUDE := $(foreach dir, ${DIRS}, -I${dir}) -I${I18N} -I.
+INCLUDE := $(foreach dir, ${DIRS}, -I${dir}) -I${I18N} -I${BUILD_DIR}
 
 CFLAGS = ${OPT} ${WARN} ${CSTANDARD} ${MCU} ${INCLUDE} ${DEFS}
 CPPFLAGS = ${OPT} ${WARN} ${CPPSTANDARD} ${CPPTUNING} ${MCU} ${INCLUDE} ${DEFS}
@@ -25,33 +26,44 @@ LINKFLAGS = -fuse-linker-plugin -Wl,--relax,--gc-sections,--defsym=__TEXT_REGION
 
 CSRCS := $(foreach dir, ${DIRS}, $(wildcard ${dir}/*.c))
 CPPSRCS := $(foreach dir, ${DIRS}, $(wildcard ${dir}/*.cpp))
-OBJS = ${CSRCS:%.c=%.o} ${CPPSRCS:%.cpp=%.o}
-DEPS = ${CSRCS:.c=.d} ${CPPSRCS:%.cpp=%.dd}
-HEXS := $(foreach lang, ${LANGS}, ${PROJECT}-${lang}.hex)
-
-COMPILE.c = ${CC} ${CFLAGS} -c
-COMPILE.cpp = ${CPP} ${CPPFLAGS} -c
-
-.PHONY: version-tmp.h clean lang_extract default
-
-.PRECIOUS: %.elf
+OBJS = $(addprefix $(BUILD_DIR)/, $(patsubst %.c, %.o, $(CSRCS))) $(addprefix $(BUILD_DIR)/, $(patsubst %.cpp, %.o, $(CPPSRCS)))
+DEPS = $(addprefix $(BUILD_DIR)/, $(patsubst %.c, %.d, $(CSRCS))) $(addprefix $(BUILD_DIR)/, $(patsubst %.cpp, %.dd, $(CPPSRCS)))
+HEXS := $(foreach lang, ${LANGS}, $(addprefix $(BUILD_DIR)/, ${PROJECT}-${lang}.hex))
+VERSION = ${BUILD_DIR}/version.h
 
 default: ${HEXS}
 
-%.hex: %.elf
+.PHONY: clean lang_extract default
+
+.SECONDARY:
+
+.SECONDEXPANSION:
+
+$(BUILD_DIR)/.:
+	@mkdir -p $@
+
+$(BUILD_DIR)%/.:
+	@mkdir -p $@
+
+$(BUILD_DIR)/%.hex: ${BUILD_DIR}/%.elf
 	${OBJCOPY} -O ihex -R .eeprom $< $@.tmp
 	@echo -e "; device = cw1\n" > $@
 	cat $@.tmp >> $@
 	rm $@.tmp
 
-%.elf: version.h Makefile ${OBJS}
-	${CPP} ${CPPFLAGS} ${LINKFLAGS},-Map=${@:%.elf=%.map} -o $@ ${OBJS}
+$(BUILD_DIR)/%.elf: ${OBJS}
+	${CPP} ${CPPFLAGS} ${LINKFLAGS},-Map=${@:%.elf=%.map} $^ -o $@
 
-version.h: version-tmp.h
+$(BUILD_DIR)/%.o: %.c | $${@D}/.
+	${CC} ${CFLAGS} -c $< -o $@
+
+$(BUILD_DIR)/%.o: %.cpp | $${@D}/.
+	${CPP} ${CPPFLAGS} -c $< -o $@
+
+$(VERSION): ${VERSION}.tmp
 	@if ! cmp -s $< $@; then cp $< $@; fi
-	@rm $<
 
-version-tmp.h:
+$(VERSION).tmp: | $${@D}/.
 	@echo "#pragma once" > $@
 	@echo -n "#define FW_LOCAL_CHANGES " >> $@
 	@git diff-index --quiet HEAD -- && echo 0 >> $@ || echo 1 >> $@
@@ -63,7 +75,7 @@ version-tmp.h:
 	@echo "\"`git describe --abbrev=0 --tags`\"" >> $@
 
 clean:
-	rm -rf ${OBJS} ${DEPS} version.h $(wildcard *.map) $(wildcard *.elf) $(wildcard *.hex) ${LANG_TEMPLATE}
+	rm -rf ${OBJS} ${DEPS} ${VERSION} ${VERSION}.tmp ${HEXS} ${HEXS:%.hex=%.elf} ${HEXS:%.hex=%.map} ${LANG_TEMPLATE}
 
 lang_extract: ${LANG_TEMPLATE}
 
@@ -74,10 +86,10 @@ $(LANG_TEMPLATE): $(wildcard ${I18N}/*.h)
 xxx:
 	msgconv --stringtable-output cs.po
 
-%.d: %.c version.h
+$(BUILD_DIR)/%.d: %.c ${VERSION} Makefile | $${@D}/.
 	@${CC} ${CFLAGS} $< -MM -MT ${@:.d=.o} >$@
 
-%.dd: %.cpp version.h
-	@${CPP} ${CPPFLAGS} $< -MM -MT ${@:.d=.o} >$@
+$(BUILD_DIR)/%.dd: %.cpp ${VERSION} Makefile | $${@D}/.
+	@${CPP} ${CPPFLAGS} $< -MM -MT ${@:.dd=.o} >$@
 
 -include ${DEPS}

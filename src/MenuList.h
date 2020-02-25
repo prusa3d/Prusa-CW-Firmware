@@ -2,8 +2,7 @@
 //! @date Apr 12, 2019
 //! @author Marek Bel
 
-#ifndef MENULIST_H
-#define MENULIST_H
+#pragma once
 
 #include "LiquidCrystal_Prusa.h"
 #include <stdint.h>
@@ -23,7 +22,4 @@ uint_least8_t scrolling_list_P(const Scrolling_item (&items)[n])
   return scrolling_list_P(items, sizeof(items)/sizeof(Scrolling_item));
 }
 
-
 void scrolling_list_set(uint8_t index);
-
-#endif /* MENULIST_H */

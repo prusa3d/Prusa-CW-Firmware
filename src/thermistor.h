@@ -1,7 +1,4 @@
-
-#ifndef THERMISTOR_H
-  #define THERMISTOR_H
-
+#pragma once
 
 class thermistor
 {
@@ -12,7 +9,3 @@ class thermistor
     int _pin;
     int _sensorNumber;
 };
-
-
-
-#endif

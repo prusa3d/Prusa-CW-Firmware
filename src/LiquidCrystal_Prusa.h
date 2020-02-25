@@ -1,5 +1,4 @@
-#ifndef LiquidCrystal_Prusa_h
-#define LiquidCrystal_Prusa_h
+#pragma once
 
 #include <inttypes.h>
 #include "Arduino.h"
@@ -120,5 +119,3 @@ private:
 #define ESC_25h		"\x1b[?25h"
 #define ESC_25l		"\x1b[?25l"
 #define ESC_H(c,r)	"\x1b["#r";"#c"H"
-
-#endif

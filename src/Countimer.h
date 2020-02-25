@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef COUNTIMER_H
-#define COUNTIMER_H
-
 #if defined(ARDUINO) && ARDUINO >= 100
 #include <Arduino.h>
 #else
@@ -91,5 +88,3 @@ private:
 	bool _isStopped;
 	CountType _countType;
 };
-
-#endif

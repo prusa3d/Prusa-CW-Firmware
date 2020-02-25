@@ -1,9 +1,2 @@
 build-env
-version.h
-*.d
-*.dd
-*.o
-*.oo
-*.elf
-*.hex
-*.map
+build

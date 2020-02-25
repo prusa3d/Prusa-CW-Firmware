@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef SELFTEST_H
-#define SELFTEST_H
-
 #include "Countimer.h"
 #include "hardware.h"
 
@@ -97,6 +94,3 @@ private:
 	uint8_t counter;			/**< Universal uint8_t variable for counting*/
 
 };
-
-
-#endif	//SELFTEST_H

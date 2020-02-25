@@ -648,7 +648,7 @@ void loop() {
 		}
 	}
 
-	// FIXME s this needed to fix ESD shock? Any better solution?
+	// FIXME is this needed to fix ESD shock? Any better solution?
 	if (millis() > time_now + 5500) {
 		if (state == HOME || state == TEMPERATURES || state == SOUND_SETTINGS || state == SPEED_STATE) {
 			last_menu_position = menu_position;
