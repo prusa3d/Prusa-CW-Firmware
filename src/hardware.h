@@ -55,7 +55,7 @@ private:
 	uint8_t fans_pwm_pins[2];
 	uint8_t fans_enable_pins[2];
 
-	int rpm_fan_counter;
 	int fan_tacho_last_count[3];
+	uint16_t rpm_fan_counter;
 	uint8_t fan_errors;
 };

@@ -19,6 +19,7 @@ hardware::hardware() :
 		fans_pwm_pins{FAN1_PWM_PIN, FAN2_PWM_PIN},
 		fans_enable_pins{FAN1_PIN, FAN2_PIN},
 		fan_tacho_last_count{0, 0, 0},
+		rpm_fan_counter(0),
 		fan_errors(0) {
 
 	outputchip.begin();
@@ -217,14 +218,14 @@ void hardware::set_fans_duty(uint8_t* duties) {
 void hardware::fan_rpm() {
 	if (++rpm_fan_counter % 500 == 0) {
 		for (uint8_t i = 0; i < 3; ++i) {
-			if (fans_duty[i] > 0) {
+			if (fans_duty[i]) {
 				fan_errors &= ~(1 << i);
 				fan_errors |= (fan_tacho_count[i] <= fan_tacho_last_count[i]) << i;
+				if (fan_tacho_count[i] >= 10000) {
+					fan_tacho_count[i] = 0;
+				}
+				fan_tacho_last_count[i] = fan_tacho_count[i];
 			}
-			if (fan_tacho_count[i] >= 10000) {
-				fan_tacho_count[i] = 0;
-			}
-			fan_tacho_last_count[i] = fan_tacho_count[i];
 		}
 		rpm_fan_counter = 0;
 /*
