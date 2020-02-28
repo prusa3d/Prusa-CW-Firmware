@@ -13,6 +13,7 @@
 #include "SpeedControl.h"
 #include "i18n.h"
 #include "config.h"
+#include "ui.h"
 
 using Ter = LiquidCrystal_Prusa::Terminator;
 
@@ -25,6 +26,15 @@ Speed_Control speed_control(hw, config);
 Selftest selftest;
 
 LiquidCrystal_Prusa lcd(LCD_PINS_RS, LCD_PINS_ENABLE, LCD_PWM_PIN, LCD_PINS_D4, LCD_PINS_D5, LCD_PINS_D6, LCD_PINS_D7);
+
+UI::X_of_ten curing_speed(lcd, pgmstr_curing_speed, config.curing_speed);
+UI::Minutes curing_run_time(lcd, pgmstr_curing_run_time, config.curing_run_time, 30);
+UI::Percent led_pwm_value(lcd, pgmstr_led_intensity, config.led_pwm_value, 1);
+UI::Temperature target_temp_c(lcd, pgmstr_target_temp, config.target_temp, true);
+UI::Temperature target_temp_f(lcd, pgmstr_target_temp, config.target_temp, false);
+const char* options[] = {pgmstr_drying_curing, pgmstr_curing, pgmstr_drying, pgmstr_resin_preheat};
+UI::Option curing_machine_mode(lcd, pgmstr_run_mode, config.curing_machine_mode, sizeof(options), options);
+
 
 enum menu_state : uint8_t {
 	HOME,
@@ -859,14 +869,10 @@ void menu_move(bool sound_echo) {
 					{pgmstr_heater_failure, (bool)(fans_error & FAN3_ERROR_MASK), Ter::none},
 					{pgmstr_serial_number, true, Ter::serialNumber},
 					{pgmstr_build_nr, true, Ter::none},
-					{pgmstr_fw_hash, true, Ter::none},
-					{pgmstr_workspace_dirty,
+					{pgmstr_fw_hash, true, Ter::none}
 #if FW_LOCAL_CHANGES
-						true,
-#else
-						false,
+					,{pgmstr_workspace_dirty, true, Ter::none}
 #endif
-						Ter::none}
 				};
 				menu_position = scrolling_list_P(items);
 				break;

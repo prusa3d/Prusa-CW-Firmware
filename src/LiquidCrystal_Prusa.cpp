@@ -1,7 +1,6 @@
 #include "LiquidCrystal_Prusa.h"
 
 #include <stdio.h>
-#include <string.h>
 #include <inttypes.h>
 #include "Arduino.h"
 #include "i18n.h"
