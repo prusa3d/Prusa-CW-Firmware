@@ -33,7 +33,10 @@ UI::Percent led_pwm_value(lcd, pgmstr_led_intensity, config.led_pwm_value, 1);
 UI::Temperature target_temp_c(lcd, pgmstr_target_temp, config.target_temp, true);
 UI::Temperature target_temp_f(lcd, pgmstr_target_temp, config.target_temp, false);
 const char* options[] = {pgmstr_drying_curing, pgmstr_curing, pgmstr_drying, pgmstr_resin_preheat};
-UI::Option curing_machine_mode(lcd, pgmstr_run_mode, config.curing_machine_mode, sizeof(options), options);
+UI::Option curing_machine_mode(lcd, pgmstr_run_mode, config.curing_machine_mode, options, COUNT_ITEMS(options));
+
+UI::Base* home_items[] = {&curing_speed, &curing_run_time, &led_pwm_value, &target_temp_c, &curing_machine_mode};
+UI::Menu home(lcd, pgmstr_emptystr, home_items, COUNT_ITEMS(home_items), true);
 
 
 enum menu_state : uint8_t {
@@ -115,6 +118,7 @@ uint8_t Backslash[8] = {
 
 const uint8_t max_preheat_run_time = 30;
 
+// TODO remove
 volatile uint8_t rotary_diff = 128;
 
 uint8_t fans_menu_speed[2] = {30, 30};		// 0-100 %
@@ -125,6 +129,7 @@ bool redraw_ms = true;
 bool mode_flag = true;	//helping var for selftesting
 
 menu_state state = HOME;
+UI::Base* active_menu = &home;
 
 float chamber_temp;
 
@@ -139,8 +144,6 @@ unsigned long therm_read_time_now = 0;
 unsigned long us_last = 0;
 unsigned long led_time_now = 0;
 
-unsigned long button_timer = 0;
-
 long remain = 0;
 
 bool curing_mode = false;
@@ -152,8 +155,6 @@ bool gastro_pan = false;
 bool paused_time = false;
 bool led_start = false;
 
-bool button_active = false;
-bool long_press_active = false;
 bool long_press = false;
 bool preheat_complete = false;
 bool pid_mode = false;
@@ -246,11 +247,13 @@ void setup() {
 	setupTimer3();
 	interrupts();
 
-	lcd.createChar(0, Back);
-	lcd.createChar(1, Right);
-	lcd.createChar(2, Backslash);
+	lcd.createChar(BACKSLASH_CHAR, Backslash);
+	lcd.createChar(BACK_CHAR, Back);
+	lcd.createChar(RIGHT_CHAR, Right);
 	redraw_menu = true;
-	menu_move(true);
+
+	active_menu->show();
+//	menu_move(true);
 }
 
 uint8_t PI_regulator(float & actualTemp, uint8_t targetTemp) {
@@ -606,23 +609,13 @@ void loop() {
 
 	speed_control.acceleration();
 
-	// rotary "click" is 4 "micro steps"
-	if (rotary_diff <= 124 || rotary_diff >= 132 || redraw_menu) {
-		menu_move(true);
-	}
+	active_menu->process_events(hw.get_events());
 
 	if (state == RUNNING || state == RUN_MENU) {
 		machine_running();
 	}
 
-	// TODO - move to hw
-	if (hw.is_button_pressed()) {
-		if (button_active == false) {
-			button_active = true;
-			button_timer = millis();
-		}
-		if ((millis() - button_timer > LONG_PRESS_TIME) && (long_press_active == false)) {
-			long_press_active = true;
+/* TODO long press event
 			switch (state) {
 				case HOME:
 					state = RUN_MODE;
@@ -644,20 +637,8 @@ void loop() {
 				default:
 					break;
 			}
-		}
-	} else {
-		if (button_active == true) {
-			if (long_press_active == true) {
-				long_press_active = false;
-			} else {
-				if (!hw.get_heater_error()) {
-					button_press();
-				}
-			}
-			button_active = false;
-		}
-	}
-
+*/
+/*
 	// FIXME is this needed to fix ESD shock? Any better solution?
 	if (millis() > time_now + 5500) {
 		if (state == HOME || state == TEMPERATURES || state == SOUND_SETTINGS || state == SPEED_STATE) {
@@ -666,9 +647,9 @@ void loop() {
 
 		time_now = millis();
 		lcd.reinit();
-		lcd.createChar(0, Back);
-		lcd.createChar(1, Right);
-		lcd.createChar(2, Backslash);
+		lcd.createChar(BACKSLASH_CHAR, Backslash);
+		lcd.createChar(BACK_CHAR, Back);
+		lcd.createChar(RIGHT_CHAR, Right);
 		redraw_menu = true;
 		menu_move(false);
 
@@ -677,7 +658,7 @@ void loop() {
 			print_menu_cursor(menu_position);
 		}
 	}
-
+*/
 	if (millis() > therm_read_time_now + 2000) {
 		therm_read_time_now = millis();
 		chamber_temp = config.SI_unit_system ? hw.therm1_read() : celsius2fahrenheit(hw.therm1_read());
@@ -685,6 +666,12 @@ void loop() {
 }
 
 void menu_move(bool sound_echo) {
+
+// ***********
+	redraw_menu = false;
+	return;
+// ***********
+
 	if (!redraw_menu) {
 		if (sound_echo && config.sound_response) {
 			hw.echo();
@@ -1729,10 +1716,9 @@ void button_press() {
 
 // 1ms timer
 ISR(TIMER0_COMPA_vect) {
-	if (!hw.get_heater_error()) {
-		hw.read_encoder(rotary_diff);
-	}
+	hw.read_encoder();
 
+	// TODO move to main loop
 	if (pid_mode) {
 		if (config.curing_machine_mode == 0 || config.curing_machine_mode == 2 || config.curing_machine_mode == 3 || (selftest.phase == 5 && state == SELFTEST)) {
 			uint8_t tmpTargetTemp = config.curing_machine_mode == 3 ? config.resin_target_temp : config.target_temp;
@@ -1747,6 +1733,7 @@ ISR(TIMER0_COMPA_vect) {
 		}
 	}
 
+	// TODO move to main loop
 	hw.fan_rpm();
 }
 

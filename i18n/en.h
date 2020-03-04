@@ -93,4 +93,4 @@ static const char pgmstr_xoften[] PROGMEM = "/10";
 static const char pgmstr_celsius[] PROGMEM = " \xDF" "C";
 static const char pgmstr_fahrenheit[] PROGMEM = " \xDF" "F";
 static const char pgmstr_sn[] PROGMEM = "SN:";
-static const char pgmstr_progress[] PROGMEM = { '|', '/', '-', 2 };
+static const char pgmstr_progress[] PROGMEM = { '|', '/', '-', BACKSLASH_CHAR };

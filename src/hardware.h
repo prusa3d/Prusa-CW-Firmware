@@ -9,6 +9,17 @@
 float celsius2fahrenheit(float);
 float fahrenheit2celsius(float);
 
+struct __attribute__((__packed__)) Events {
+	bool cover_opened;
+	bool cover_closed;
+	bool tank_inserted;
+	bool tank_removed;
+	bool button_short_press;
+	bool button_long_press;
+	bool control_up;
+	bool control_down;
+};
+
 class hardware {
 public:
 	hardware();
@@ -34,13 +45,14 @@ public:
 	void beep();
 	void warning_beep();
 
-	void read_encoder(volatile uint8_t&);
-	bool is_button_pressed();
+	void read_encoder();
 
 	void set_fans_duty(uint8_t*);
 	void fan_rpm();
 	bool get_heater_error();
 	uint8_t get_fans_error();
+
+	Events get_events();
 
 	volatile int fan_tacho_count[3];
 
@@ -50,6 +62,7 @@ private:
 	Trinamic_TMC2130 myStepper;
 
 	uint8_t lcd_encoder_bits;
+	volatile int8_t rotary_diff;
 
 	uint8_t fans_duty[3];
 	uint8_t fans_pwm_pins[2];
@@ -58,4 +71,10 @@ private:
 	int fan_tacho_last_count[3];
 	uint16_t rpm_fan_counter;
 	uint8_t fan_errors;
+
+	unsigned long button_timer;
+	bool cover_closed;
+	bool tank_inserted;
+	bool button_active;
+	bool long_press_active;
 };

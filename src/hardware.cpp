@@ -15,12 +15,16 @@ hardware::hardware() :
 		outputchip(0, 8),
 		myStepper(CS_PIN),
 		lcd_encoder_bits(0),
+		rotary_diff(0),
 		fans_duty{0, 0, 0},
 		fans_pwm_pins{FAN1_PWM_PIN, FAN2_PWM_PIN},
 		fans_enable_pins{FAN1_PIN, FAN2_PIN},
 		fan_tacho_last_count{0, 0, 0},
 		rpm_fan_counter(0),
-		fan_errors(0) {
+		fan_errors(0),
+		button_timer(0),
+		button_active(false),
+		long_press_active(false) {
 
 	outputchip.begin();
 	outputchip.pinMode(0B0000000010010111);
@@ -53,6 +57,9 @@ hardware::hardware() :
 	myStepper.set_tbl(1);					// ([0-3]) set comparator blank time to 16, 24, 36 or 54 clocks, 1 or 2 is recommended
 	myStepper.set_toff(8);					// ([0-15]) 0: driver disable, 1: use only with TBL>2, 2-15: off time setting during slow decay phase
 	myStepper.set_en_pwm_mode(1);			// 0: driver disable PWM mode, 1: driver enable PWM mode
+
+	cover_closed = is_cover_closed();
+	tank_inserted = is_tank_inserted();
 }
 
 float hardware::therm1_read() {
@@ -153,7 +160,7 @@ void hardware::warning_beep() {
 	delay(250);
 }
 
-void hardware::read_encoder(volatile uint8_t& rotary_diff) {
+void hardware::read_encoder() {
 	uint8_t enc = 0;
 	if (digitalRead(BTN_EN1) == HIGH) {
 		enc |= B01;
@@ -164,40 +171,40 @@ void hardware::read_encoder(volatile uint8_t& rotary_diff) {
 	if (enc != lcd_encoder_bits) {
 		switch (enc) {
 			case encrot0:
-				if (lcd_encoder_bits == encrot3 && rotary_diff < 255) {
+				if (lcd_encoder_bits == encrot3) {
 					rotary_diff++;
-				} else if (lcd_encoder_bits == encrot1 && rotary_diff) {
+				} else if (lcd_encoder_bits == encrot1) {
 					rotary_diff--;
 				}
 				break;
 			case encrot1:
-				if (lcd_encoder_bits == encrot0 && rotary_diff < 255) {
+				if (lcd_encoder_bits == encrot0) {
 					rotary_diff++;
-				} else if (lcd_encoder_bits == encrot2 && rotary_diff) {
+				} else if (lcd_encoder_bits == encrot2) {
 					rotary_diff--;
 				}
 				break;
 			case encrot2:
-				if (lcd_encoder_bits == encrot1 && rotary_diff < 255) {
+				if (lcd_encoder_bits == encrot1) {
 					rotary_diff++;
-				} else if (lcd_encoder_bits == encrot3 && rotary_diff) {
+				} else if (lcd_encoder_bits == encrot3) {
 					rotary_diff--;
 				}
 				break;
 			case encrot3:
-				if (lcd_encoder_bits == encrot2 && rotary_diff < 255) {
+				if (lcd_encoder_bits == encrot2) {
 					rotary_diff++;
-				} else if (lcd_encoder_bits == encrot0 && rotary_diff) {
+				} else if (lcd_encoder_bits == encrot0) {
 					rotary_diff--;
 				}
 				break;
 		}
 		lcd_encoder_bits = enc;
+		if (rotary_diff > 124)
+			rotary_diff = 124;
+		else if (rotary_diff < -124)
+			rotary_diff = -124;
 	}
-}
-
-bool hardware::is_button_pressed() {
-	return outputchip.digitalRead(BTN_ENC) == LOW;
 }
 
 void hardware::set_fans_duty(uint8_t* duties) {
@@ -244,4 +251,60 @@ bool hardware::get_heater_error() {
 
 uint8_t hardware::get_fans_error() {
 	return fan_errors;
+}
+
+Events hardware::get_events() {
+	Events events = {false, false, false, false, false, false, false, false};
+
+	if (get_heater_error())
+		return events;
+
+	// cover
+	bool cover_closed_now = is_cover_closed();
+	if (cover_closed_now != cover_closed) {
+		if (cover_closed_now)
+			events.cover_closed = true;
+		else
+			events.cover_opened = true;
+		cover_closed = cover_closed_now;
+	}
+
+	// tank
+	bool tank_inserted_now = is_tank_inserted();
+	if (tank_inserted_now != tank_inserted) {
+		if (tank_inserted_now)
+			events.tank_inserted = true;
+		else
+			events.tank_removed = true;
+		tank_inserted = tank_inserted_now;
+	}
+
+	// button
+	if (outputchip.digitalRead(BTN_ENC) == LOW) {
+		if (!button_active) {
+			button_active = true;
+			button_timer = millis();
+		} else if (!long_press_active && millis() - button_timer > LONG_PRESS_TIME) {
+			long_press_active = true;
+		}
+	} else if (button_active) {
+		if (long_press_active) {
+			long_press_active = false;
+			events.button_long_press = true;
+		} else {
+			events.button_short_press = true;
+		}
+		button_active = false;
+	}
+
+	// rotary "click" is 4 "micro steps"
+	if (rotary_diff > 3) {
+		rotary_diff -= 4;
+		events.control_down = true;
+	} else if (rotary_diff < -3) {
+		rotary_diff += 4;
+		events.control_up = true;
+	}
+
+	return events;
 }

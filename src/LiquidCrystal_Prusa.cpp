@@ -341,8 +341,9 @@ void LiquidCrystal_Prusa::printClear_P(const char *str, uint_least8_t n, Termina
 		--n;
 	}
 
+	uint8_t c;
 	while (n--) {
-		uint8_t c = pgm_read_byte(str);
+		c = pgm_read_byte(str);
 		if (c) {
 			write(c);
 			++str;
@@ -350,8 +351,8 @@ void LiquidCrystal_Prusa::printClear_P(const char *str, uint_least8_t n, Termina
 			write(' ');
 		}
 	}
-	if (terminator == Terminator::back) write(char(0));
-	if (terminator == Terminator::right) write(char(1));
+	if (terminator == Terminator::back) write(char(BACK_CHAR));
+	if (terminator == Terminator::right) write(char(RIGHT_CHAR));
 }
 
 /*********** mid level commands, for sending data/cmds */

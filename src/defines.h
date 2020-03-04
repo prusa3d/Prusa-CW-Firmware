@@ -1,11 +1,20 @@
 //#define SERIAL_COM_DEBUG	//!< Set up for communication through USB
 
+#define COUNT_ITEMS(x)		(sizeof(x)/sizeof(x[0]))
+
+#define DISPLAY_CHARS		20
+#define DISPLAY_LINES		4
+
 #define LAYOUT_TIME_X		3
 #define LAYOUT_TIME_Y		2
 #define LAYOUT_TIME_LT		1
 #define LAYOUT_TIME_GT		8
 #define LAYOUT_TEMP_X		12
 #define LAYOUT_TEMP_Y		2
+
+#define BACKSLASH_CHAR		0
+#define BACK_CHAR			1
+#define RIGHT_CHAR			2
 
 #define FAN1_ERROR_MASK		B001
 #define FAN2_ERROR_MASK		B010
