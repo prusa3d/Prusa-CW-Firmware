@@ -12,7 +12,7 @@ namespace UI {
 	{}
 
 	char* Base::get_menu_label(char* buffer, uint8_t buffer_size) {
-		SerialUSB.print("Base::get_menu_label()\r\n");
+		USB_TRACE("Base::get_menu_label()\r\n");
 		buffer[--buffer_size] = char(0);	// end of text
 		buffer[--buffer_size] = char(RIGHT_CHAR);
 		memset(buffer, ' ', buffer_size);
@@ -28,7 +28,7 @@ namespace UI {
 	}
 
 	void Base::show() {
-		SerialUSB.print("Base::show()\r\n");
+		USB_TRACE("Base::show()\r\n");
 		// do nothing
 	}
 
@@ -53,42 +53,42 @@ namespace UI {
 	}
 
 	void Base::event_cover_opened() {
-		SerialUSB.print("Base::event_cover_opened()\r\n");
+		USB_TRACE("Base::event_cover_opened()\r\n");
 		// do nothing
 	}
 
 	void Base::event_cover_closed() {
-		SerialUSB.print("Base::event_cover_closed()\r\n");
+		USB_TRACE("Base::event_cover_closed()\r\n");
 		// do nothing
 	}
 
 	void Base::event_tank_inserted() {
-		SerialUSB.print("Base::event_tank_inserted()\r\n");
+		USB_TRACE("Base::event_tank_inserted()\r\n");
 		// do nothing
 	}
 
 	void Base::event_tank_removed() {
-		SerialUSB.print("Base::event_tank_removed()\r\n");
+		USB_TRACE("Base::event_tank_removed()\r\n");
 		// do nothing
 	}
 
 	void Base::event_button_short_press() {
-		SerialUSB.print("Base::event_button_short_press()\r\n");
+		USB_TRACE("Base::event_button_short_press()\r\n");
 		// do nothing
 	}
 
 	void Base::event_button_long_press() {
-		SerialUSB.print("Base::event_button_long_press()\r\n");
+		USB_TRACE("Base::event_button_long_press()\r\n");
 		// do nothing
 	}
 
 	void Base::event_control_up() {
-		SerialUSB.print("Base::event_control_up()\r\n");
+		USB_TRACE("Base::event_control_up()\r\n");
 		// do nothing
 	}
 
 	void Base::event_control_down() {
-		SerialUSB.print("Base::event_control_down()\r\n");
+		USB_TRACE("Base::event_control_down()\r\n");
 		// do nothing
 	}
 
@@ -100,21 +100,21 @@ namespace UI {
 
 	void Menu::show() {
 		char buffer[DISPLAY_CHARS];				// buffer is one byte shorter (we are printing from position 1, not 0)
-		SerialUSB.print("Menu::show()\r\n");
+		USB_TRACE("Menu::show()\r\n");
 		for (uint8_t i = 0; i < items_count; ++i) {
 			items[i]->get_menu_label(buffer, sizeof(buffer));
-			SerialUSB.print(buffer);
-			SerialUSB.print("\r\n");
+			USB_TRACE(buffer);
+			USB_TRACE("\r\n");
 			lcd.print(buffer, 1, i);
 		}
 	}
 
 	void Menu::event_control_up() {
-		SerialUSB.print("Menu::event_control_up()\r\n");
+		USB_TRACE("Menu::event_control_up()\r\n");
 	}
 
 	void Menu::event_control_down() {
-		SerialUSB.print("Menu::event_control_down()\r\n");
+		USB_TRACE("Menu::event_control_down()\r\n");
 	}
 
 
@@ -124,7 +124,7 @@ namespace UI {
 	{}
 
 	char* Bool::get_menu_label(char* buffer, uint8_t buffer_size) {
-		SerialUSB.print("Bool::get_menu_label()\r\n");
+		USB_TRACE("Bool::get_menu_label()\r\n");
 		char* remain = Base::get_menu_label(buffer, buffer_size);
 		// TODO "[on]" / "[off]"
 		return remain;
@@ -137,7 +137,7 @@ namespace UI {
 	{}
 
 	void Value::show() {
-		SerialUSB.print("Value::show()\r\n");
+		USB_TRACE("Value::show()\r\n");
 		lcd.setCursor(1, 0);
 		lcd.printClear_P(label, 19, Ter::none);
 		lcd.print(value, 5, 2);
@@ -145,6 +145,7 @@ namespace UI {
 	}
 
 	void Value::event_control_up() {
+		USB_TRACE("Value::event_control_up()\r\n");
 		if (value < max_value) {
 			value++;
 			show();
@@ -152,6 +153,7 @@ namespace UI {
 	}
 
 	void Value::event_control_down() {
+		USB_TRACE("Value::event_control_up()\r\n");
 		if (value > min_value) {
 			value--;
 			show();
@@ -184,7 +186,7 @@ namespace UI {
 	}
 
 	void Option::show() {
-		SerialUSB.print("Option::show()\r\n");
+		USB_TRACE("Option::show()\r\n");
 		lcd.setCursor(1, 0);
 		lcd.printClear_P(label, 19, Ter::none);
 		lcd.setCursor(0, 2);
@@ -203,6 +205,7 @@ namespace UI {
 	}
 
 	void Option::event_control_up() {
+		USB_TRACE("Option::event_control_up()\r\n");
 		if (value < options_count - 1) {
 			value++;
 			show();
@@ -210,6 +213,7 @@ namespace UI {
 	}
 
 	void Option::event_control_down() {
+		USB_TRACE("Option::event_control_down()\r\n");
 		if (value) {
 			value--;
 			show();
