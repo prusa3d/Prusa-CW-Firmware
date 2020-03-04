@@ -95,26 +95,49 @@ namespace UI {
 
 	// UI::Menu
 	Menu::Menu(LiquidCrystal_Prusa& lcd, const char* label, Base** items, uint8_t items_count, bool is_root) :
-		Base(lcd, label), items(items), items_count(items_count), is_root(is_root)
-	{}
+		Base(lcd, label), items(items), items_count(items_count), is_root(is_root), menu_offset(0), cursor_position(0)
+	{
+		max_items = items_count < DISPLAY_LINES ? items_count : DISPLAY_LINES;
+	}
 
 	void Menu::show() {
-		char buffer[DISPLAY_CHARS];				// buffer is one byte shorter (we are printing from position 1, not 0)
 		USB_TRACE("Menu::show()\r\n");
-		for (uint8_t i = 0; i < items_count; ++i) {
-			items[i]->get_menu_label(buffer, sizeof(buffer));
+		// buffer is one byte shorter (we are printing from position 1, not 0)
+		char buffer[DISPLAY_CHARS];
+		for (uint8_t i = 0; i < max_items; ++i) {
+			lcd.setCursor(0, i);
+			if (i == cursor_position)
+				lcd.write('>');
+			else
+				lcd.write(' ');
+			items[i + menu_offset]->get_menu_label(buffer, sizeof(buffer));
+			USB_TRACE(">");
 			USB_TRACE(buffer);
-			USB_TRACE("\r\n");
-			lcd.print(buffer, 1, i);
+			USB_TRACE("<\r\n");
+			lcd.print(buffer);
 		}
 	}
 
 	void Menu::event_control_up() {
 		USB_TRACE("Menu::event_control_up()\r\n");
+		if (cursor_position) {
+			--cursor_position;
+			show();
+		} else if (menu_offset) {
+			--menu_offset;
+			show();
+		}
 	}
 
 	void Menu::event_control_down() {
 		USB_TRACE("Menu::event_control_down()\r\n");
+		if (cursor_position < max_items - 1) {
+			++cursor_position;
+			show();
+		} else if (menu_offset < items_count - DISPLAY_LINES) {
+			++menu_offset;
+			show();
+		}
 	}
 
 

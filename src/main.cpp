@@ -609,7 +609,7 @@ void loop() {
 
 	speed_control.acceleration();
 
-	active_menu->process_events(hw.get_events());
+	active_menu->process_events(hw.get_events((bool)config.sound_response));
 
 	if (state == RUNNING || state == RUN_MENU) {
 		machine_running();

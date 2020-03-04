@@ -37,6 +37,9 @@ namespace UI {
 		Base** items;
 		uint8_t items_count;
 		bool is_root;
+		uint8_t menu_offset;
+		uint8_t cursor_position;
+		uint8_t max_items;
 	};
 
 

@@ -52,7 +52,7 @@ public:
 	bool get_heater_error();
 	uint8_t get_fans_error();
 
-	Events get_events();
+	Events get_events(bool sound_response);
 
 	volatile int fan_tacho_count[3];
 

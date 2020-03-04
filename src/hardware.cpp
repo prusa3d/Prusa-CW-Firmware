@@ -253,7 +253,7 @@ uint8_t hardware::get_fans_error() {
 	return fan_errors;
 }
 
-Events hardware::get_events() {
+Events hardware::get_events(bool sound_response) {
 	Events events = {false, false, false, false, false, false, false, false};
 
 	if (get_heater_error())
@@ -304,6 +304,10 @@ Events hardware::get_events() {
 	} else if (rotary_diff < -3) {
 		rotary_diff += 4;
 		events.control_up = true;
+	}
+
+	if (sound_response && (events.button_long_press || events.button_short_press || events.control_down || events.control_up)) {
+		echo();
 	}
 
 	return events;
