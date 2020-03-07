@@ -300,10 +300,10 @@ Events hardware::get_events(bool sound_response) {
 	// rotary "click" is 4 "micro steps"
 	if (rotary_diff > 3) {
 		rotary_diff -= 4;
-		events.control_down = true;
+		events.control_up = true;
 	} else if (rotary_diff < -3) {
 		rotary_diff += 4;
-		events.control_up = true;
+		events.control_down = true;
 	}
 
 	if (sound_response && (events.button_long_press || events.button_short_press || events.control_down || events.control_up)) {

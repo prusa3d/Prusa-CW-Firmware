@@ -43,13 +43,6 @@
 
 class LiquidCrystal_Prusa {
 public:
-	enum class Terminator : uint_least8_t {
-		none,
-		back,
-		right,
-		serialNumber,
-	};
-
 	LiquidCrystal_Prusa(uint8_t rs, uint8_t enable, uint8_t pwm,
 		uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3,
 		uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7);
@@ -94,7 +87,7 @@ public:
 	void printTime(uint8_t min, uint8_t sec, uint8_t col = 255, uint8_t row = 255);
 	void print(const char*, uint8_t col = 255, uint8_t row = 255);
 	void print_P(const char*, uint8_t col = 255, uint8_t row = 255);
-	void printClear_P(const char*, uint_least8_t n, Terminator);
+	void clearLine(uint8_t row);
 
 private:
 	void send(uint8_t, uint8_t);

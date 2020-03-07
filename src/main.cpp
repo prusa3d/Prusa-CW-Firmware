@@ -8,14 +8,13 @@
 #include "hardware.h"
 #include "Countimer.h"
 #include "USBCore.h"
-#include "MenuList.h"
 #include "Selftest.h"
 #include "SpeedControl.h"
 #include "i18n.h"
 #include "config.h"
 #include "ui.h"
 
-using Ter = LiquidCrystal_Prusa::Terminator;
+static const char* pgmstr_serial_number = reinterpret_cast<const char*>(0x7fe0); //!< 15 characters
 
 Countimer tDown(Countimer::COUNT_DOWN);
 Countimer tUp(Countimer::COUNT_UP);
@@ -27,17 +26,77 @@ Selftest selftest;
 
 LiquidCrystal_Prusa lcd(LCD_PINS_RS, LCD_PINS_ENABLE, LCD_PWM_PIN, LCD_PINS_D4, LCD_PINS_D5, LCD_PINS_D6, LCD_PINS_D7);
 
+/*** menu definitions ***/
+UI::Base back(lcd, pgmstr_back, BACK_CHAR);
+
+// run time menu
+UI::Minutes curing_run_time(lcd, pgmstr_curing_run_time, config.curing_run_time);
+UI::Minutes drying_run_time(lcd, pgmstr_drying_run_time, config.drying_run_time);
+UI::Minutes washing_run_time(lcd, pgmstr_washing_run_time, config.washing_run_time);
+UI::Minutes resin_preheat_run_time(lcd, pgmstr_resin_preheat_time, config.resin_preheat_run_time, 30);
+UI::Base* const run_time_items[] = {&back, &curing_run_time, &drying_run_time, &washing_run_time, &resin_preheat_run_time};
+UI::Menu run_time_menu(lcd, pgmstr_run_time, run_time_items, COUNT_ITEMS(run_time_items));
+
+// speed menu
 UI::X_of_ten curing_speed(lcd, pgmstr_curing_speed, config.curing_speed);
-UI::Minutes curing_run_time(lcd, pgmstr_curing_run_time, config.curing_run_time, 30);
+UI::X_of_ten washing_speed(lcd, pgmstr_washing_speed, config.washing_speed);
+UI::Base* const speed_items[] = {&back, &curing_speed, &washing_speed};
+UI::Menu speed_menu(lcd, pgmstr_rotation_speed, speed_items, COUNT_ITEMS(speed_items));
+
+// temperatore menu
+UI::Bool heat_to_target_temp(lcd, pgmstr_warmup, config.heat_to_target_temp);
+UI::Temperature target_temp(lcd, pgmstr_drying_warmup_temp, config.target_temp, config.SI_unit_system);
+UI::Temperature resin_target_temp(lcd, pgmstr_resin_preheat_temp, config.resin_target_temp, config.SI_unit_system);
+UI::Temperature* const SI_changed[] = {&target_temp, &resin_target_temp};
+UI::SI_switch SI_unit_system(lcd, pgmstr_units, config.SI_unit_system, SI_changed, COUNT_ITEMS(SI_changed));
+UI::Base* const temperature_items[] = {&back, &heat_to_target_temp, &target_temp, &resin_target_temp, &SI_unit_system};
+UI::Menu temperature_menu(lcd, pgmstr_temperatures, temperature_items, COUNT_ITEMS(temperature_items));
+
+// sound menu
+UI::Bool sound_response(lcd, pgmstr_control_echo, config.sound_response);
+const char* finish_beep_options[] = {pgmstr_none, pgmstr_once, pgmstr_continuous};
+UI::Option finish_beep(lcd, pgmstr_finish_beep, config.finish_beep_mode, finish_beep_options, COUNT_ITEMS(finish_beep_options));
+UI::Base* const sound_items[] = {&back, &sound_response, &finish_beep};
+UI::Menu sound_menu(lcd, pgmstr_sound, sound_items, COUNT_ITEMS(sound_items));
+
+// fans menu
+UI::Percent fan1_curing_speed(lcd, pgmstr_fan1_curing_speed, config.fans_curing_speed[0]);
+UI::Percent fan1_drying_speed(lcd, pgmstr_fan1_drying_speed, config.fans_drying_speed[0]);
+UI::Percent fan2_curing_speed(lcd, pgmstr_fan2_curing_speed, config.fans_curing_speed[1]);
+UI::Percent fan2_drying_speed(lcd, pgmstr_fan2_drying_speed, config.fans_drying_speed[1]);
+UI::Base* const fans_items[] = {&back, &fan1_curing_speed, &fan1_drying_speed, &fan2_curing_speed, &fan2_drying_speed};
+UI::Menu fans_menu(lcd, pgmstr_fans, fans_items, COUNT_ITEMS(fans_items));
+
+// info menu
+UI::Base fw_version(lcd, pgmstr_fw_version);
+UI::SN serial_number(lcd, pgmstr_serial_number);
+UI::Base build_nr(lcd, pgmstr_build_nr);
+UI::Base fw_hash(lcd, pgmstr_fw_hash);
+#if FW_LOCAL_CHANGES
+UI::Base workspace_dirty(lcd, pgmstr_workspace_dirty);
+UI::Base* const info_items[] = {&back, &fw_version, &serial_number, &build_nr, &fw_hash, &workspace_dirty};
+#else
+UI::Base* const info_items[] = {&back, &fw_version, &serial_number, &build_nr, &fw_hash};
+#endif
+UI::Menu info_menu(lcd, pgmstr_information, info_items, COUNT_ITEMS(info_items));
+
+// config menu
+const char* curing_machine_mode_options[] = {pgmstr_drying_curing, pgmstr_curing, pgmstr_drying, pgmstr_resin_preheat};
+UI::Option curing_machine_mode(lcd, pgmstr_run_mode, config.curing_machine_mode, curing_machine_mode_options, COUNT_ITEMS(curing_machine_mode_options));
 UI::Percent led_pwm_value(lcd, pgmstr_led_intensity, config.led_pwm_value, 1);
-UI::Temperature target_temp_c(lcd, pgmstr_target_temp, config.target_temp, true);
-UI::Temperature target_temp_f(lcd, pgmstr_target_temp, config.target_temp, false);
-const char* options[] = {pgmstr_drying_curing, pgmstr_curing, pgmstr_drying, pgmstr_resin_preheat};
-UI::Option curing_machine_mode(lcd, pgmstr_run_mode, config.curing_machine_mode, options, COUNT_ITEMS(options));
+UI::Base* const config_items[] = {&back, &speed_menu, &curing_machine_mode, &temperature_menu, &sound_menu, &fans_menu, &led_pwm_value, &info_menu};
+UI::Menu config_menu(lcd, pgmstr_settings, config_items, COUNT_ITEMS(config_items));
 
-UI::Base* home_items[] = {&curing_speed, &curing_run_time, &led_pwm_value, &target_temp_c, &curing_machine_mode};
-UI::Menu home(lcd, pgmstr_emptystr, home_items, COUNT_ITEMS(home_items), true);
+// home menu
+UI::State do_it(lcd, pgmstr_start_drying_curing);	// TODO multi label based on config and tank state
+UI::Base* const home_items[] = {&do_it, &run_time_menu, &config_menu};
+UI::Menu home_menu(lcd, pgmstr_emptystr, home_items, COUNT_ITEMS(home_items));
 
+// menu data
+#define MAX_MENU_DEPTH	5
+UI::Base* menu_stack[MAX_MENU_DEPTH];
+uint8_t menu_depth = 0;
+UI::Base* active_menu = &home_menu;
 
 enum menu_state : uint8_t {
 	HOME,
@@ -69,16 +128,6 @@ enum menu_state : uint8_t {
 	ERROR,
 	SELFTEST
 };
-
-enum units : uint8_t {
-	XOFTEN,
-	MINUTES,
-	PERCENT,
-	TEMPERATURE_C,
-	TEMPERATURE_F,
-};
-
-static const char* pgmstr_serial_number = reinterpret_cast<const char*>(0x7fe0); //!< 15 characters
 
 volatile uint16_t* const bootKeyPtr = (volatile uint16_t *)(RAMEND - 1);
 static volatile uint16_t bootKeyPtrVal __attribute__ ((section (".noinit")));
@@ -129,7 +178,6 @@ bool redraw_ms = true;
 bool mode_flag = true;	//helping var for selftesting
 
 menu_state state = HOME;
-UI::Base* active_menu = &home;
 
 float chamber_temp;
 
@@ -273,140 +321,9 @@ uint8_t PI_regulator(float & actualTemp, uint8_t targetTemp) {
 	return newSpeed;
 }
 
-void print_menu_cursor(uint8_t line) {
-	for (uint8_t i = 0; i < 4; ++i) {
-		lcd.setCursor(0, i);
-		if (i == line) {
-			lcd.write('>');
-		} else {
-			lcd.write(' ');
-		}
-	}
-}
-
-void generic_menu_P(uint8_t num, ...) {
-	va_list argList;
-	va_start(argList, num);
-	max_menu_position = 0;
-	for (; num; num--) {
-		lcd.setCursor(1, max_menu_position++);
-		lcd.printClear_P(va_arg(argList, const char *), 18, Ter::none);
-	}
-	va_end(argList);
-	max_menu_position--;
-
-	if (rotary_diff > 128) {
-		if (menu_position < max_menu_position) {
-			menu_position++;
-		}
-	} else if (rotary_diff < 128) {
-		if (menu_position) {
-			menu_position--;
-		}
-	}
-	print_menu_cursor(menu_position);
-}
-
-void lcd_print_back() {
-	lcd.setCursor(19, 0);
-	lcd.write(uint8_t(0));
-}
-
-void lcd_print_right(uint8_t a) {
-	lcd.setCursor(19, a);
-	lcd.write(uint8_t(1));
-}
-
 void lcd_clear_time_boundaries() {
 	lcd.print_P(pgmstr_double_space, LAYOUT_TIME_GT, LAYOUT_TIME_Y);
 	lcd.print_P(pgmstr_double_space, LAYOUT_TIME_LT, LAYOUT_TIME_Y);
-}
-
-void generic_value_P(const char *label, uint8_t *value, uint8_t min, uint8_t max, units units) {
-	if (rotary_diff > 128 && *value < max)
-		(*value)++;
-	else if (rotary_diff < 128 && *value > min)
-		(*value)--;
-// TODO
-//	else
-//		return;
-
-	lcd.setCursor(1, 0);
-	lcd.printClear_P(label, 19, Ter::none);
-
-	lcd.print(*value, 5, 2);
-	switch (units) {
-
-		case XOFTEN:
-			lcd.print_P(pgmstr_xoften);
-			break;
-
-		case MINUTES:
-			lcd.print_P(pgmstr_minutes);
-			break;
-
-		case PERCENT:
-			lcd.print_P(pgmstr_percent);
-			break;
-
-		case TEMPERATURE_C:
-			lcd.print_P(pgmstr_celsius);
-			break;
-
-		case TEMPERATURE_F:
-			lcd.print_P(pgmstr_fahrenheit);
-			break;
-
-		default:
-			break;
-	}
-}
-
-void generic_items_P(const char *label, uint8_t *value, uint8_t num, ...) {
-	lcd.setCursor(1, 0);
-	lcd.printClear_P(label, 19, Ter::none);
-	const char *items[num];
-	if (*value > num) {
-		*value = 0;
-	}
-
-	va_list argList;
-	va_start(argList, num);
-	uint8_t i = 0;
-	for (; num; num--) {
-		items[i++] = va_arg(argList, const char *);
-	}
-	va_end(argList);
-
-	if (rotary_diff > 128) {
-		if (*value < i - 1) {
-			(*value)++;
-		}
-	} else if (rotary_diff < 128) {
-		if (*value) {
-			(*value)--;
-		}
-	}
-
-	if (*value < i) {
-		lcd.setCursor(0, 2);
-		lcd.printClear_P(pgmstr_emptystr, 20, Ter::none);
-		uint8_t len = strlen_P(items[*value]);
-		if (*value) {
-			len += 2;
-		}
-		if (*value < i - 1) {
-			len += 2;
-		}
-		lcd.setCursor((20 - len) / 2, 2);
-		if (*value) {
-			lcd.print_P(pgmstr_lt);
-		}
-		lcd.print_P(items[*value]);
-		if (*value < i - 1) {
-			lcd.print_P(pgmstr_gt);
-		}
-	}
 }
 
 void redraw_selftest_vals() {
@@ -609,7 +526,25 @@ void loop() {
 
 	speed_control.acceleration();
 
-	active_menu->process_events(hw.get_events((bool)config.sound_response));
+	UI::Base* new_menu = active_menu->process_events(hw.get_events((bool)config.sound_response));
+	if (new_menu == &back) {
+		if (menu_depth) {
+			active_menu = menu_stack[--menu_depth];
+			lcd.clear();
+			active_menu->show();
+		} else {
+			USB_TRACE("ERROR: back at menu depth 0!\r\n");
+		}
+	} else if (new_menu) {
+		if (menu_depth < MAX_MENU_DEPTH) {
+			menu_stack[menu_depth++] = active_menu;
+			active_menu = new_menu;
+			lcd.clear();
+			active_menu->show();
+		} else {
+			USB_TRACE("ERROR: MAX_MENU_DEPTH reached!\r\n");
+		}
+	}
 
 	if (state == RUNNING || state == RUN_MENU) {
 		machine_running();
@@ -683,6 +618,7 @@ void menu_move(bool sound_echo) {
 	redraw_menu = false;
 
 	switch (state) {
+/*
 		case HOME:
 			static const char* first_line;
 			if (curing_mode) {
@@ -707,145 +643,8 @@ void menu_move(bool sound_echo) {
 			lcd_print_right(1);
 			lcd_print_right(2);
 			break;
-
-		case SPEED_STATE:
-			generic_menu_P(3, pgmstr_back, pgmstr_curing_speed, pgmstr_washing_speed);
-			lcd_print_back();
-			lcd_print_right(1);
-			lcd_print_right(2);
-			break;
-
-		case SPEED_CURING:
-			generic_value_P(pgmstr_curing_speed, &config.curing_speed, 1, 10, XOFTEN);
-			break;
-
-		case SPEED_WASHING:
-			generic_value_P(pgmstr_washing_speed, &config.washing_speed, 1, 10, XOFTEN);
-			break;
-
-		case TIME:
-			{
-				Scrolling_item items[] = {
-					{pgmstr_back, true, Ter::back},
-					{pgmstr_curing_run_time, true, Ter::right},
-					{pgmstr_drying_run_time, true, Ter::right},
-					{pgmstr_washing_run_time, true, Ter::right},
-					{pgmstr_resin_preheat_time, true, Ter::right},
-				};
-				menu_position = scrolling_list_P(items);
-				break;
-			}
-
-		case TIME_CURING:
-			generic_value_P(pgmstr_curing_run_time, &config.curing_run_time, 1, 10, MINUTES);
-			break;
-
-		case TIME_DRYING:
-			generic_value_P(pgmstr_drying_run_time, &config.drying_run_time, 1, 10, MINUTES);
-			break;
-
-		case TIME_WASHING:
-			generic_value_P(pgmstr_washing_run_time, &config.washing_run_time, 1, 10, MINUTES);
-			break;
-
-		case TIME_RESIN_PREHEAT:
-			generic_value_P(pgmstr_resin_preheat_time, &config.resin_preheat_run_time, 1, 30, MINUTES);
-			break;
-
-		case SETTINGS:
-			{
-				Scrolling_item items[] = {
-					{pgmstr_back, true, Ter::back},
-					{pgmstr_rotation_speed, true, Ter::right},
-					{pgmstr_run_mode, true, Ter::right},
-					{pgmstr_temperatures, true, Ter::right},
-					{pgmstr_sound, true, Ter::right},
-					{pgmstr_fans, true, Ter::right},
-					{pgmstr_led_intensity, true, Ter::right},
-					{hw.get_fans_error() ? pgmstr_information_error : pgmstr_information, true, Ter::right},
-				};
-				menu_position = scrolling_list_P(items);
-				break;
-			}
-
-		case TEMPERATURES:
-			{
-				Scrolling_item items[] = {
-					{pgmstr_back, true, Ter::back},
-					{config.heat_to_target_temp ? pgmstr_warmup_on : pgmstr_warmup_off, true, Ter::none},
-					{pgmstr_drying_warmup_temp, true, Ter::right},
-					{pgmstr_resin_preheat_temp, true, Ter::right},
-					{config.SI_unit_system ? pgmstr_units_C : pgmstr_units_F, true, Ter::none},
-				};
-				menu_position = scrolling_list_P(items);
-				break;
-			}
-
-		case TARGET_TEMP:
-			if (config.SI_unit_system) {
-				generic_value_P(pgmstr_target_temp, &config.target_temp, MIN_TARGET_TEMP_C, MAX_TARGET_TEMP_C, TEMPERATURE_C);
-			} else {
-				generic_value_P(pgmstr_target_temp, &config.target_temp, MIN_TARGET_TEMP_F, MAX_TARGET_TEMP_F, TEMPERATURE_F);
-			}
-			break;
-
-		case RESIN_TARGET_TEMP:
-			if (config.SI_unit_system) {
-				generic_value_P(pgmstr_target_temp, &config.resin_target_temp, MIN_TARGET_TEMP_C, MAX_TARGET_TEMP_C, TEMPERATURE_C);
-			} else {
-				generic_value_P(pgmstr_target_temp, &config.resin_target_temp, MIN_TARGET_TEMP_F, MAX_TARGET_TEMP_F, TEMPERATURE_F);
-			}
-			break;
-
-		case RUN_MODE:
-			generic_items_P(pgmstr_run_mode, &config.curing_machine_mode, 4, pgmstr_drying_curing, pgmstr_curing, pgmstr_drying, pgmstr_resin_preheat);
-			break;
-
-		case SOUND_SETTINGS:
-			generic_menu_P(3, pgmstr_back,
-				config.sound_response ? pgmstr_control_echo_on : pgmstr_control_echo_off,
-				pgmstr_finish_beep);
-			lcd_print_back();
-			lcd_print_right(2);
-			break;
-
-		case BEEP:
-			generic_items_P(pgmstr_finish_beep, &config.finish_beep_mode, 3, pgmstr_none, pgmstr_once, pgmstr_continuous);
-			break;
-
-		case FANS:
-			{
-				Scrolling_item items[] = {
-					{pgmstr_back, true, Ter::back},
-					{pgmstr_fan1_curing_speed, true, Ter::right},
-					{pgmstr_fan1_drying_speed, true, Ter::right},
-					{pgmstr_fan2_curing_speed, true, Ter::right},
-					{pgmstr_fan2_drying_speed, true, Ter::right},
-				};
-				menu_position = scrolling_list_P(items);
-				break;
-			}
-
-		case LED_INTENSITY:
-			generic_value_P(pgmstr_led_intensity, &config.led_pwm_value, 1, 100, PERCENT);
-			break;
-
-		case FAN1_CURING:
-			generic_value_P(pgmstr_fan1_curing_speed, &config.fans_curing_speed[0], 0, 100, PERCENT);
-			break;
-
-		case FAN1_DRYING:
-			generic_value_P(pgmstr_fan1_drying_speed, &config.fans_drying_speed[0], 0, 100, PERCENT);
-			break;
-
-		case FAN2_CURING:
-			generic_value_P(pgmstr_fan2_curing_speed, &config.fans_curing_speed[1], 0, 100, PERCENT);
-			break;
-
-		case FAN2_DRYING:
-			generic_value_P(pgmstr_fan2_drying_speed, &config.fans_drying_speed[1], 0, 100, PERCENT);
-			break;
-
+*/
+/*
 		case INFO:
 			{
 				uint8_t fans_error = hw.get_fans_error();
@@ -864,13 +663,15 @@ void menu_move(bool sound_echo) {
 				menu_position = scrolling_list_P(items);
 				break;
 			}
-
+*/
 		case RUN_MENU:
+			/*
 			if (!curing_mode && paused_time) {
 				generic_menu_P(3, paused ? pgmstr_ipa_tank_removed : pgmstr_pause, pgmstr_stop, pgmstr_back);
 			} else {
 				generic_menu_P(3, paused ? pgmstr_continue : pgmstr_pause, pgmstr_stop, pgmstr_back);
 			}
+			*/
 			break;
 
 		case RUNNING:
@@ -943,9 +744,11 @@ void menu_move(bool sound_echo) {
 
 		case SELFTEST:
 			if (selftest.phase == 0) {
+				/*
 				generic_menu_P(2, pgmstr_back, pgmstr_selftest);
 				lcd_print_back();
 				lcd_print_right(1);
+				*/
 			} else if (selftest.phase == 1) {
 				lcd.setCursor(1,0);
 				if (!selftest.cover_test) {
@@ -1298,50 +1101,6 @@ void button_press() {
 			}
 			break;
 
-		case SETTINGS:
-			switch (menu_position) {
-				case 0:
-					menu_position = 2;
-					state = HOME;
-					break;
-
-				case 1:
-					menu_position = 0;
-					state = SPEED_STATE;
-					break;
-
-				case 2:
-					menu_position = 0;
-					state = RUN_MODE;
-					break;
-
-				case 3:
-					menu_position = 0;
-					state = TEMPERATURES;
-					break;
-
-				case 4:
-					menu_position = 0;
-					state = SOUND_SETTINGS;
-					break;
-
-				case 5:
-					menu_position = 0;
-					state = FANS;
-					break;
-
-				case 6:
-					menu_position = 0;
-					state = LED_INTENSITY;
-					break;
-
-				default:
-					menu_position = 0;
-					state = INFO;
-					break;
-			}
-			break;
-
 		case SOUND_SETTINGS:
 			switch (menu_position) {
 				case 0:
@@ -1358,35 +1117,6 @@ void button_press() {
 				case 2:
 					menu_position = 0;
 					state = BEEP;
-					break;
-			}
-			break;
-
-		case FANS:
-			switch (menu_position) {
-				case 0:
-					menu_position = 5;
-					state = SETTINGS;
-					break;
-
-				case 1:
-					menu_position = 0;
-					state = FAN1_CURING;
-					break;
-
-				case 2:
-					menu_position = 0;
-					state = FAN1_DRYING;
-					break;
-
-				case 3:
-					menu_position = 0;
-					state = FAN2_CURING;
-					break;
-
-				default:
-					menu_position = 0;
-					state = FAN2_DRYING;
 					break;
 			}
 			break;
@@ -1458,25 +1188,6 @@ void button_press() {
 			}
 			break;
 
-		case SPEED_STATE:
-			switch (menu_position) {
-				case 0:
-					menu_position = 1;
-					state = SETTINGS;
-					break;
-
-				case 1:
-					menu_position = 1;
-					state = SPEED_CURING;
-					break;
-
-				default:
-					menu_position = 2;
-					state = SPEED_WASHING;
-					break;
-			}
-			break;
-
 		case SPEED_CURING:
 			write_config();
 			state = SPEED_STATE;
@@ -1485,35 +1196,6 @@ void button_press() {
 		case SPEED_WASHING:
 			write_config();
 			state = SPEED_STATE;
-			break;
-
-		case TIME:
-			switch (menu_position) {
-				case 0:
-					menu_position = 1;
-					state = HOME;
-					break;
-
-				case 1:
-					menu_position = 0;
-					state = TIME_CURING;
-					break;
-
-				case 2:
-					menu_position = 0;
-					state = TIME_DRYING;
-					break;
-
-				case 3:
-					menu_position = 0;
-					state = TIME_WASHING;
-					break;
-
-				default:
-					menu_position = 0;
-					state = TIME_RESIN_PREHEAT;
-					break;
-			}
 			break;
 
 		case BEEP:
@@ -1706,7 +1388,7 @@ void button_press() {
 		default:
 			break;
 	}
-	scrolling_list_set(menu_position);
+//	scrolling_list_set(menu_position);
 
 	rotary_diff = 128;
 	redraw_menu = true;

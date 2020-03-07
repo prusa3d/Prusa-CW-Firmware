@@ -9,7 +9,7 @@ Speed_Control::Speed_Control(hardware& hw, eeprom_v2_t& config) :
 		target_washing_period(WASHING_ROTATION_START),
 		do_acceleration(false),
 		us_last(0)
-{ }
+{}
 
 void Speed_Control::speed_configuration(bool curing_mode) {
 	hw.motor_configuration(curing_mode);

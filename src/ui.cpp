@@ -1,27 +1,24 @@
 #include "ui.h"
-#include "i18n.h"
 #include "defines.h"
-
-using Ter = LiquidCrystal_Prusa::Terminator;
 
 namespace UI {
 
 	// UI::Base
-	Base::Base(LiquidCrystal_Prusa& lcd, const char* label) :
-		lcd(lcd), label(label)
+	Base::Base(LiquidCrystal_Prusa& lcd, const char* label, uint8_t last_char) :
+		lcd(lcd), label(label), last_char(last_char)
 	{}
 
 	char* Base::get_menu_label(char* buffer, uint8_t buffer_size) {
 		USB_TRACE("Base::get_menu_label()\r\n");
 		buffer[--buffer_size] = char(0);	// end of text
-		buffer[--buffer_size] = char(RIGHT_CHAR);
+		if (last_char)
+			buffer[--buffer_size] = last_char;
 		memset(buffer, ' ', buffer_size);
 		const char* from = label;
 		uint8_t c = pgm_read_byte(from);
-		while (buffer_size && c) {
+		while (--buffer_size && c) {
 			*buffer = c;
 			++buffer;
-			--buffer_size;
 			c = pgm_read_byte(++from);
 		}
 	return buffer;
@@ -46,9 +43,9 @@ namespace UI {
 		if (events.control_down)
 			event_control_down();
 		if (events.button_short_press)
-			event_button_short_press();
+			return event_button_short_press();
 		if (events.button_long_press)
-			event_button_long_press();
+			return event_button_long_press();
 		return nullptr;		// TODO for change menu page
 	}
 
@@ -72,14 +69,16 @@ namespace UI {
 		// do nothing
 	}
 
-	void Base::event_button_short_press() {
+	Base* Base::event_button_short_press() {
 		USB_TRACE("Base::event_button_short_press()\r\n");
 		// do nothing
+		return nullptr;
 	}
 
-	void Base::event_button_long_press() {
+	Base* Base::event_button_long_press() {
 		USB_TRACE("Base::event_button_long_press()\r\n");
 		// do nothing
+		return nullptr;
 	}
 
 	void Base::event_control_up() {
@@ -92,10 +91,28 @@ namespace UI {
 		// do nothing
 	}
 
+	bool Base::in_menu_action() {
+		USB_TRACE("Base::in_menu_action()\r\n");
+		// do nothing
+		return false;
+	}
+
+
+	// UI:SN
+	SN::SN(LiquidCrystal_Prusa& lcd, const char* label) :
+		Base(lcd, label, 0)
+	{}
+
+	char* SN::get_menu_label(char* buffer, uint8_t buffer_size) {
+		USB_TRACE("SN::get_menu_label()\r\n");
+		strncpy_P(buffer, pgmstr_sn, buffer_size);
+		return Base::get_menu_label(buffer + sizeof(pgmstr_sn), buffer_size - sizeof(pgmstr_sn));
+	}
+
 
 	// UI::Menu
-	Menu::Menu(LiquidCrystal_Prusa& lcd, const char* label, Base** items, uint8_t items_count, bool is_root) :
-		Base(lcd, label), items(items), items_count(items_count), is_root(is_root), menu_offset(0), cursor_position(0)
+	Menu::Menu(LiquidCrystal_Prusa& lcd, const char* label, Base* const* items, uint8_t items_count) :
+		Base(lcd, label), items(items), items_count(items_count), menu_offset(0), cursor_position(0)
 	{
 		max_items = items_count < DISPLAY_LINES ? items_count : DISPLAY_LINES;
 	}
@@ -118,19 +135,18 @@ namespace UI {
 		}
 	}
 
-	void Menu::event_control_up() {
-		USB_TRACE("Menu::event_control_up()\r\n");
-		if (cursor_position) {
-			--cursor_position;
+	Base* Menu::event_button_short_press() {
+		USB_TRACE("Menu::event_button_short_press()\r\n");
+		if (items[menu_offset + cursor_position]->in_menu_action()) {
 			show();
-		} else if (menu_offset) {
-			--menu_offset;
-			show();
+			return nullptr;
+		} else {
+			return items[menu_offset + cursor_position];
 		}
 	}
 
-	void Menu::event_control_down() {
-		USB_TRACE("Menu::event_control_down()\r\n");
+	void Menu::event_control_up() {
+		USB_TRACE("Menu::event_control_up()\r\n");
 		if (cursor_position < max_items - 1) {
 			++cursor_position;
 			show();
@@ -140,29 +156,26 @@ namespace UI {
 		}
 	}
 
-
-	// UI::Bool
-	Bool::Bool(LiquidCrystal_Prusa& lcd, const char* label, uint8_t& value) :
-		Base(lcd, label), value(value)
-	{}
-
-	char* Bool::get_menu_label(char* buffer, uint8_t buffer_size) {
-		USB_TRACE("Bool::get_menu_label()\r\n");
-		char* remain = Base::get_menu_label(buffer, buffer_size);
-		// TODO "[on]" / "[off]"
-		return remain;
+	void Menu::event_control_down() {
+		USB_TRACE("Menu::event_control_down()\r\n");
+		if (cursor_position) {
+			--cursor_position;
+			show();
+		} else if (menu_offset) {
+			--menu_offset;
+			show();
+		}
 	}
 
 
 	// UI::Value
 	Value::Value(LiquidCrystal_Prusa& lcd, const char* label, uint8_t& value, const char* units, uint8_t max, uint8_t min) :
-		Base(lcd, label), value(value), units(units), max_value(max), min_value(min)
+		Base(lcd, label), units(units), value(value), max_value(max), min_value(min)
 	{}
 
 	void Value::show() {
 		USB_TRACE("Value::show()\r\n");
-		lcd.setCursor(1, 0);
-		lcd.printClear_P(label, 19, Ter::none);
+		lcd.print_P(label, 1, 0);
 		lcd.print(value, 5, 2);
 		lcd.print_P(units);
 	}
@@ -199,6 +212,56 @@ namespace UI {
 		Value(lcd, label, value, SI ? pgmstr_celsius : pgmstr_fahrenheit, SI ? MAX_TARGET_TEMP_C : MAX_TARGET_TEMP_F, SI ? MIN_TARGET_TEMP_C : MIN_TARGET_TEMP_F)
 	{}
 
+	void Temperature::units_change(bool SI) {
+		USB_TRACE("Temperature::units_change()\r\n");
+		if (SI) {
+			value = round(fahrenheit2celsius(value));
+			max_value = MAX_TARGET_TEMP_C;
+			min_value = MIN_TARGET_TEMP_C;
+		} else {
+			value = round(celsius2fahrenheit(value));
+			max_value = MAX_TARGET_TEMP_F;
+			min_value = MIN_TARGET_TEMP_F;
+		}
+	}
+
+
+	// UI::Bool
+	Bool::Bool(LiquidCrystal_Prusa& lcd, const char* label, uint8_t& value, const char* true_text, const char* false_text) :
+		Base(lcd, label, 0), true_text(true_text), false_text(false_text), value(value)
+	{}
+
+	char* Bool::get_menu_label(char* buffer, uint8_t buffer_size) {
+		USB_TRACE("Bool::get_menu_label()\r\n");
+		char* end = Base::get_menu_label(buffer, buffer_size);
+		const char* from = value ? true_text : false_text;
+		uint8_t c = pgm_read_byte(from);
+		while (buffer + buffer_size > ++end && c) {
+			*end = c;
+			c = pgm_read_byte(++from);
+		}
+		return end;
+	}
+
+	bool Bool::in_menu_action() {
+		USB_TRACE("Bool::in_menu_action()\r\n");
+		value ^= 1;
+		return true;
+	}
+
+	SI_switch::SI_switch(LiquidCrystal_Prusa& lcd, const char* label, uint8_t& value, Temperature* const* to_change, uint8_t to_change_count) :
+		Bool(lcd, label, value, pgmstr_celsius_units, pgmstr_fahrenheit_units), to_change(to_change), to_change_count(to_change_count)
+	{}
+
+	bool SI_switch::in_menu_action() {
+		USB_TRACE("SI_switch::in_menu_action()\r\n");
+		Bool::in_menu_action();
+		for (uint8_t i = 0; i < to_change_count; ++i) {
+			to_change[i]->units_change(value);
+		}
+		return true;
+	}
+
 
 	// UI::Option
 	Option::Option(LiquidCrystal_Prusa& lcd, const char* label, uint8_t& value, const char** options, uint8_t options_count) :
@@ -210,10 +273,8 @@ namespace UI {
 
 	void Option::show() {
 		USB_TRACE("Option::show()\r\n");
-		lcd.setCursor(1, 0);
-		lcd.printClear_P(label, 19, Ter::none);
-		lcd.setCursor(0, 2);
-		lcd.printClear_P(pgmstr_emptystr, 20, Ter::none);
+		lcd.print_P(label, 1, 0);
+		lcd.clearLine(2);
 		uint8_t len = strlen_P(options[value]);
 		if (value)
 			len += 2;

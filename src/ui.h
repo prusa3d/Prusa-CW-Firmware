@@ -2,13 +2,14 @@
 
 #include "LiquidCrystal_Prusa.h"
 #include "hardware.h"
+#include "i18n.h"
 
 namespace UI {
 
 	// UI::Base
 	class Base {
 	public:
-		Base(LiquidCrystal_Prusa& lcd, const char* label);
+		Base(LiquidCrystal_Prusa& lcd, const char* label, uint8_t last_char = RIGHT_CHAR);
 		virtual char* get_menu_label(char* buffer, uint8_t buffer_size);
 		virtual void show();
 		Base* process_events(Events events);
@@ -16,40 +17,40 @@ namespace UI {
 		virtual void event_cover_closed();
 		virtual void event_tank_inserted();
 		virtual void event_tank_removed();
-		virtual void event_button_short_press();
-		virtual void event_button_long_press();
+		virtual Base* event_button_short_press();
+		virtual Base* event_button_long_press();
 		virtual void event_control_up();
 		virtual void event_control_down();
+		virtual bool in_menu_action();
 	protected:
 		LiquidCrystal_Prusa &lcd;
 		const char* label;
+		uint8_t last_char;
+	};
+
+
+	// UI:SN
+	class SN : public Base {
+	public:
+		SN(LiquidCrystal_Prusa& lcd, const char* label);
+		char* get_menu_label(char* buffer, uint8_t buffer_size);
 	};
 
 
 	// UI::Menu
 	class Menu : public Base {
 	public:
-		Menu(LiquidCrystal_Prusa& lcd, const char* label, Base** items, uint8_t items_count, bool is_root = false);
+		Menu(LiquidCrystal_Prusa& lcd, const char* label, Base* const* items, uint8_t items_count);
 		void show();
+		Base* event_button_short_press();
 		void event_control_up();
 		void event_control_down();
 	private:
-		Base** items;
+		Base* const* items;
 		uint8_t items_count;
-		bool is_root;
 		uint8_t menu_offset;
 		uint8_t cursor_position;
 		uint8_t max_items;
-	};
-
-
-	// UI:Bool
-	class Bool : public Base {
-	public:
-		Bool(LiquidCrystal_Prusa& lcd, const char* label, uint8_t& value);
-		char* get_menu_label(char* buffer, uint8_t buffer_size);
-	private:
-		uint8_t& value;
 	};
 
 
@@ -61,8 +62,9 @@ namespace UI {
 		void event_control_up();
 		void event_control_down();
 	private:
-		uint8_t& value;
 		const char* units;
+	protected:
+		uint8_t& value;
 		uint8_t max_value;
 		uint8_t min_value;
 	};
@@ -85,6 +87,30 @@ namespace UI {
 	class Temperature : public Value {
 	public:
 		Temperature(LiquidCrystal_Prusa& lcd, const char* label, uint8_t& value, bool SI);
+		void units_change(bool SI);
+	};
+
+
+	// UI:Bool
+	class Bool : public Base {
+	public:
+		Bool(LiquidCrystal_Prusa& lcd, const char* label, uint8_t& value, const char* true_text = pgmstr_on, const char* false_text = pgmstr_off);
+		char* get_menu_label(char* buffer, uint8_t buffer_size);
+		bool in_menu_action();
+	private:
+		const char* true_text;
+		const char* false_text;
+	protected:
+		uint8_t& value;
+	};
+
+	class SI_switch : public Bool {
+	public:
+		SI_switch(LiquidCrystal_Prusa& lcd, const char* label, uint8_t& value, Temperature* const* to_change, uint8_t to_change_count);
+		bool in_menu_action();
+	private:
+		Temperature* const* to_change;
+		uint8_t to_change_count;
 	};
 
 

@@ -322,37 +322,11 @@ void LiquidCrystal_Prusa::print_P(const char *str, uint8_t col, uint8_t row) {
 	}
 }
 
-//! Print n characters from null terminated string c
-//! if there are not enough characters, prints ' ' for remaining n.
-//!
-//! @param str null terminated string to print
-//! @param n number of characters to print or clear
-//! ignored for terminator Terminator::serialNumber - prints always 18 characters
-//! @param terminator additional symbol to be printed
-//!  * Terminator::none none
-//!  * Terminator::back back arrow
-//!  * Terminator::right right arrow
-//!  * Terminator::serialNumber none
-void LiquidCrystal_Prusa::printClear_P(const char *str, uint_least8_t n, Terminator terminator) {
-	if (terminator == Terminator::serialNumber) {
-		print_P(pgmstr_sn);
-		n = 15;
-	} else if (terminator != Terminator::none) {
-		--n;
+void LiquidCrystal_Prusa::clearLine(uint8_t row) {
+	setCursor(0, row);
+	for (uint8_t i = 0; i < DISPLAY_CHARS; i++) {
+		write(' ');
 	}
-
-	uint8_t c;
-	while (n--) {
-		c = pgm_read_byte(str);
-		if (c) {
-			write(c);
-			++str;
-		} else {
-			write(' ');
-		}
-	}
-	if (terminator == Terminator::back) write(char(BACK_CHAR));
-	if (terminator == Terminator::right) write(char(RIGHT_CHAR));
 }
 
 /*********** mid level commands, for sending data/cmds */
