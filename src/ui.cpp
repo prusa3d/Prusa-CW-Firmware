@@ -6,7 +6,7 @@ namespace UI {
 
 	// UI::Base
 	Base::Base(LiquidCrystal_Prusa& lcd, const char* label, uint8_t last_char, bool menu_action) :
-		lcd(lcd), label(label), last_char(last_char), menu_action(menu_action)
+		lcd(lcd), label(label), last_char(last_char), menu_action(menu_action), long_press_ui_item(nullptr)
 	{}
 
 	char* Base::get_menu_label(char* buffer, uint8_t buffer_size) {
@@ -47,7 +47,7 @@ namespace UI {
 			return event_button_short_press();
 		if (events.button_long_press)
 			return event_button_long_press();
-		return nullptr;		// TODO for change menu page
+		return nullptr;
 	}
 
 	void Base::event_cover_opened() {
@@ -78,8 +78,7 @@ namespace UI {
 
 	Base* Base::event_button_long_press() {
 		USB_TRACE("Base::event_button_long_press()\r\n");
-		// do nothing
-		return nullptr;
+		return long_press_ui_item;
 	}
 
 	void Base::event_control_up() {
@@ -96,6 +95,10 @@ namespace UI {
 		USB_TRACE("Base::in_menu_action()\r\n");
 		// do nothing
 		return menu_action;
+	}
+
+	void Base::set_long_press_ui_item(Base *ui_item) {
+		long_press_ui_item = ui_item;
 	}
 
 

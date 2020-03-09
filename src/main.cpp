@@ -204,7 +204,6 @@ bool gastro_pan = false;
 bool paused_time = false;
 bool led_start = false;
 
-bool long_press = false;
 bool preheat_complete = false;
 bool pid_mode = false;
 
@@ -300,6 +299,8 @@ void setup() {
 	lcd.createChar(BACK_CHAR, Back);
 	lcd.createChar(RIGHT_CHAR, Right);
 	redraw_menu = true;
+
+	home_menu.set_long_press_ui_item(&curing_machine_mode);
 
 	active_menu->show();
 }
@@ -552,12 +553,6 @@ void loop() {
 
 /* TODO long press event
 			switch (state) {
-				case HOME:
-					state = RUN_MODE;
-					long_press = true;
-					redraw_menu = true;
-					menu_move(true);
-					break;
 				case INFO:
 					state = SELFTEST;
 					menu_position = 0;

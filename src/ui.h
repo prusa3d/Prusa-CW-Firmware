@@ -22,11 +22,13 @@ namespace UI {
 		virtual void event_control_up();
 		virtual void event_control_down();
 		virtual bool in_menu_action();
+		void set_long_press_ui_item(Base *ui_item);
 	protected:
 		LiquidCrystal_Prusa &lcd;
 		const char* label;
 		uint8_t last_char;
 		bool menu_action;
+		Base* long_press_ui_item;
 	};
 
 

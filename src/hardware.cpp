@@ -286,11 +286,11 @@ Events hardware::get_events(bool sound_response) {
 			button_timer = millis();
 		} else if (!long_press_active && millis() - button_timer > LONG_PRESS_TIME) {
 			long_press_active = true;
+			events.button_long_press = true;
 		}
 	} else if (button_active) {
 		if (long_press_active) {
 			long_press_active = false;
-			events.button_long_press = true;
 		} else {
 			events.button_short_press = true;
 		}
