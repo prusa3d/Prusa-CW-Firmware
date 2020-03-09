@@ -9,7 +9,7 @@ namespace UI {
 	// UI::Base
 	class Base {
 	public:
-		Base(LiquidCrystal_Prusa& lcd, const char* label, uint8_t last_char = RIGHT_CHAR);
+		Base(LiquidCrystal_Prusa& lcd, const char* label, uint8_t last_char = RIGHT_CHAR, bool menu_action = false);
 		virtual char* get_menu_label(char* buffer, uint8_t buffer_size);
 		virtual void show();
 		Base* process_events(Events events);
@@ -26,6 +26,7 @@ namespace UI {
 		LiquidCrystal_Prusa &lcd;
 		const char* label;
 		uint8_t last_char;
+		bool menu_action;
 	};
 
 
@@ -59,6 +60,7 @@ namespace UI {
 	public:
 		Value(LiquidCrystal_Prusa& lcd, const char* label, uint8_t& value, const char* units, uint8_t max, uint8_t min = 1);
 		void show();
+		Base* event_button_short_press();
 		void event_control_up();
 		void event_control_down();
 	private:
@@ -119,6 +121,7 @@ namespace UI {
 	public:
 		Option(LiquidCrystal_Prusa& lcd, const char* label, uint8_t& value, const char** options, uint8_t options_count);
 		void show();
+		Base* event_button_short_press();
 		void event_control_up();
 		void event_control_down();
 	private:

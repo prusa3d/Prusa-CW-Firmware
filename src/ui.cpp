@@ -1,11 +1,12 @@
 #include "ui.h"
 #include "defines.h"
+#include "config.h"
 
 namespace UI {
 
 	// UI::Base
-	Base::Base(LiquidCrystal_Prusa& lcd, const char* label, uint8_t last_char) :
-		lcd(lcd), label(label), last_char(last_char)
+	Base::Base(LiquidCrystal_Prusa& lcd, const char* label, uint8_t last_char, bool menu_action) :
+		lcd(lcd), label(label), last_char(last_char), menu_action(menu_action)
 	{}
 
 	char* Base::get_menu_label(char* buffer, uint8_t buffer_size) {
@@ -13,7 +14,7 @@ namespace UI {
 		buffer[--buffer_size] = char(0);	// end of text
 		if (last_char)
 			buffer[--buffer_size] = last_char;
-		memset(buffer, ' ', buffer_size);
+		memset(buffer, ' ', buffer_size++);
 		const char* from = label;
 		uint8_t c = pgm_read_byte(from);
 		while (--buffer_size && c) {
@@ -94,19 +95,21 @@ namespace UI {
 	bool Base::in_menu_action() {
 		USB_TRACE("Base::in_menu_action()\r\n");
 		// do nothing
-		return false;
+		return menu_action;
 	}
 
 
 	// UI:SN
 	SN::SN(LiquidCrystal_Prusa& lcd, const char* label) :
-		Base(lcd, label, 0)
+		Base(lcd, label, 0, true)
 	{}
 
 	char* SN::get_menu_label(char* buffer, uint8_t buffer_size) {
 		USB_TRACE("SN::get_menu_label()\r\n");
 		strncpy_P(buffer, pgmstr_sn, buffer_size);
-		return Base::get_menu_label(buffer + sizeof(pgmstr_sn), buffer_size - sizeof(pgmstr_sn));
+		// sizeof() != strlen()
+		uint8_t bs = buffer_size - (sizeof(pgmstr_sn) - 1);
+		return Base::get_menu_label(buffer + sizeof(pgmstr_sn) - 1, bs < SN_LENGTH+1 ? bs : SN_LENGTH+1);
 	}
 
 
@@ -180,6 +183,12 @@ namespace UI {
 		lcd.print_P(units);
 	}
 
+
+	Base* Value::event_button_short_press() {
+		write_config();
+		return this;
+	}
+
 	void Value::event_control_up() {
 		USB_TRACE("Value::event_control_up()\r\n");
 		if (value < max_value) {
@@ -246,6 +255,7 @@ namespace UI {
 	bool Bool::in_menu_action() {
 		USB_TRACE("Bool::in_menu_action()\r\n");
 		value ^= 1;
+		write_config();
 		return true;
 	}
 
@@ -255,10 +265,10 @@ namespace UI {
 
 	bool SI_switch::in_menu_action() {
 		USB_TRACE("SI_switch::in_menu_action()\r\n");
-		Bool::in_menu_action();
 		for (uint8_t i = 0; i < to_change_count; ++i) {
-			to_change[i]->units_change(value);
+			to_change[i]->units_change(value^1);
 		}
+		Bool::in_menu_action();
 		return true;
 	}
 
@@ -286,6 +296,11 @@ namespace UI {
 		lcd.print_P(options[value]);
 		if (value < options_count - 1)
 			lcd.print_P(pgmstr_gt);
+	}
+
+	Base* Option::event_button_short_press() {
+		write_config();
+		return this;
 	}
 
 	void Option::event_control_up() {

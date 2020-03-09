@@ -14,7 +14,7 @@
 #include "config.h"
 #include "ui.h"
 
-static const char* pgmstr_serial_number = reinterpret_cast<const char*>(0x7fe0); //!< 15 characters
+static const char* pgmstr_serial_number = reinterpret_cast<const char*>(0x7fe0); // see SN_LENGTH!!!
 
 Countimer tDown(Countimer::COUNT_DOWN);
 Countimer tUp(Countimer::COUNT_UP);
@@ -68,12 +68,12 @@ UI::Base* const fans_items[] = {&back, &fan1_curing_speed, &fan1_drying_speed, &
 UI::Menu fans_menu(lcd, pgmstr_fans, fans_items, COUNT_ITEMS(fans_items));
 
 // info menu
-UI::Base fw_version(lcd, pgmstr_fw_version);
+UI::Base fw_version(lcd, pgmstr_fw_version, 0, true);
 UI::SN serial_number(lcd, pgmstr_serial_number);
-UI::Base build_nr(lcd, pgmstr_build_nr);
-UI::Base fw_hash(lcd, pgmstr_fw_hash);
+UI::Base build_nr(lcd, pgmstr_build_nr, 0, true);
+UI::Base fw_hash(lcd, pgmstr_fw_hash, 0, true);
 #if FW_LOCAL_CHANGES
-UI::Base workspace_dirty(lcd, pgmstr_workspace_dirty);
+UI::Base workspace_dirty(lcd, pgmstr_workspace_dirty, 0, true);
 UI::Base* const info_items[] = {&back, &fw_version, &serial_number, &build_nr, &fw_hash, &workspace_dirty};
 #else
 UI::Base* const info_items[] = {&back, &fw_version, &serial_number, &build_nr, &fw_hash};
@@ -128,6 +128,7 @@ enum menu_state : uint8_t {
 	ERROR,
 	SELFTEST
 };
+
 
 volatile uint16_t* const bootKeyPtr = (volatile uint16_t *)(RAMEND - 1);
 static volatile uint16_t bootKeyPtrVal __attribute__ ((section (".noinit")));
@@ -301,7 +302,6 @@ void setup() {
 	redraw_menu = true;
 
 	active_menu->show();
-//	menu_move(true);
 }
 
 uint8_t PI_regulator(float & actualTemp, uint8_t targetTemp) {
@@ -527,7 +527,7 @@ void loop() {
 	speed_control.acceleration();
 
 	UI::Base* new_menu = active_menu->process_events(hw.get_events((bool)config.sound_response));
-	if (new_menu == &back) {
+	if (new_menu == &back || new_menu == active_menu) {
 		if (menu_depth) {
 			active_menu = menu_stack[--menu_depth];
 			lcd.clear();
@@ -643,26 +643,6 @@ void menu_move(bool sound_echo) {
 			lcd_print_right(1);
 			lcd_print_right(2);
 			break;
-*/
-/*
-		case INFO:
-			{
-				uint8_t fans_error = hw.get_fans_error();
-				Scrolling_item items[] = {
-					{pgmstr_fw_version, true, Ter::none},
-					{pgmstr_fan1_failure, (bool)(fans_error & FAN1_ERROR_MASK), Ter::none},
-					{pgmstr_fan2_failure, (bool)(fans_error & FAN2_ERROR_MASK), Ter::none},
-					{pgmstr_heater_failure, (bool)(fans_error & FAN3_ERROR_MASK), Ter::none},
-					{pgmstr_serial_number, true, Ter::serialNumber},
-					{pgmstr_build_nr, true, Ter::none},
-					{pgmstr_fw_hash, true, Ter::none}
-#if FW_LOCAL_CHANGES
-					,{pgmstr_workspace_dirty, true, Ter::none}
-#endif
-				};
-				menu_position = scrolling_list_P(items);
-				break;
-			}
 */
 		case RUN_MENU:
 			/*
@@ -1086,180 +1066,9 @@ void button_press() {
 					menu_move(true);
 					break;
 
-				case 1:
-					menu_position = 0;
-					state = TIME;
-					break;
-
-				case 2:
-					menu_position = 0;
-					state = SETTINGS;
-					break;
-
 				default:
 					break;
 			}
-			break;
-
-		case SOUND_SETTINGS:
-			switch (menu_position) {
-				case 0:
-					menu_position = 4;
-					state = SETTINGS;
-					break;
-
-				case 1:
-					config.sound_response ^= 1;
-					write_config();
-					redraw_menu = true;
-					break;
-
-				case 2:
-					menu_position = 0;
-					state = BEEP;
-					break;
-			}
-			break;
-
-		case LED_INTENSITY:
-			menu_position = 6;
-			write_config();
-			state = SETTINGS;
-			break;
-
-		case FAN1_CURING:
-			menu_position = 1;
-			write_config();
-			state = FANS;
-			break;
-
-		case FAN1_DRYING:
-			menu_position = 2;
-			write_config();
-			state = FANS;
-			break;
-
-		case FAN2_CURING:
-			menu_position = 3;
-			write_config();
-			state = FANS;
-			break;
-
-		case FAN2_DRYING:
-			menu_position = 4;
-			write_config();
-			state = FANS;
-			break;
-
-		case TEMPERATURES:
-			switch (menu_position) {
-				case 0:
-					menu_position = 3;
-					state = SETTINGS;
-					break;
-
-				case 1:
-					config.heat_to_target_temp ^= 1;
-					write_config();
-					redraw_menu = true;
-					break;
-
-				case 2:
-					menu_position = 0;
-					state = TARGET_TEMP;
-					break;
-
-				case 3:
-					menu_position = 0;
-					state = RESIN_TARGET_TEMP;
-					break;
-
-				default:
-					config.SI_unit_system ^= 1;
-					if (config.SI_unit_system) {
-						config.target_temp = round(fahrenheit2celsius(config.target_temp));
-						config.resin_target_temp = round(fahrenheit2celsius(config.resin_target_temp));
-					} else {
-						config.target_temp = round(celsius2fahrenheit(config.target_temp));
-						config.resin_target_temp = round(celsius2fahrenheit(config.resin_target_temp));
-					}
-					write_config();
-					break;
-			}
-			break;
-
-		case SPEED_CURING:
-			write_config();
-			state = SPEED_STATE;
-			break;
-
-		case SPEED_WASHING:
-			write_config();
-			state = SPEED_STATE;
-			break;
-
-		case BEEP:
-			write_config();
-			menu_position = 2;
-			state = SOUND_SETTINGS;
-			break;
-
-		case TIME_CURING:
-			write_config();
-			menu_position = 1;
-			state = TIME;
-			break;
-
-		case TIME_DRYING:
-			write_config();
-			menu_position = 2;
-			state = TIME;
-			break;
-
-		case TIME_WASHING:
-			write_config();
-			menu_position = 3;
-			state = TIME;
-			break;
-
-		case TIME_RESIN_PREHEAT:
-			write_config();
-			menu_position = 4;
-			state = TIME;
-			break;
-
-		case INFO:
-			menu_position = 7;
-			state = SETTINGS;
-			break;
-
-		case RUN_MODE:
-			write_config();
-			if (!long_press) {
-				menu_position = 2;
-				state = SETTINGS;
-			} else {
-				long_press = false;
-				menu_position = 0;
-				state = HOME;
-			}
-			break;
-
-		case TARGET_TEMP:
-			write_config();
-			menu_position = 2;
-			state = TEMPERATURES;
-			break;
-
-		case RESIN_TARGET_TEMP:
-			write_config();
-			menu_position = 3;
-			state = TEMPERATURES;
-			break;
-
-		case CONFIRM:
-			menu_position = 0;
-			state = HOME;
 			break;
 
 		case RUN_MENU:
