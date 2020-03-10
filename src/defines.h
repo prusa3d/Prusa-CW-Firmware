@@ -22,6 +22,7 @@
 #define BACKSLASH_CHAR		0
 #define BACK_CHAR			1
 #define RIGHT_CHAR			2
+#define PLAY_CHAR			3
 
 #define FAN1_ERROR_MASK		B001
 #define FAN2_ERROR_MASK		B010

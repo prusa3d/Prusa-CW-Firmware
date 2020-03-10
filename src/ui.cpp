@@ -141,6 +141,16 @@ namespace UI {
 		}
 	}
 
+	void Menu::event_tank_inserted() {
+		USB_TRACE("Menu::event_tank_inserted()\r\n");
+		show();
+	}
+
+	void Menu::event_tank_removed() {
+		USB_TRACE("Menu::event_tank_removed()\r\n");
+		show();
+	}
+
 	Base* Menu::event_button_short_press() {
 		USB_TRACE("Menu::event_button_short_press()\r\n");
 		if (items[menu_offset + cursor_position]->in_menu_action()) {
@@ -324,8 +334,33 @@ namespace UI {
 
 
 	// UI::State
-	State::State(LiquidCrystal_Prusa& lcd, const char* label) :
-		Base(lcd, label)
+	State::State(LiquidCrystal_Prusa& lcd, const char* label, hardware &hw) :
+		Base(lcd, label, PLAY_CHAR), hw(hw)
 	{}
 
+
+	// UI::Do_it
+	Do_it::Do_it(LiquidCrystal_Prusa& lcd, const char* label, hardware &hw, uint8_t& curing_machine_mode) :
+		State(lcd, label, hw), curing_machine_mode(curing_machine_mode)
+	{}
+
+	char* Do_it::get_menu_label(char* buffer, uint8_t buffer_size) {
+		USB_TRACE("Do_it::get_menu_label()\r\n");
+		if (hw.is_tank_inserted()) {
+			label = pgmstr_washing;
+		} else {
+			switch (curing_machine_mode) {
+				case 2:
+					label = pgmstr_drying;
+					break;
+				case 1:
+					label = pgmstr_curing;
+					break;
+				default:
+					label = pgmstr_drying_curing;
+					break;
+			}
+		}
+		return State::get_menu_label(buffer, buffer_size);
+	}
 }

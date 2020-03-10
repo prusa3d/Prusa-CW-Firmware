@@ -45,6 +45,8 @@ namespace UI {
 	public:
 		Menu(LiquidCrystal_Prusa& lcd, const char* label, Base* const* items, uint8_t items_count);
 		void show();
+		void event_tank_inserted();
+		void event_tank_removed();
 		Base* event_button_short_press();
 		void event_control_up();
 		void event_control_down();
@@ -136,8 +138,20 @@ namespace UI {
 	// UI::State
 	class State : public Base {
 	public:
-		State(LiquidCrystal_Prusa& lcd, const char* label);
+		State(LiquidCrystal_Prusa& lcd, const char* label, hardware &hw);
 	private:
+	protected:
+		hardware &hw;
+	};
+
+
+	// UI::Do_it
+	class Do_it : public State {
+	public:
+		Do_it(LiquidCrystal_Prusa& lcd, const char* label, hardware &hw, uint8_t& curing_machine_mode);
+		char* get_menu_label(char* buffer, uint8_t buffer_size);
+	private:
+		uint8_t& curing_machine_mode;
 	};
 
 }

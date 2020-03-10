@@ -81,15 +81,16 @@ UI::Base* const info_items[] = {&back, &fw_version, &serial_number, &build_nr, &
 UI::Menu info_menu(lcd, pgmstr_information, info_items, COUNT_ITEMS(info_items));
 
 // config menu
-const char* curing_machine_mode_options[] = {pgmstr_drying_curing, pgmstr_curing, pgmstr_drying, pgmstr_resin_preheat};
+const char* curing_machine_mode_options[] = {pgmstr_drying_curing, pgmstr_curing, pgmstr_drying};
 UI::Option curing_machine_mode(lcd, pgmstr_run_mode, config.curing_machine_mode, curing_machine_mode_options, COUNT_ITEMS(curing_machine_mode_options));
 UI::Percent led_pwm_value(lcd, pgmstr_led_intensity, config.led_pwm_value, 1);
 UI::Base* const config_items[] = {&back, &speed_menu, &curing_machine_mode, &temperature_menu, &sound_menu, &fans_menu, &led_pwm_value, &info_menu};
 UI::Menu config_menu(lcd, pgmstr_settings, config_items, COUNT_ITEMS(config_items));
 
 // home menu
-UI::State do_it(lcd, pgmstr_start_drying_curing);	// TODO multi label based on config and tank state
-UI::Base* const home_items[] = {&do_it, &run_time_menu, &config_menu};
+UI::Do_it do_it(lcd, pgmstr_emptystr, hw, config.curing_machine_mode);
+UI::State resin_preheat(lcd, pgmstr_resin_preheat, hw);
+UI::Base* const home_items[] = {&do_it, &resin_preheat, &run_time_menu, &config_menu};
 UI::Menu home_menu(lcd, pgmstr_emptystr, home_items, COUNT_ITEMS(home_items));
 
 // menu data
@@ -162,6 +163,17 @@ uint8_t Backslash[8] = {
 	B00100,
 	B00010,
 	B00001,
+	B00000,
+	B00000
+};
+
+uint8_t Play[8] = {
+	B00000,
+	B01000,
+	B01100,
+	B01110,
+	B01100,
+	B01000,
 	B00000,
 	B00000
 };
@@ -298,6 +310,7 @@ void setup() {
 	lcd.createChar(BACKSLASH_CHAR, Backslash);
 	lcd.createChar(BACK_CHAR, Back);
 	lcd.createChar(RIGHT_CHAR, Right);
+	lcd.createChar(PLAY_CHAR, Play);
 	redraw_menu = true;
 
 	home_menu.set_long_press_ui_item(&curing_machine_mode);
@@ -613,32 +626,6 @@ void menu_move(bool sound_echo) {
 	redraw_menu = false;
 
 	switch (state) {
-/*
-		case HOME:
-			static const char* first_line;
-			if (curing_mode) {
-				switch (config.curing_machine_mode) {
-					case 3:
-						first_line = pgmstr_start_resin_preheat;
-						break;
-					case 2:
-						first_line = pgmstr_start_drying;
-						break;
-					case 1:
-						first_line = pgmstr_start_curing;
-						break;
-					default:
-						first_line = pgmstr_start_drying_curing;
-						break;
-				}
-			} else {
-				first_line = pgmstr_start_washing;
-			}
-			generic_menu_P(3, first_line, pgmstr_run_time, hw.get_fans_error() ? pgmstr_settings_error : pgmstr_settings);
-			lcd_print_right(1);
-			lcd_print_right(2);
-			break;
-*/
 		case RUN_MENU:
 			/*
 			if (!curing_mode && paused_time) {
