@@ -1,110 +1,13 @@
+#include "LiquidCrystal_Prusa.h"
 #include "ui.h"
 #include "defines.h"
 #include "config.h"
 
 namespace UI {
 
-	// UI::Base
-	Base::Base(LiquidCrystal_Prusa& lcd, const char* label, uint8_t last_char, bool menu_action) :
-		lcd(lcd), label(label), last_char(last_char), menu_action(menu_action), long_press_ui_item(nullptr)
-	{}
-
-	char* Base::get_menu_label(char* buffer, uint8_t buffer_size) {
-		USB_TRACE("Base::get_menu_label()\r\n");
-		buffer[--buffer_size] = char(0);	// end of text
-		if (last_char)
-			buffer[--buffer_size] = last_char;
-		memset(buffer, ' ', buffer_size++);
-		const char* from = label;
-		uint8_t c = pgm_read_byte(from);
-		while (--buffer_size && c) {
-			*buffer = c;
-			++buffer;
-			c = pgm_read_byte(++from);
-		}
-	return buffer;
-	}
-
-	void Base::show() {
-		USB_TRACE("Base::show()\r\n");
-		// do nothing
-	}
-
-	Base* Base::process_events(Events events) {
-		if (events.cover_opened)
-			event_cover_opened();
-		if (events.cover_closed)
-			event_cover_closed();
-		if (events.tank_inserted)
-			event_tank_inserted();
-		if (events.tank_removed)
-			event_tank_removed();
-		if (events.control_up)
-			event_control_up();
-		if (events.control_down)
-			event_control_down();
-		if (events.button_short_press)
-			return event_button_short_press();
-		if (events.button_long_press)
-			return event_button_long_press();
-		return nullptr;
-	}
-
-	void Base::event_cover_opened() {
-		USB_TRACE("Base::event_cover_opened()\r\n");
-		// do nothing
-	}
-
-	void Base::event_cover_closed() {
-		USB_TRACE("Base::event_cover_closed()\r\n");
-		// do nothing
-	}
-
-	void Base::event_tank_inserted() {
-		USB_TRACE("Base::event_tank_inserted()\r\n");
-		// do nothing
-	}
-
-	void Base::event_tank_removed() {
-		USB_TRACE("Base::event_tank_removed()\r\n");
-		// do nothing
-	}
-
-	Base* Base::event_button_short_press() {
-		USB_TRACE("Base::event_button_short_press()\r\n");
-		// do nothing
-		return nullptr;
-	}
-
-	Base* Base::event_button_long_press() {
-		USB_TRACE("Base::event_button_long_press()\r\n");
-		return long_press_ui_item;
-	}
-
-	void Base::event_control_up() {
-		USB_TRACE("Base::event_control_up()\r\n");
-		// do nothing
-	}
-
-	void Base::event_control_down() {
-		USB_TRACE("Base::event_control_down()\r\n");
-		// do nothing
-	}
-
-	bool Base::in_menu_action() {
-		USB_TRACE("Base::in_menu_action()\r\n");
-		// do nothing
-		return menu_action;
-	}
-
-	void Base::set_long_press_ui_item(Base *ui_item) {
-		long_press_ui_item = ui_item;
-	}
-
-
 	// UI:SN
-	SN::SN(LiquidCrystal_Prusa& lcd, const char* label) :
-		Base(lcd, label, 0, true)
+	SN::SN(const char* label) :
+		Base(label, 0, true)
 	{}
 
 	char* SN::get_menu_label(char* buffer, uint8_t buffer_size) {
@@ -116,164 +19,9 @@ namespace UI {
 	}
 
 
-	// UI::Menu
-	Menu::Menu(LiquidCrystal_Prusa& lcd, const char* label, Base* const* items, uint8_t items_count) :
-		Base(lcd, label), items(items), items_count(items_count), menu_offset(0), cursor_position(0)
-	{
-		max_items = items_count < DISPLAY_LINES ? items_count : DISPLAY_LINES;
-	}
-
-	void Menu::show() {
-		USB_TRACE("Menu::show()\r\n");
-		// buffer is one byte shorter (we are printing from position 1, not 0)
-		char buffer[DISPLAY_CHARS];
-		for (uint8_t i = 0; i < max_items; ++i) {
-			lcd.setCursor(0, i);
-			if (i == cursor_position)
-				lcd.write('>');
-			else
-				lcd.write(' ');
-			items[i + menu_offset]->get_menu_label(buffer, sizeof(buffer));
-			USB_TRACE(">");
-			USB_TRACE(buffer);
-			USB_TRACE("<\r\n");
-			lcd.print(buffer);
-		}
-	}
-
-	void Menu::event_tank_inserted() {
-		USB_TRACE("Menu::event_tank_inserted()\r\n");
-		show();
-	}
-
-	void Menu::event_tank_removed() {
-		USB_TRACE("Menu::event_tank_removed()\r\n");
-		show();
-	}
-
-	Base* Menu::event_button_short_press() {
-		USB_TRACE("Menu::event_button_short_press()\r\n");
-		if (items[menu_offset + cursor_position]->in_menu_action()) {
-			show();
-			return nullptr;
-		} else {
-			return items[menu_offset + cursor_position];
-		}
-	}
-
-	void Menu::event_control_up() {
-		USB_TRACE("Menu::event_control_up()\r\n");
-		if (cursor_position < max_items - 1) {
-			++cursor_position;
-			show();
-		} else if (menu_offset < items_count - DISPLAY_LINES) {
-			++menu_offset;
-			show();
-		}
-	}
-
-	void Menu::event_control_down() {
-		USB_TRACE("Menu::event_control_down()\r\n");
-		if (cursor_position) {
-			--cursor_position;
-			show();
-		} else if (menu_offset) {
-			--menu_offset;
-			show();
-		}
-	}
-
-
-	// UI::Value
-	Value::Value(LiquidCrystal_Prusa& lcd, const char* label, uint8_t& value, const char* units, uint8_t max, uint8_t min) :
-		Base(lcd, label), units(units), value(value), max_value(max), min_value(min)
-	{}
-
-	void Value::show() {
-		USB_TRACE("Value::show()\r\n");
-		lcd.print_P(label, 1, 0);
-		lcd.print(value, 5, 2);
-		lcd.print_P(units);
-	}
-
-
-	Base* Value::event_button_short_press() {
-		write_config();
-		return this;
-	}
-
-	void Value::event_control_up() {
-		USB_TRACE("Value::event_control_up()\r\n");
-		if (value < max_value) {
-			value++;
-			show();
-		}
-	}
-
-	void Value::event_control_down() {
-		USB_TRACE("Value::event_control_up()\r\n");
-		if (value > min_value) {
-			value--;
-			show();
-		}
-	}
-
-	X_of_ten::X_of_ten(LiquidCrystal_Prusa& lcd, const char* label, uint8_t& value) :
-		Value(lcd, label, value, pgmstr_xoften, 10)
-	{}
-
-	Minutes::Minutes(LiquidCrystal_Prusa& lcd, const char* label, uint8_t& value, uint8_t max) :
-		Value(lcd, label, value, pgmstr_minutes, max)
-	{}
-
-	Percent::Percent(LiquidCrystal_Prusa& lcd, const char* label, uint8_t& value, uint8_t min) :
-		Value(lcd, label, value, pgmstr_percent, 100, min)
-	{}
-
-	Temperature::Temperature(LiquidCrystal_Prusa& lcd, const char* label, uint8_t& value, bool SI) :
-		Value(lcd, label, value, SI ? pgmstr_celsius : pgmstr_fahrenheit, SI ? MAX_TARGET_TEMP_C : MAX_TARGET_TEMP_F, SI ? MIN_TARGET_TEMP_C : MIN_TARGET_TEMP_F)
-	{}
-
-	void Temperature::units_change(bool SI) {
-		USB_TRACE("Temperature::units_change()\r\n");
-		if (SI) {
-			value = round(fahrenheit2celsius(value));
-			max_value = MAX_TARGET_TEMP_C;
-			min_value = MIN_TARGET_TEMP_C;
-		} else {
-			value = round(celsius2fahrenheit(value));
-			max_value = MAX_TARGET_TEMP_F;
-			min_value = MIN_TARGET_TEMP_F;
-		}
-	}
-
-
-	// UI::Bool
-	Bool::Bool(LiquidCrystal_Prusa& lcd, const char* label, uint8_t& value, const char* true_text, const char* false_text) :
-		Base(lcd, label, 0), true_text(true_text), false_text(false_text), value(value)
-	{}
-
-	char* Bool::get_menu_label(char* buffer, uint8_t buffer_size) {
-		USB_TRACE("Bool::get_menu_label()\r\n");
-		char* end = Base::get_menu_label(buffer, buffer_size);
-		const char* from = value ? true_text : false_text;
-		uint8_t c = pgm_read_byte(from);
-		while (buffer + buffer_size > ++end && c) {
-			*end = c;
-			c = pgm_read_byte(++from);
-		}
-		return end;
-	}
-
-	bool Bool::in_menu_action() {
-		USB_TRACE("Bool::in_menu_action()\r\n");
-		value ^= 1;
-		write_config();
-		return true;
-	}
-
-	SI_switch::SI_switch(LiquidCrystal_Prusa& lcd, const char* label, uint8_t& value, Temperature* const* to_change, uint8_t to_change_count) :
-		Bool(lcd, label, value, pgmstr_celsius_units, pgmstr_fahrenheit_units), to_change(to_change), to_change_count(to_change_count)
+	// UI::SI_switch
+	SI_switch::SI_switch(const char* label, uint8_t& value, Temperature* const* to_change, uint8_t to_change_count) :
+		Bool(label, value, pgmstr_celsius_units, pgmstr_fahrenheit_units), to_change(to_change), to_change_count(to_change_count)
 	{}
 
 	bool SI_switch::in_menu_action() {
@@ -286,62 +34,9 @@ namespace UI {
 	}
 
 
-	// UI::Option
-	Option::Option(LiquidCrystal_Prusa& lcd, const char* label, uint8_t& value, const char** options, uint8_t options_count) :
-		Base(lcd, label), value(value), options(options), options_count(options_count)
-	{
-		if (value > options_count)
-			value = 0;
-	}
-
-	void Option::show() {
-		USB_TRACE("Option::show()\r\n");
-		lcd.print_P(label, 1, 0);
-		lcd.clearLine(2);
-		uint8_t len = strlen_P(options[value]);
-		if (value)
-			len += 2;
-		if (value < options_count - 1)
-			len += 2;
-		lcd.setCursor((20 - len) / 2, 2);
-		if (value)
-			lcd.print_P(pgmstr_lt);
-		lcd.print_P(options[value]);
-		if (value < options_count - 1)
-			lcd.print_P(pgmstr_gt);
-	}
-
-	Base* Option::event_button_short_press() {
-		write_config();
-		return this;
-	}
-
-	void Option::event_control_up() {
-		USB_TRACE("Option::event_control_up()\r\n");
-		if (value < options_count - 1) {
-			value++;
-			show();
-		}
-	}
-
-	void Option::event_control_down() {
-		USB_TRACE("Option::event_control_down()\r\n");
-		if (value) {
-			value--;
-			show();
-		}
-	}
-
-
-	// UI::State
-	State::State(LiquidCrystal_Prusa& lcd, const char* label, hardware &hw) :
-		Base(lcd, label, PLAY_CHAR), hw(hw)
-	{}
-
-
 	// UI::Do_it
-	Do_it::Do_it(LiquidCrystal_Prusa& lcd, const char* label, hardware &hw, uint8_t& curing_machine_mode) :
-		State(lcd, label, hw), curing_machine_mode(curing_machine_mode)
+	Do_it::Do_it(const char* label, uint8_t& curing_machine_mode) :
+		State(label), curing_machine_mode(curing_machine_mode)
 	{}
 
 	char* Do_it::get_menu_label(char* buffer, uint8_t buffer_size) {
@@ -363,4 +58,105 @@ namespace UI {
 		}
 		return State::get_menu_label(buffer, buffer_size);
 	}
+
+
+	/*** menu definitions ***/
+	Base back(pgmstr_back, BACK_CHAR);
+
+	// run time menu
+	Minutes curing_run_time(pgmstr_curing_run_time, config.curing_run_time);
+	Minutes drying_run_time(pgmstr_drying_run_time, config.drying_run_time);
+	Minutes washing_run_time(pgmstr_washing_run_time, config.washing_run_time);
+	Minutes resin_preheat_run_time(pgmstr_resin_preheat_time, config.resin_preheat_run_time, 30);
+	Base* const run_time_items[] = {&back, &curing_run_time, &drying_run_time, &washing_run_time, &resin_preheat_run_time};
+	Menu run_time_menu(pgmstr_run_time, run_time_items, COUNT_ITEMS(run_time_items));
+
+	// speed menu
+	X_of_ten curing_speed(pgmstr_curing_speed, config.curing_speed);
+	X_of_ten washing_speed(pgmstr_washing_speed, config.washing_speed);
+	Base* const speed_items[] = {&back, &curing_speed, &washing_speed};
+	Menu speed_menu(pgmstr_rotation_speed, speed_items, COUNT_ITEMS(speed_items));
+
+	// temperatore menu
+	Bool heat_to_target_temp(pgmstr_warmup, config.heat_to_target_temp);
+	Temperature target_temp(pgmstr_drying_warmup_temp, config.target_temp, config.SI_unit_system);
+	Temperature resin_target_temp(pgmstr_resin_preheat_temp, config.resin_target_temp, config.SI_unit_system);
+	Temperature* const SI_changed[] = {&target_temp, &resin_target_temp};
+	SI_switch SI_unit_system(pgmstr_units, config.SI_unit_system, SI_changed, COUNT_ITEMS(SI_changed));
+	Base* const temperature_items[] = {&back, &heat_to_target_temp, &target_temp, &resin_target_temp, &SI_unit_system};
+	Menu temperature_menu(pgmstr_temperatures, temperature_items, COUNT_ITEMS(temperature_items));
+
+	// sound menu
+	Bool sound_response(pgmstr_control_echo, config.sound_response);
+	const char* finish_beep_options[] = {pgmstr_none, pgmstr_once, pgmstr_continuous};
+	Option finish_beep(pgmstr_finish_beep, config.finish_beep_mode, finish_beep_options, COUNT_ITEMS(finish_beep_options));
+	Base* const sound_items[] = {&back, &sound_response, &finish_beep};
+	Menu sound_menu(pgmstr_sound, sound_items, COUNT_ITEMS(sound_items));
+
+	// fans menu
+	Percent fan1_curing_speed(pgmstr_fan1_curing_speed, config.fans_curing_speed[0]);
+	Percent fan1_drying_speed(pgmstr_fan1_drying_speed, config.fans_drying_speed[0]);
+	Percent fan2_curing_speed(pgmstr_fan2_curing_speed, config.fans_curing_speed[1]);
+	Percent fan2_drying_speed(pgmstr_fan2_drying_speed, config.fans_drying_speed[1]);
+	Base* const fans_items[] = {&back, &fan1_curing_speed, &fan1_drying_speed, &fan2_curing_speed, &fan2_drying_speed};
+	Menu fans_menu(pgmstr_fans, fans_items, COUNT_ITEMS(fans_items));
+
+	// info menu
+	Base fw_version(pgmstr_fw_version, 0, true);
+	SN serial_number(pgmstr_serial_number);
+	Base build_nr(pgmstr_build_nr, 0, true);
+	Base fw_hash(pgmstr_fw_hash, 0, true);
+#if FW_LOCAL_CHANGES
+	Base workspace_dirty(pgmstr_workspace_dirty, 0, true);
+	Base* const info_items[] = {&back, &fw_version, &serial_number, &build_nr, &fw_hash, &workspace_dirty};
+#else
+	Base* const info_items[] = {&back, &fw_version, &serial_number, &build_nr, &fw_hash};
+#endif
+	Menu info_menu(pgmstr_information, info_items, COUNT_ITEMS(info_items));
+
+	// config menu
+	const char* curing_machine_mode_options[] = {pgmstr_drying_curing, pgmstr_curing, pgmstr_drying};
+	Option curing_machine_mode(pgmstr_run_mode, config.curing_machine_mode, curing_machine_mode_options, COUNT_ITEMS(curing_machine_mode_options));
+	Percent led_pwm_value(pgmstr_led_intensity, config.led_pwm_value, 1);
+	Base* const config_items[] = {&back, &speed_menu, &curing_machine_mode, &temperature_menu, &sound_menu, &fans_menu, &led_pwm_value, &info_menu};
+	Menu config_menu(pgmstr_settings, config_items, COUNT_ITEMS(config_items));
+
+	// home menu
+	Do_it do_it(pgmstr_emptystr, config.curing_machine_mode);
+	State resin_preheat(pgmstr_resin_preheat);
+	Base* const home_items[] = {&do_it, &resin_preheat, &run_time_menu, &config_menu};
+	Menu home_menu(pgmstr_emptystr, home_items, COUNT_ITEMS(home_items));
+
+	// menu data
+	Base* menu_stack[MAX_MENU_DEPTH];
+	uint8_t menu_depth = 0;
+	Base* active_menu = &home_menu;
+
+	void init() {
+		home_menu.set_long_press_ui_item(&curing_machine_mode);
+		active_menu->show();
+	}
+
+	void loop() {
+		Base* new_menu = active_menu->process_events(hw.get_events((bool)config.sound_response));
+		if (new_menu == &back || new_menu == active_menu) {
+			if (menu_depth) {
+				active_menu = menu_stack[--menu_depth];
+				lcd.clear();
+				active_menu->show();
+			} else {
+				USB_TRACE("ERROR: back at menu depth 0!\r\n");
+			}
+		} else if (new_menu) {
+			if (menu_depth < MAX_MENU_DEPTH) {
+				menu_stack[menu_depth++] = active_menu;
+				active_menu = new_menu;
+				lcd.clear();
+				active_menu->show();
+			} else {
+				USB_TRACE("ERROR: MAX_MENU_DEPTH reached!\r\n");
+			}
+		}
+	}
+
 }

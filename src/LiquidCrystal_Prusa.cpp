@@ -1,7 +1,7 @@
 #include "LiquidCrystal_Prusa.h"
 
 #include <stdio.h>
-#include <inttypes.h>
+
 #include "Arduino.h"
 #include "i18n.h"
 
@@ -383,3 +383,5 @@ void LiquidCrystal_Prusa::write8bits(uint8_t value) {
 	}
 	pulseEnable();
 }
+
+LiquidCrystal_Prusa lcd(LCD_PINS_RS, LCD_PINS_ENABLE, LCD_PWM_PIN, LCD_PINS_D4, LCD_PINS_D5, LCD_PINS_D6, LCD_PINS_D7);

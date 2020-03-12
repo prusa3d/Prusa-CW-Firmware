@@ -1,5 +1,7 @@
 #include <avr/wdt.h>
+
 #include "hardware.h"
+#include "config.h"
 
 float celsius2fahrenheit(float celsius) {
 	return 1.8 * celsius + 32;
@@ -9,20 +11,25 @@ float fahrenheit2celsius(float fahrenheit) {
 	return (fahrenheit - 32) / 1.8;
 }
 
-hardware::hardware() :
+Hardware::Hardware() :
 		fan_tacho_count{0, 0, 0},
+		microstep_control(WASHING_ROTATION_START),
 		therm1(THERM_READ_PIN, 5),
 		outputchip(0, 8),
 		myStepper(CS_PIN),
 		lcd_encoder_bits(0),
 		rotary_diff(0),
+		target_accel_period(WASHING_ROTATION_START),
 		fans_duty{0, 0, 0},
 		fans_pwm_pins{FAN1_PWM_PIN, FAN2_PWM_PIN},
 		fans_enable_pins{FAN1_PIN, FAN2_PIN},
 		fan_tacho_last_count{0, 0, 0},
-		rpm_fan_counter(0),
 		fan_errors(0),
+		accel_us_last(0),
+		loop_us_last(0),
 		button_timer(0),
+		PI_summ_err(0),
+		do_acceleration(false),
 		button_active(false),
 		long_press_active(false) {
 
@@ -62,105 +69,13 @@ hardware::hardware() :
 	tank_inserted = is_tank_inserted();
 }
 
-float hardware::therm1_read() {
+float Hardware::therm1_read() {
 	outputchip.digitalWrite(ANALOG_SWITCH_A, LOW);
 	outputchip.digitalWrite(ANALOG_SWITCH_B, LOW);
 	return therm1.analog2temp();
 }
 
-void hardware::run_motor() {
-	// enable stepper timer
-	TIMSK3 |= (1 << OCIE3A);
-	// enable stepper
-	outputchip.digitalWrite(EN_PIN, LOW);
-}
-
-void hardware::stop_motor() {
-	// disable stepper timer
-	TIMSK3 = 0;
-	// disable stepper
-	outputchip.digitalWrite(EN_PIN, HIGH);
-}
-
-void hardware::motor_configuration(bool curing_mode) {
-	if (curing_mode) {
-		myStepper.set_IHOLD_IRUN(10, 10, 0);
-		myStepper.set_mres(256);
-	} else {
-		myStepper.set_IHOLD_IRUN(31, 31, 5);
-		myStepper.set_mres(16);
-	}
-}
-
-void hardware::motor_noaccel_settings() {
-	myStepper.set_IHOLD_IRUN(10, 10, 5);
-}
-
-void hardware::run_heater() {
-	outputchip.digitalWrite(FAN_HEAT_PIN, HIGH);
-	fans_duty[2] = 100;
-	wdt_enable(WDTO_4S);
-}
-
-void hardware::stop_heater() {
-	outputchip.digitalWrite(FAN_HEAT_PIN, LOW);
-	fans_duty[2] = 0;
-	wdt_disable();
-}
-
-bool hardware::is_heater_running() {
-	return (bool)fans_duty[2];
-}
-
-void hardware::run_led(uint8_t pwm) {
-	analogWrite(LED_PWM_PIN, map(pwm, 0, 100, 0, 255));
-	outputchip.digitalWrite(LED_RELE_PIN, HIGH);
-}
-
-void hardware::stop_led() {
-	outputchip.digitalWrite(LED_RELE_PIN, LOW);
-	digitalWrite(LED_PWM_PIN, LOW);
-}
-
-bool hardware::is_led_on() {
-	return outputchip.digitalRead(LED_RELE_PIN) == HIGH;
-}
-
-bool hardware::is_cover_closed() {
-	return outputchip.digitalRead(COVER_OPEN_PIN) == LOW;
-}
-
-bool hardware::is_tank_inserted() {
-	return outputchip.digitalRead(WASH_DETECT_PIN) == LOW;
-}
-
-void hardware::echo() {
-	for (uint8_t i = 0; i < 10; ++i) {
-		digitalWrite(BEEPER, HIGH);
-		delayMicroseconds(100);
-		digitalWrite(BEEPER, LOW);
-		delayMicroseconds(100);
-	}
-}
-
-void hardware::beep() {
-	analogWrite(BEEPER, 220);
-	delay(50);
-	digitalWrite(BEEPER, LOW);
-	delay(250);
-	analogWrite(BEEPER, 220);
-	delay(50);
-	digitalWrite(BEEPER, LOW);
-}
-
-void hardware::warning_beep() {
-	analogWrite(BEEPER, 220);
-	delay(50);
-	digitalWrite(BEEPER, LOW);
-	delay(250);
-}
-
-void hardware::read_encoder() {
+void Hardware::encoder_read() {
 	uint8_t enc = 0;
 	if (digitalRead(BTN_EN1) == HIGH) {
 		enc |= B01;
@@ -207,7 +122,119 @@ void hardware::read_encoder() {
 	}
 }
 
-void hardware::set_fans_duty(uint8_t* duties) {
+void Hardware::run_motor() {
+	// enable stepper timer
+	TIMSK3 |= (1 << OCIE3A);
+	// enable stepper
+	outputchip.digitalWrite(EN_PIN, LOW);
+}
+
+void Hardware::stop_motor() {
+	// disable stepper timer
+	TIMSK3 = 0;
+	// disable stepper
+	outputchip.digitalWrite(EN_PIN, HIGH);
+}
+
+void Hardware::speed_configuration(bool curing_mode) {
+	if (curing_mode) {
+		myStepper.set_IHOLD_IRUN(10, 10, 0);
+		myStepper.set_mres(256);
+		microstep_control = map(config.curing_speed, 1, 10, MIN_CURING_SPEED, MAX_CURING_SPEED);
+	} else {
+		myStepper.set_IHOLD_IRUN(31, 31, 5);
+		myStepper.set_mres(16);
+		target_accel_period = map(config.washing_speed, 1, 10, MIN_WASHING_SPEED, MAX_WASHING_SPEED);
+		microstep_control = WASHING_ROTATION_START;
+		accel_us_last = millis();
+	}
+	do_acceleration = !curing_mode;
+}
+
+void Hardware::acceleration() {
+	if (microstep_control > target_accel_period) {
+		// step is 5 to MIN_WASHING_SPEED+5, then step is 1
+		if (microstep_control > MIN_WASHING_SPEED + 5)
+			microstep_control -= 4;
+		microstep_control--;
+#ifdef SERIAL_COM_DEBUG
+		SerialUSB.print("acceleration: ");
+		SerialUSB.print(microstep_control);
+		SerialUSB.print("->");
+		SerialUSB.print(target_accel_period);
+		SerialUSB.print("\r\n");
+#endif
+	} else {
+		do_acceleration = false;
+		myStepper.set_IHOLD_IRUN(10, 10, 5);
+	}
+}
+
+void Hardware::run_heater() {
+	outputchip.digitalWrite(FAN_HEAT_PIN, HIGH);
+	fans_duty[2] = 100;
+	wdt_enable(WDTO_4S);
+}
+
+void Hardware::stop_heater() {
+	outputchip.digitalWrite(FAN_HEAT_PIN, LOW);
+	fans_duty[2] = 0;
+	wdt_disable();
+}
+
+bool Hardware::is_heater_running() {
+	return (bool)fans_duty[2];
+}
+
+void Hardware::run_led(uint8_t pwm) {
+	analogWrite(LED_PWM_PIN, map(pwm, 0, 100, 0, 255));
+	outputchip.digitalWrite(LED_RELE_PIN, HIGH);
+}
+
+void Hardware::stop_led() {
+	outputchip.digitalWrite(LED_RELE_PIN, LOW);
+	digitalWrite(LED_PWM_PIN, LOW);
+}
+
+bool Hardware::is_led_on() {
+	return outputchip.digitalRead(LED_RELE_PIN) == HIGH;
+}
+
+bool Hardware::is_cover_closed() {
+	return outputchip.digitalRead(COVER_OPEN_PIN) == LOW;
+}
+
+bool Hardware::is_tank_inserted() {
+	return outputchip.digitalRead(WASH_DETECT_PIN) == LOW;
+}
+
+void Hardware::echo() {
+	for (uint8_t i = 0; i < 10; ++i) {
+		digitalWrite(BEEPER, HIGH);
+		delayMicroseconds(100);
+		digitalWrite(BEEPER, LOW);
+		delayMicroseconds(100);
+	}
+}
+
+void Hardware::beep() {
+	analogWrite(BEEPER, 220);
+	delay(50);
+	digitalWrite(BEEPER, LOW);
+	delay(250);
+	analogWrite(BEEPER, 220);
+	delay(50);
+	digitalWrite(BEEPER, LOW);
+}
+
+void Hardware::warning_beep() {
+	analogWrite(BEEPER, 220);
+	delay(50);
+	digitalWrite(BEEPER, LOW);
+	delay(250);
+}
+
+void Hardware::set_fans_duty(uint8_t* duties) {
 	for (uint8_t i = 0; i < 2; ++i) {
 		if (duties[i] != fans_duty[i]) {
 			fans_duty[i] = duties[i];
@@ -222,19 +249,17 @@ void hardware::set_fans_duty(uint8_t* duties) {
 	}
 }
 
-void hardware::fan_rpm() {
-	if (++rpm_fan_counter % 500 == 0) {
-		for (uint8_t i = 0; i < 3; ++i) {
-			if (fans_duty[i]) {
-				fan_errors &= ~(1 << i);
-				fan_errors |= (fan_tacho_count[i] <= fan_tacho_last_count[i]) << i;
-				if (fan_tacho_count[i] >= 10000) {
-					fan_tacho_count[i] = 0;
-				}
-				fan_tacho_last_count[i] = fan_tacho_count[i];
+void Hardware::fans_check() {
+	for (uint8_t i = 0; i < 3; ++i) {
+		if (fans_duty[i]) {
+			fan_errors &= ~(1 << i);
+			fan_errors |= (fan_tacho_count[i] <= fan_tacho_last_count[i]) << i;
+			if (fan_tacho_count[i] >= 10000) {
+				fan_tacho_count[i] = 0;
 			}
+			fan_tacho_last_count[i] = fan_tacho_count[i];
 		}
-		rpm_fan_counter = 0;
+	}
 /*
 #ifdef SERIAL_COM_DEBUG
 	SerialUSB.print("fan_errors: ");
@@ -242,18 +267,17 @@ void hardware::fan_rpm() {
 	SerialUSB.print("\r\n");
 #endif
 */
-	}
 }
 
-bool hardware::get_heater_error() {
+bool Hardware::get_heater_error() {
 	return (bool)(fan_errors & FAN3_ERROR_MASK);
 }
 
-uint8_t hardware::get_fans_error() {
+uint8_t Hardware::get_fans_error() {
 	return fan_errors;
 }
 
-Events hardware::get_events(bool sound_response) {
+Events Hardware::get_events(bool sound_response) {
 	Events events = {false, false, false, false, false, false, false, false};
 
 	if (get_heater_error())
@@ -312,3 +336,33 @@ Events hardware::get_events(bool sound_response) {
 
 	return events;
 }
+
+void Hardware::loop() {
+	unsigned long us_now = millis();
+	if (do_acceleration && us_now - accel_us_last >= 50) {
+		accel_us_last = us_now;
+		acceleration();
+	}
+	if (us_now - loop_us_last >= 500) {
+		loop_us_last = us_now;
+		fans_check();
+	}
+}
+
+uint8_t Hardware::PI_regulator(float actual_temp, uint8_t target_temp) {
+	double err_value = actual_temp - target_temp;
+	PI_summ_err += err_value;
+
+	if ((PI_summ_err > 10000) || (PI_summ_err < -10000)) {
+		PI_summ_err = 10000;
+	}
+
+	double new_speed = P * err_value + I * PI_summ_err;
+	if (new_speed > 100) {
+		new_speed = 100;
+	}
+
+	return new_speed;
+}
+
+Hardware hw;

@@ -11,6 +11,7 @@
 #define DISPLAY_CHARS		20
 #define DISPLAY_LINES		4
 #define SN_LENGTH			15
+#define MAX_MENU_DEPTH		5
 
 #define LAYOUT_TIME_X		3
 #define LAYOUT_TIME_Y		2

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Arduino.h"
+#include <stdint.h>
 
 //! @brief legacy configuration store structure
 //!
