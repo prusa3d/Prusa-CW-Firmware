@@ -26,8 +26,8 @@ static const char pgmstr_washing_speed[] PROGMEM = _("Washing speed");
 // temperatore menu
 static const char pgmstr_temperatures[] PROGMEM = _("Temperatures");
 static const char pgmstr_warmup[] PROGMEM = _("Warm-up");
-static const char pgmstr_drying_warmup_temp[] PROGMEM = _("Drying warm-up temp.");
-static const char pgmstr_resin_preheat_temp[] PROGMEM = _("Resin preheat temp.");
+static const char pgmstr_drying_warmup_temp[] PROGMEM = _("Drying warm-up t.");
+static const char pgmstr_resin_preheat_temp[] PROGMEM = _("Resin preheat t.");
 static const char pgmstr_units[] PROGMEM = _("Temp. units");
 static const char pgmstr_celsius_units[] PROGMEM = "[\xDF" "C]";
 static const char pgmstr_fahrenheit_units[] PROGMEM = "[\xDF" "F]";

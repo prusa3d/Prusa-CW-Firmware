@@ -102,15 +102,15 @@ namespace UI {
 	Menu fans_menu(pgmstr_fans, fans_items, COUNT_ITEMS(fans_items));
 
 	// info menu
-	Base fw_version(pgmstr_fw_version, 0, true);
 	SN serial_number(pgmstr_serial_number);
+	Base fw_version(pgmstr_fw_version, 0, true);
 	Base build_nr(pgmstr_build_nr, 0, true);
 	Base fw_hash(pgmstr_fw_hash, 0, true);
 #if FW_LOCAL_CHANGES
 	Base workspace_dirty(pgmstr_workspace_dirty, 0, true);
-	Base* const info_items[] = {&back, &fw_version, &serial_number, &build_nr, &fw_hash, &workspace_dirty};
+	Base* const info_items[] = {&back, &serial_number, &fw_version, &build_nr, &fw_hash, &workspace_dirty};
 #else
-	Base* const info_items[] = {&back, &fw_version, &serial_number, &build_nr, &fw_hash};
+	Base* const info_items[] = {&back, &serial_number, &fw_version, &build_nr, &fw_hash};
 #endif
 	Menu info_menu(pgmstr_information, info_items, COUNT_ITEMS(info_items));
 

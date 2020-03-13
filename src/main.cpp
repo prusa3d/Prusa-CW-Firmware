@@ -136,12 +136,32 @@ bool led_start = false;
 bool preheat_complete = false;
 bool pid_mode = false;
 
-// 1ms timer
+// 1ms timer for read controls
+void setupTimer0() {
+	OCR0A = 0xAF;
+	TIMSK0 |= _BV(OCIE0A);
+}
+
 ISR(TIMER0_COMPA_vect) {
 	hw.encoder_read();
 }
 
-// timmer for stepper move
+// timer for stepper move
+void setupTimer3() {
+	// Clear registers
+	TCCR3A = 0;
+	TCCR3B = 0;
+	TCNT3 = 0;
+	// 1 Hz (16000000/((15624+1)*1024))
+	OCR3A = 200;
+	// CTC
+	TCCR3B |= (1 << WGM32);
+	// Prescaler 1024
+	TCCR3B |= (1 << CS31) | (1 << CS30);
+	// Start with interrupt disabled
+	TIMSK3 = 0;
+}
+
 ISR(TIMER3_COMPA_vect) {
 	OCR3A = hw.microstep_control;
 	digitalWrite(STEP_PIN, HIGH);
@@ -173,27 +193,6 @@ static void start_washing();
 static void preheat();
 static void lcd_time_print();
 
-// timer for read controls
-void setupTimer0() {
-	OCR0A = 0xAF;
-	TIMSK0 |= _BV(OCIE0A);
-}
-
-// timer for stepper move
-void setupTimer3() {
-	// Clear registers
-	TCCR3A = 0;
-	TCCR3B = 0;
-	TCNT3 = 0;
-	// 1 Hz (16000000/((15624+1)*1024))
-	OCR3A = 200;
-	// CTC
-	TCCR3B |= (1 << WGM32);
-	// Prescaler 1024
-	TCCR3B |= (1 << CS31) | (1 << CS30);
-	// Start with interrupt disabled
-	TIMSK3 = 0;
-}
 
 void run_stop() {
 	menu_position = 0;
@@ -277,6 +276,7 @@ void loop() {
 	}
 
 	hw.loop();
+	UI::loop();
 
 
 	// TODO move to State
