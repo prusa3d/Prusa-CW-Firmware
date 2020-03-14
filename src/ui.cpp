@@ -11,7 +11,7 @@ namespace UI {
 	{}
 
 	char* SN::get_menu_label(char* buffer, uint8_t buffer_size) {
-		USB_TRACE("SN::get_menu_label()\r\n");
+		USB_PRINTLN(__PRETTY_FUNCTION__);
 		strncpy_P(buffer, pgmstr_sn, buffer_size);
 		// sizeof() != strlen()
 		uint8_t bs = buffer_size - (sizeof(pgmstr_sn) - 1);
@@ -25,7 +25,7 @@ namespace UI {
 	{}
 
 	bool SI_switch::in_menu_action() {
-		USB_TRACE("SI_switch::in_menu_action()\r\n");
+		USB_PRINTLN(__PRETTY_FUNCTION__);
 		for (uint8_t i = 0; i < to_change_count; ++i) {
 			to_change[i]->units_change(value^1);
 		}
@@ -40,7 +40,7 @@ namespace UI {
 	{}
 
 	char* Do_it::get_menu_label(char* buffer, uint8_t buffer_size) {
-		USB_TRACE("Do_it::get_menu_label()\r\n");
+		USB_PRINTLN(__PRETTY_FUNCTION__);
 		if (hw.is_tank_inserted()) {
 			label = pgmstr_washing;
 		} else {
@@ -145,7 +145,7 @@ namespace UI {
 				lcd.clear();
 				active_menu->show();
 			} else {
-				USB_TRACE("ERROR: back at menu depth 0!\r\n");
+				USB_PRINTLN("ERROR: back at menu depth 0!");
 			}
 		} else if (new_menu) {
 			if (menu_depth < MAX_MENU_DEPTH) {
@@ -154,7 +154,7 @@ namespace UI {
 				lcd.clear();
 				active_menu->show();
 			} else {
-				USB_TRACE("ERROR: MAX_MENU_DEPTH reached!\r\n");
+				USB_PRINTLN("ERROR: MAX_MENU_DEPTH reached!");
 			}
 		}
 	}

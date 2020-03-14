@@ -1,9 +1,11 @@
 #define SERIAL_COM_DEBUG	//!< Set up for communication through USB
 
 #ifdef SERIAL_COM_DEBUG
-#define USB_TRACE(x)		SerialUSB.print(x)
+#define USB_PRINT(x)		SerialUSB.print(x)
+#define USB_PRINTLN(x)		SerialUSB.println(x)
 #else
-#define USB_TRACE(x)
+#define USB_PRINT(x)
+#define USB_PRINTLN(x)
 #endif
 
 #define COUNT_ITEMS(x)		(sizeof(x)/sizeof(x[0]))

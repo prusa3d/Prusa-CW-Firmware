@@ -11,7 +11,7 @@ namespace UI {
 	{}
 
 	char* Base::get_menu_label(char* buffer, uint8_t buffer_size) {
-		USB_TRACE("Base::get_menu_label()\r\n");
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		buffer[--buffer_size] = char(0);	// end of text
 		if (last_char)
 			buffer[--buffer_size] = last_char;
@@ -27,7 +27,7 @@ namespace UI {
 	}
 
 	void Base::show() {
-		USB_TRACE("Base::show()\r\n");
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		// do nothing
 	}
 
@@ -52,48 +52,48 @@ namespace UI {
 	}
 
 	void Base::event_cover_opened() {
-		USB_TRACE("Base::event_cover_opened()\r\n");
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		// do nothing
 	}
 
 	void Base::event_cover_closed() {
-		USB_TRACE("Base::event_cover_closed()\r\n");
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		// do nothing
 	}
 
 	void Base::event_tank_inserted() {
-		USB_TRACE("Base::event_tank_inserted()\r\n");
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		// do nothing
 	}
 
 	void Base::event_tank_removed() {
-		USB_TRACE("Base::event_tank_removed()\r\n");
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		// do nothing
 	}
 
 	Base* Base::event_button_short_press() {
-		USB_TRACE("Base::event_button_short_press()\r\n");
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		// do nothing
 		return nullptr;
 	}
 
 	Base* Base::event_button_long_press() {
-		USB_TRACE("Base::event_button_long_press()\r\n");
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		return long_press_ui_item;
 	}
 
 	void Base::event_control_up() {
-		USB_TRACE("Base::event_control_up()\r\n");
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		// do nothing
 	}
 
 	void Base::event_control_down() {
-		USB_TRACE("Base::event_control_down()\r\n");
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		// do nothing
 	}
 
 	bool Base::in_menu_action() {
-		USB_TRACE("Base::in_menu_action()\r\n");
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		// do nothing
 		return menu_action;
 	}
@@ -111,7 +111,7 @@ namespace UI {
 	}
 
 	void Menu::show() {
-		USB_TRACE("Menu::show()\r\n");
+		USB_PRINTLN(__PRETTY_FUNCTION__);
 		// buffer is one byte shorter (we are printing from position 1, not 0)
 		char buffer[DISPLAY_CHARS];
 		for (uint8_t i = 0; i < max_items; ++i) {
@@ -121,25 +121,27 @@ namespace UI {
 			else
 				lcd.write(' ');
 			items[i + menu_offset]->get_menu_label(buffer, sizeof(buffer));
-			USB_TRACE(">");
-			USB_TRACE(buffer);
-			USB_TRACE("<\r\n");
+/*
+			USB_PRINT(" >");
+			USB_PRINT(buffer);
+			USB_PRINTLN("<");
+*/
 			lcd.print(buffer);
 		}
 	}
 
 	void Menu::event_tank_inserted() {
-		USB_TRACE("Menu::event_tank_inserted()\r\n");
+		USB_PRINTLN(__PRETTY_FUNCTION__);
 		show();
 	}
 
 	void Menu::event_tank_removed() {
-		USB_TRACE("Menu::event_tank_removed()\r\n");
+		USB_PRINTLN(__PRETTY_FUNCTION__);
 		show();
 	}
 
 	Base* Menu::event_button_short_press() {
-		USB_TRACE("Menu::event_button_short_press()\r\n");
+		USB_PRINTLN(__PRETTY_FUNCTION__);
 		if (items[menu_offset + cursor_position]->in_menu_action()) {
 			show();
 			return nullptr;
@@ -149,7 +151,7 @@ namespace UI {
 	}
 
 	void Menu::event_control_up() {
-		USB_TRACE("Menu::event_control_up()\r\n");
+		USB_PRINTLN(__PRETTY_FUNCTION__);
 		if (cursor_position < max_items - 1) {
 			++cursor_position;
 			show();
@@ -160,7 +162,7 @@ namespace UI {
 	}
 
 	void Menu::event_control_down() {
-		USB_TRACE("Menu::event_control_down()\r\n");
+		USB_PRINTLN(__PRETTY_FUNCTION__);
 		if (cursor_position) {
 			--cursor_position;
 			show();
@@ -177,7 +179,7 @@ namespace UI {
 	{}
 
 	void Value::show() {
-		USB_TRACE("Value::show()\r\n");
+		USB_PRINTLN(__PRETTY_FUNCTION__);
 		lcd.print_P(label, 1, 0);
 		lcd.print(value, 5, 2);
 		lcd.print_P(units);
@@ -190,7 +192,7 @@ namespace UI {
 	}
 
 	void Value::event_control_up() {
-		USB_TRACE("Value::event_control_up()\r\n");
+		USB_PRINTLN(__PRETTY_FUNCTION__);
 		if (value < max_value) {
 			value++;
 			show();
@@ -198,7 +200,7 @@ namespace UI {
 	}
 
 	void Value::event_control_down() {
-		USB_TRACE("Value::event_control_up()\r\n");
+		USB_PRINTLN(__PRETTY_FUNCTION__);
 		if (value > min_value) {
 			value--;
 			show();
@@ -222,7 +224,7 @@ namespace UI {
 	{}
 
 	void Temperature::units_change(bool SI) {
-		USB_TRACE("Temperature::units_change()\r\n");
+		USB_PRINTLN(__PRETTY_FUNCTION__);
 		if (SI) {
 			value = round(fahrenheit2celsius(value));
 			max_value = MAX_TARGET_TEMP_C;
@@ -241,7 +243,7 @@ namespace UI {
 	{}
 
 	char* Bool::get_menu_label(char* buffer, uint8_t buffer_size) {
-		USB_TRACE("Bool::get_menu_label()\r\n");
+		USB_PRINTLN(__PRETTY_FUNCTION__);
 		char* end = Base::get_menu_label(buffer, buffer_size);
 		const char* from = value ? true_text : false_text;
 		uint8_t c = pgm_read_byte(from);
@@ -253,7 +255,7 @@ namespace UI {
 	}
 
 	bool Bool::in_menu_action() {
-		USB_TRACE("Bool::in_menu_action()\r\n");
+		USB_PRINTLN(__PRETTY_FUNCTION__);
 		value ^= 1;
 		write_config();
 		return true;
@@ -269,7 +271,7 @@ namespace UI {
 	}
 
 	void Option::show() {
-		USB_TRACE("Option::show()\r\n");
+		USB_PRINTLN(__PRETTY_FUNCTION__);
 		lcd.print_P(label, 1, 0);
 		lcd.clearLine(2);
 		uint8_t len = strlen_P(options[value]);
@@ -291,7 +293,7 @@ namespace UI {
 	}
 
 	void Option::event_control_up() {
-		USB_TRACE("Option::event_control_up()\r\n");
+		USB_PRINTLN(__PRETTY_FUNCTION__);
 		if (value < options_count - 1) {
 			value++;
 			show();
@@ -299,7 +301,7 @@ namespace UI {
 	}
 
 	void Option::event_control_down() {
-		USB_TRACE("Option::event_control_down()\r\n");
+		USB_PRINTLN(__PRETTY_FUNCTION__);
 		if (value) {
 			value--;
 			show();
