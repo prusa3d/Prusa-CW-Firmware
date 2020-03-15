@@ -33,7 +33,7 @@ VERSION = ${BUILD_DIR}/version.h
 
 default: ${HEXS}
 
-.PHONY: clean lang_extract default
+.PHONY: clean lang_extract default ${VERSION}.tmp
 
 .SECONDARY:
 
