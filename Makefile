@@ -86,6 +86,10 @@ $(LANG_TEMPLATE): $(wildcard ${I18N}/*.h)
 xxx:
 	msgconv --stringtable-output cs.po
 
+tags: ${CSRCS} ${CPPSRCS} $(wildcard ${I18N}/*.h)
+	arduino-ctags $^
+
+
 $(BUILD_DIR)/%.d: %.c ${VERSION} Makefile | $${@D}/.
 	@${CC} ${CFLAGS} $< -MM -MT ${@:.d=.o} >$@
 

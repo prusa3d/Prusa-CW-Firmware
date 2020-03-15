@@ -46,7 +46,8 @@ typedef struct {
 	uint8_t led_pwm_value;
 	uint8_t fans_curing_speed[2];
 	uint8_t fans_drying_speed[2];
-	uint8_t fans_preheat_speed[2];
+	uint8_t fans_washing_speed[2];
+	uint8_t fans_menu_speed[2];
 } eeprom_v2_t;
 
 extern eeprom_v2_t config;

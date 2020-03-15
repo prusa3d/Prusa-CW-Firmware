@@ -11,7 +11,7 @@ namespace UI {
 	{}
 
 	char* SN::get_menu_label(char* buffer, uint8_t buffer_size) {
-		USB_PRINTLN(__PRETTY_FUNCTION__);
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		strncpy_P(buffer, pgmstr_sn, buffer_size);
 		// sizeof() != strlen()
 		uint8_t bs = buffer_size - (sizeof(pgmstr_sn) - 1);
@@ -25,7 +25,7 @@ namespace UI {
 	{}
 
 	bool SI_switch::in_menu_action() {
-		USB_PRINTLN(__PRETTY_FUNCTION__);
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		for (uint8_t i = 0; i < to_change_count; ++i) {
 			to_change[i]->units_change(value^1);
 		}
@@ -35,12 +35,12 @@ namespace UI {
 
 
 	// UI::Do_it
-	Do_it::Do_it(const char* label, uint8_t& curing_machine_mode) :
-		State(label), curing_machine_mode(curing_machine_mode)
+	Do_it::Do_it(const char* label, uint8_t& curing_machine_mode, States::Base* long_press_state) :
+		State(label, nullptr, long_press_state), curing_machine_mode(curing_machine_mode)
 	{}
 
 	char* Do_it::get_menu_label(char* buffer, uint8_t buffer_size) {
-		USB_PRINTLN(__PRETTY_FUNCTION__);
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		if (hw.is_tank_inserted()) {
 			label = pgmstr_washing;
 		} else {
@@ -57,6 +57,26 @@ namespace UI {
 			}
 		}
 		return State::get_menu_label(buffer, buffer_size);
+	}
+
+	void Do_it::show() {
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
+		if (hw.is_tank_inserted()) {
+			state = &States::washing;
+		} else {
+			switch (curing_machine_mode) {
+				case 2:
+					state = &States::drying;
+					break;
+				case 1:
+					state = &States::curing;
+					break;
+				default:
+					state = &States::drying_curing;
+					break;
+			}
+		}
+		State::show();
 	}
 
 
@@ -93,12 +113,32 @@ namespace UI {
 	Base* const sound_items[] = {&back, &sound_response, &finish_beep};
 	Menu sound_menu(pgmstr_sound, sound_items, COUNT_ITEMS(sound_items));
 
+	// fans curing speed
+	Percent fan1_curing_speed(pgmstr_fan1_curing_speed, config.fans_curing_speed[0], MIN_FAN_SPEED);
+	Percent fan2_curing_speed(pgmstr_fan2_curing_speed, config.fans_curing_speed[1], MIN_FAN_SPEED);
+	Base* const fans_curing_speed[] = {&back, &fan1_curing_speed, &fan2_curing_speed};
+	Menu fans_curing_menu(pgmstr_fans_curing, fans_curing_speed, COUNT_ITEMS(fans_curing_speed));
+
+	// fans drying speed
+	Percent fan1_drying_speed(pgmstr_fan1_drying_speed, config.fans_drying_speed[0], MIN_FAN_SPEED);
+	Percent fan2_drying_speed(pgmstr_fan2_drying_speed, config.fans_drying_speed[1], MIN_FAN_SPEED);
+	Base* const fans_drying_speed[] = {&back, &fan1_drying_speed, &fan2_drying_speed};
+	Menu fans_drying_menu(pgmstr_fans_drying, fans_drying_speed, COUNT_ITEMS(fans_drying_speed));
+
+	// fans washing speed
+	Percent fan1_washing_speed(pgmstr_fan1_washing_speed, config.fans_washing_speed[0], MIN_FAN_SPEED);
+	Percent fan2_washing_speed(pgmstr_fan2_washing_speed, config.fans_washing_speed[1], MIN_FAN_SPEED);
+	Base* const fans_washing_speed[] = {&back, &fan1_washing_speed, &fan2_washing_speed};
+	Menu fans_washing_menu(pgmstr_fans_washing, fans_washing_speed, COUNT_ITEMS(fans_washing_speed));
+
+	// fans menu speed
+	Percent fan1_menu_speed(pgmstr_fan1_menu_speed, config.fans_menu_speed[0], MIN_FAN_SPEED);
+	Percent fan2_menu_speed(pgmstr_fan2_menu_speed, config.fans_menu_speed[1], MIN_FAN_SPEED);
+	Base* const fans_menu_speed[] = {&back, &fan1_menu_speed, &fan2_menu_speed};
+	Menu fans_menu_menu(pgmstr_fans_menu, fans_menu_speed, COUNT_ITEMS(fans_menu_speed));
+
 	// fans menu
-	Percent fan1_curing_speed(pgmstr_fan1_curing_speed, config.fans_curing_speed[0]);
-	Percent fan1_drying_speed(pgmstr_fan1_drying_speed, config.fans_drying_speed[0]);
-	Percent fan2_curing_speed(pgmstr_fan2_curing_speed, config.fans_curing_speed[1]);
-	Percent fan2_drying_speed(pgmstr_fan2_drying_speed, config.fans_drying_speed[1]);
-	Base* const fans_items[] = {&back, &fan1_curing_speed, &fan1_drying_speed, &fan2_curing_speed, &fan2_drying_speed};
+	Base* const fans_items[] = {&back, &fans_curing_menu, &fans_drying_menu, &fans_washing_menu, &fans_menu_menu};
 	Menu fans_menu(pgmstr_fans, fans_items, COUNT_ITEMS(fans_items));
 
 	// info menu
@@ -122,8 +162,8 @@ namespace UI {
 	Menu config_menu(pgmstr_settings, config_items, COUNT_ITEMS(config_items));
 
 	// home menu
-	Do_it do_it(pgmstr_emptystr, config.curing_machine_mode);
-	State resin_preheat(pgmstr_resin_preheat);
+	Do_it do_it(pgmstr_emptystr, config.curing_machine_mode, &States::menu);
+	State resin_preheat(pgmstr_resin_preheat, &States::preheat, &States::menu);
 	Base* const home_items[] = {&do_it, &resin_preheat, &run_time_menu, &config_menu};
 	Menu home_menu(pgmstr_emptystr, home_items, COUNT_ITEMS(home_items));
 
@@ -134,6 +174,8 @@ namespace UI {
 
 	void init() {
 		home_menu.set_long_press_ui_item(&curing_machine_mode);
+		do_it.set_long_press_ui_item(&back);
+		resin_preheat.set_long_press_ui_item(&back);
 		active_menu->show();
 	}
 

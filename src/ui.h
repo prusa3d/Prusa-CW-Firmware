@@ -26,11 +26,13 @@ namespace UI {
 	// UI::Do_it
 	class Do_it : public State {
 	public:
-		Do_it(const char* label, uint8_t& curing_machine_mode);
+		Do_it(const char* label, uint8_t& curing_machine_mode, States::Base* long_press_state);
 		char* get_menu_label(char* buffer, uint8_t buffer_size);
+		void show();
 	private:
 		uint8_t& curing_machine_mode;
 	};
+
 
 	void init();
 	void loop();

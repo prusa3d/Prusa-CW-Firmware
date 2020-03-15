@@ -23,7 +23,6 @@ class Hardware {
 public:
 	Hardware();
 
-	float therm1_read();
 	void encoder_read();
 
 	void run_motor();
@@ -35,7 +34,7 @@ public:
 	void stop_heater();
 	bool is_heater_running();
 
-	void run_led(uint8_t);
+	void run_led(uint8_t pwm);
 	void stop_led();
 	bool is_led_on();
 
@@ -46,8 +45,7 @@ public:
 	void beep();
 	void warning_beep();
 
-	void set_fans_duty(uint8_t*);
-	void fans_check();
+	void set_fans(uint8_t* duties, uint8_t target_temp);
 	bool get_heater_error();
 	uint8_t get_fans_error();
 
@@ -57,27 +55,33 @@ public:
 
 	volatile int fan_tacho_count[3];
 	volatile uint8_t microstep_control;
+	float chamber_temp;
 
-	uint8_t PI_regulator(float actual_temp, uint8_t target_temp);	// FIXME private
 private:
-
 	thermistor therm1;
 	MCP outputchip;
 	Trinamic_TMC2130 myStepper;
+
+	float therm1_read();
+	void fans_duty();
+	void fans_PI_regulator();
+	void fans_check();
 
 	uint8_t lcd_encoder_bits;
 	volatile int8_t rotary_diff;
 	uint8_t target_accel_period;
 
-	uint8_t fans_duty[3];
-	uint8_t fans_pwm_pins[2];
-	uint8_t fans_enable_pins[2];
+	uint8_t fan_duty[3];
+	uint8_t fan_pwm_pins[2];
+	uint8_t fan_enable_pins[2];
+	uint8_t fans_target_temp;
 
 	int fan_tacho_last_count[3];
 	uint8_t fan_errors;
 
 	unsigned long accel_us_last;
-	unsigned long loop_us_last;
+	unsigned long fans_us_last;
+	unsigned long therm_us_last;
 	unsigned long button_timer;
 	double PI_summ_err;
 	bool do_acceleration;

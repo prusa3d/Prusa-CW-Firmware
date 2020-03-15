@@ -2,6 +2,7 @@
 
 #include "hardware.h"
 #include "i18n.h"
+#include "states.h"
 
 namespace UI {
 
@@ -119,7 +120,11 @@ namespace UI {
 	// UI::State
 	class State : public Base {
 	public:
-		State(const char* label);
-	private:
+		State(const char* label, States::Base* state, States::Base* long_press_state);
+		void show();
+		Base* event_button_long_press();
+	protected:
+		States::Base* state;
+		States::Base* long_press_state;
 	};
 }

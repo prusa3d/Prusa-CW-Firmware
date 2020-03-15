@@ -111,7 +111,7 @@ namespace UI {
 	}
 
 	void Menu::show() {
-		USB_PRINTLN(__PRETTY_FUNCTION__);
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		// buffer is one byte shorter (we are printing from position 1, not 0)
 		char buffer[DISPLAY_CHARS];
 		for (uint8_t i = 0; i < max_items; ++i) {
@@ -131,17 +131,17 @@ namespace UI {
 	}
 
 	void Menu::event_tank_inserted() {
-		USB_PRINTLN(__PRETTY_FUNCTION__);
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		show();
 	}
 
 	void Menu::event_tank_removed() {
-		USB_PRINTLN(__PRETTY_FUNCTION__);
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		show();
 	}
 
 	Base* Menu::event_button_short_press() {
-		USB_PRINTLN(__PRETTY_FUNCTION__);
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		if (items[menu_offset + cursor_position]->in_menu_action()) {
 			show();
 			return nullptr;
@@ -151,7 +151,7 @@ namespace UI {
 	}
 
 	void Menu::event_control_up() {
-		USB_PRINTLN(__PRETTY_FUNCTION__);
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		if (cursor_position < max_items - 1) {
 			++cursor_position;
 			show();
@@ -162,7 +162,7 @@ namespace UI {
 	}
 
 	void Menu::event_control_down() {
-		USB_PRINTLN(__PRETTY_FUNCTION__);
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		if (cursor_position) {
 			--cursor_position;
 			show();
@@ -179,7 +179,7 @@ namespace UI {
 	{}
 
 	void Value::show() {
-		USB_PRINTLN(__PRETTY_FUNCTION__);
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		lcd.print_P(label, 1, 0);
 		lcd.print(value, 5, 2);
 		lcd.print_P(units);
@@ -192,7 +192,7 @@ namespace UI {
 	}
 
 	void Value::event_control_up() {
-		USB_PRINTLN(__PRETTY_FUNCTION__);
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		if (value < max_value) {
 			value++;
 			show();
@@ -200,7 +200,7 @@ namespace UI {
 	}
 
 	void Value::event_control_down() {
-		USB_PRINTLN(__PRETTY_FUNCTION__);
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		if (value > min_value) {
 			value--;
 			show();
@@ -224,7 +224,7 @@ namespace UI {
 	{}
 
 	void Temperature::units_change(bool SI) {
-		USB_PRINTLN(__PRETTY_FUNCTION__);
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		if (SI) {
 			value = round(fahrenheit2celsius(value));
 			max_value = MAX_TARGET_TEMP_C;
@@ -243,7 +243,7 @@ namespace UI {
 	{}
 
 	char* Bool::get_menu_label(char* buffer, uint8_t buffer_size) {
-		USB_PRINTLN(__PRETTY_FUNCTION__);
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		char* end = Base::get_menu_label(buffer, buffer_size);
 		const char* from = value ? true_text : false_text;
 		uint8_t c = pgm_read_byte(from);
@@ -255,7 +255,7 @@ namespace UI {
 	}
 
 	bool Bool::in_menu_action() {
-		USB_PRINTLN(__PRETTY_FUNCTION__);
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		value ^= 1;
 		write_config();
 		return true;
@@ -271,7 +271,7 @@ namespace UI {
 	}
 
 	void Option::show() {
-		USB_PRINTLN(__PRETTY_FUNCTION__);
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		lcd.print_P(label, 1, 0);
 		lcd.clearLine(2);
 		uint8_t len = strlen_P(options[value]);
@@ -293,7 +293,7 @@ namespace UI {
 	}
 
 	void Option::event_control_up() {
-		USB_PRINTLN(__PRETTY_FUNCTION__);
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		if (value < options_count - 1) {
 			value++;
 			show();
@@ -301,7 +301,7 @@ namespace UI {
 	}
 
 	void Option::event_control_down() {
-		USB_PRINTLN(__PRETTY_FUNCTION__);
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		if (value) {
 			value--;
 			show();
@@ -310,7 +310,18 @@ namespace UI {
 
 
 	// UI::State
-	State::State(const char* label) :
-		Base(label, PLAY_CHAR)
+	State::State(const char* label, States::Base* state, States::Base* long_press_state) :
+		Base(label, PLAY_CHAR), state(state), long_press_state(long_press_state)
 	{}
+
+	void State::show() {
+		USB_PRINTLN(__PRETTY_FUNCTION__);
+		States::change(state);
+	}
+
+	Base* State::event_button_long_press() {
+		USB_PRINTLN(__PRETTY_FUNCTION__);
+		States::change(long_press_state);
+		return Base::event_button_long_press();
+	}
 }

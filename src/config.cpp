@@ -33,7 +33,8 @@ eeprom_v2_t config = {
 	100,		// led_pwm_value
 	{60, 70},	// fans_curing_speed
 	{60, 70},	// fans_drying_speed
-	{40, 40},	// fans_preheat_speed
+	{60, 70},	// fans_washing_speed
+	{MIN_FAN_SPEED, MIN_FAN_SPEED},	// fans_menu_speed
 };
 
 void write_config() {

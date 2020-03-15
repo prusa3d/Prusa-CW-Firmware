@@ -30,6 +30,7 @@
 #define FAN1_ERROR_MASK		B001
 #define FAN2_ERROR_MASK		B010
 #define FAN3_ERROR_MASK		B100
+#define MIN_FAN_SPEED		30		// 0-100 %
 
 // various constants
 #define LED_DELAY			1000
