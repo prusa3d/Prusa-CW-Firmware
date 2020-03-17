@@ -219,20 +219,30 @@ namespace UI {
 		Value(label, value, pgmstr_percent, 100, min)
 	{}
 
-	Temperature::Temperature(const char* label, uint8_t& value, bool SI) :
-		Value(label, value, SI ? pgmstr_celsius : pgmstr_fahrenheit, SI ? MAX_TARGET_TEMP_C : MAX_TARGET_TEMP_F, SI ? MIN_TARGET_TEMP_C : MIN_TARGET_TEMP_F)
+	Temperature::Temperature(const char* label, uint8_t& value) :
+		Value(label, value, pgmstr_celsius, MAX_TARGET_TEMP_C, MIN_TARGET_TEMP_C)
 	{}
 
-	void Temperature::units_change(bool SI) {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
+	// config may be readed after constructor
+	void Temperature::init(bool SI) {
 		if (SI) {
-			value = round(fahrenheit2celsius(value));
+			units = pgmstr_celsius;
 			max_value = MAX_TARGET_TEMP_C;
 			min_value = MIN_TARGET_TEMP_C;
 		} else {
-			value = round(celsius2fahrenheit(value));
+			units = pgmstr_fahrenheit;
 			max_value = MAX_TARGET_TEMP_F;
 			min_value = MIN_TARGET_TEMP_F;
+		}
+	}
+
+	void Temperature::units_change(bool SI) {
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
+		init(SI);
+		if (SI) {
+			value = round(fahrenheit2celsius(value));
+		} else {
+			value = round(celsius2fahrenheit(value));
 		}
 	}
 
@@ -310,8 +320,8 @@ namespace UI {
 
 
 	// UI::State
-	State::State(const char* label, States::Base* state, States::Base* long_press_state) :
-		Base(label, PLAY_CHAR), state(state), long_press_state(long_press_state)
+	State::State(const char* label, States::Base* state, States::Base* state_long_press) :
+		Base(label, PLAY_CHAR), state(state), state_long_press(state_long_press)
 	{}
 
 	void State::show() {
@@ -321,7 +331,7 @@ namespace UI {
 
 	Base* State::event_button_long_press() {
 		USB_PRINTLN(__PRETTY_FUNCTION__);
-		States::change(long_press_state);
+		States::change(state_long_press);
 		return Base::event_button_long_press();
 	}
 }

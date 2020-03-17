@@ -235,10 +235,10 @@ void Hardware::warning_beep() {
 	delay(250);
 }
 
-void Hardware::set_fans(uint8_t* duties, uint8_t target_temp) {
+void Hardware::set_fans(uint8_t* duties, uint8_t* target_temp) {
 	fan_duty[0] = duties[0];
 	fan_duty[1] = duties[1];
-	fans_target_temp = target_temp;
+	fans_target_temp = target_temp ? *target_temp : 0;
 	fans_duty();
 }
 

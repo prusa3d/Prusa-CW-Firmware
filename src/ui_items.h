@@ -42,8 +42,8 @@ namespace UI {
 		void event_control_up();
 		void event_control_down();
 	private:
-		Base* const* items;
-		uint8_t items_count;
+		Base* const* const items;
+		uint8_t const items_count;
 		uint8_t menu_offset;
 		uint8_t cursor_position;
 		uint8_t max_items;
@@ -58,9 +58,8 @@ namespace UI {
 		Base* event_button_short_press();
 		void event_control_up();
 		void event_control_down();
-	private:
-		const char* units;
 	protected:
+		const char* units;
 		uint8_t& value;
 		uint8_t max_value;
 		uint8_t min_value;
@@ -83,7 +82,8 @@ namespace UI {
 
 	class Temperature : public Value {
 	public:
-		Temperature(const char* label, uint8_t& value, bool SI);
+		Temperature(const char* label, uint8_t& value);
+		void init(bool SI);
 		void units_change(bool SI);
 	};
 
@@ -112,19 +112,19 @@ namespace UI {
 		void event_control_down();
 	private:
 		uint8_t& value;
-		const char** options;
-		uint8_t options_count;
+		const char** const options;
+		uint8_t const options_count;
 	};
 
 
 	// UI::State
 	class State : public Base {
 	public:
-		State(const char* label, States::Base* state, States::Base* long_press_state);
+		State(const char* label, States::Base* state, States::Base* state_long_press);
 		void show();
 		Base* event_button_long_press();
 	protected:
 		States::Base* state;
-		States::Base* long_press_state;
+		States::Base* const state_long_press;
 	};
 }

@@ -20,10 +20,10 @@ eeprom_v2_t config = {
 	1,			// curing_speed
 	4,			// washing_run_time
 	3,			// curing_run_time
-	1,			// finish_beep_mode
+	1,			// finish_beep_mode (0=none, 1=once, 2=continuous)
 	3,			// drying_run_time
 	1,			// sound_response
-	0,			// curing_machine_mode (0=drying/curing, 1=curing, 2=drying, 3=resin preheat)
+	0,			// curing_machine_mode (0=drying/curing, 1=curing, 2=drying)
 	0,			// heat_to_target_temp
 	35,			// target_temp (celsius)
 	30,			// resin_target_temp (celsius)
@@ -31,10 +31,10 @@ eeprom_v2_t config = {
 
 	10,			// resin_preheat_run_time
 	100,		// led_pwm_value
-	{60, 70},	// fans_curing_speed
-	{60, 70},	// fans_drying_speed
-	{60, 70},	// fans_washing_speed
 	{MIN_FAN_SPEED, MIN_FAN_SPEED},	// fans_menu_speed
+	{60, 70},	// fans_washing_speed
+	{60, 70},	// fans_drying_speed
+	{60, 70},	// fans_curing_speed
 };
 
 void write_config() {

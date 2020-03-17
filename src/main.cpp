@@ -273,9 +273,10 @@ void loop() {
 	UI::loop();
 
 
-
+/*
 	tDown.run();
 	tUp.run();
+*/
 
 	if (state == SELFTEST) {
 

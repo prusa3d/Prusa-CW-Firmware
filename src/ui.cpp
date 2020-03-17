@@ -66,15 +66,16 @@ namespace UI {
 		} else {
 			switch (curing_machine_mode) {
 				case 2:
-					state = &States::drying;
+					States::warmup_print.set_continue_to(&States::drying);
 					break;
 				case 1:
-					state = &States::curing;
+					States::warmup_print.set_continue_to(&States::curing);
 					break;
 				default:
-					state = &States::drying_curing;
+					States::warmup_print.set_continue_to(&States::drying_curing);
 					break;
 			}
+			state = &States::warmup_print;
 		}
 		State::show();
 	}
@@ -99,8 +100,8 @@ namespace UI {
 
 	// temperatore menu
 	Bool heat_to_target_temp(pgmstr_warmup, config.heat_to_target_temp);
-	Temperature target_temp(pgmstr_drying_warmup_temp, config.target_temp, config.SI_unit_system);
-	Temperature resin_target_temp(pgmstr_resin_preheat_temp, config.resin_target_temp, config.SI_unit_system);
+	Temperature target_temp(pgmstr_drying_warmup_temp, config.target_temp);
+	Temperature resin_target_temp(pgmstr_resin_preheat_temp, config.resin_target_temp);
 	Temperature* const SI_changed[] = {&target_temp, &resin_target_temp};
 	SI_switch SI_unit_system(pgmstr_units, config.SI_unit_system, SI_changed, COUNT_ITEMS(SI_changed));
 	Base* const temperature_items[] = {&back, &heat_to_target_temp, &target_temp, &resin_target_temp, &SI_unit_system};
@@ -163,7 +164,7 @@ namespace UI {
 
 	// home menu
 	Do_it do_it(pgmstr_emptystr, config.curing_machine_mode, &States::menu);
-	State resin_preheat(pgmstr_resin_preheat, &States::preheat, &States::menu);
+	State resin_preheat(pgmstr_resin_preheat, &States::warmup_resin, &States::menu);
 	Base* const home_items[] = {&do_it, &resin_preheat, &run_time_menu, &config_menu};
 	Menu home_menu(pgmstr_emptystr, home_items, COUNT_ITEMS(home_items));
 
@@ -173,6 +174,9 @@ namespace UI {
 	Base* active_menu = &home_menu;
 
 	void init() {
+		for (uint8_t i = 0; i < COUNT_ITEMS(SI_changed); ++i) {
+			SI_changed[i]->init(config.SI_unit_system);
+		}
 		home_menu.set_long_press_ui_item(&curing_machine_mode);
 		do_it.set_long_press_ui_item(&back);
 		resin_preheat.set_long_press_ui_item(&back);
