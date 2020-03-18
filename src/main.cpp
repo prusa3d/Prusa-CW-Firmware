@@ -418,27 +418,11 @@ void loop() {
 		state = ERROR;
 	}
 
-	if (state == CONFIRM) {
-		unsigned long us_now = millis();
-		if (us_now - us_last > 1000) {
-			hw.beep();
-			us_last = us_now;
-		}
-	}
-
-	if (state == RUNNING || state == RUN_MENU) {
-		machine_running();
-	}
-
 /* TODO long press event
 			switch (state) {
 				case INFO:
 					state = SELFTEST;
 					menu_position = 0;
-					menu_move(true);
-					break;
-				case RUNNING:
-					run_stop();
 					menu_move(true);
 					break;
 				default:
@@ -545,11 +529,6 @@ void menu_move(bool sound_echo) {
 				}
 			}
 			redraw_ms = true; // for print MM:SS part
-			break;
-
-		case CONFIRM:
-			lcd.print_P(pgmstr_finished, 1, 0);
-			lcd.print_P(pgmstr_press2continue, 1, 2);
 			break;
 
 		case SELFTEST:
@@ -932,11 +911,6 @@ void button_press() {
 			}
 			break;
 
-		case RUNNING:
-			menu_position = 0;
-			state = RUN_MENU;
-			break;
-
 		case SELFTEST:
 			switch (selftest.phase) {
 				case 0:
@@ -1184,8 +1158,9 @@ void leave_action() {
 	menu_position = 0;
 	hw.stop_motor();
 	hw.stop_heater();
+
+	/* DONE
 	//hw.set_fans_duty(fans_menu_speed);
-	rotary_diff = 128;
 	switch (config.finish_beep_mode) {
 		case 2:
 			hw.beep();
@@ -1200,6 +1175,8 @@ void leave_action() {
 			break;
 	}
 	menu_move(true);
+	*/
+
 }
 
 //! @brief Display remaining time

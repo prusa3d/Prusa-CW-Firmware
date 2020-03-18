@@ -35,8 +35,8 @@ namespace UI {
 
 
 	// UI::Do_it
-	Do_it::Do_it(const char* label, uint8_t& curing_machine_mode, States::Base* long_press_state) :
-		State(label, nullptr, long_press_state), curing_machine_mode(curing_machine_mode)
+	Do_it::Do_it(const char* label, uint8_t& curing_machine_mode, States::Base* long_press_state, Base* menu_short_press_running, Base* menu_short_press_finished) :
+		State(label, nullptr, long_press_state, menu_short_press_running, menu_short_press_finished), curing_machine_mode(curing_machine_mode)
 	{}
 
 	char* Do_it::get_menu_label(char* buffer, uint8_t buffer_size) {
@@ -163,8 +163,8 @@ namespace UI {
 	Menu config_menu(pgmstr_settings, config_items, COUNT_ITEMS(config_items));
 
 	// home menu
-	Do_it do_it(pgmstr_emptystr, config.curing_machine_mode, &States::menu);
-	State resin_preheat(pgmstr_resin_preheat, &States::warmup_resin, &States::menu);
+	Do_it do_it(pgmstr_emptystr, config.curing_machine_mode, &States::menu, nullptr, &back);
+	State resin_preheat(pgmstr_resin_preheat, &States::warmup_resin, &States::menu, nullptr, &back);
 	Base* const home_items[] = {&do_it, &resin_preheat, &run_time_menu, &config_menu};
 	Menu home_menu(pgmstr_emptystr, home_items, COUNT_ITEMS(home_items));
 
@@ -184,6 +184,7 @@ namespace UI {
 	}
 
 	void loop() {
+		active_menu->loop();
 		Base* new_menu = active_menu->process_events(hw.get_events((bool)config.sound_response));
 		if (new_menu == &back || new_menu == active_menu) {
 			if (menu_depth) {

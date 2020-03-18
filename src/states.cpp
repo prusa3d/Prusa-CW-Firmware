@@ -3,8 +3,8 @@
 
 namespace States {
 
-	Base::Base(uint8_t* fans_duties, uint8_t* target_temp) :
-		fans_duties(fans_duties), target_temp(target_temp)
+	Base::Base(const char* title, uint8_t* fans_duties, uint8_t* target_temp) :
+		title(title), fans_duties(fans_duties), target_temp(target_temp)
 	{}
 
 	void Base::invoke() {
@@ -20,9 +20,17 @@ namespace States {
 		return nullptr;
 	}
 
+	const char* Base::get_title() {
+		return title;
+	}
 
-	Timer::Timer(uint8_t* fans_duties, uint8_t* after, Base* to, uint8_t* target_temp, Countimer::CountType timer_type) :
-		Base(fans_duties, target_temp), continue_to(to), continue_after(after), timer(timer_type)
+	const char* Base::get_message() {
+		return nullptr;
+	}
+
+
+	Timer::Timer(const char* title, uint8_t* fans_duties, uint8_t* after, Base* to, uint8_t* target_temp, Countimer::CountType timer_type) :
+		Base(title, fans_duties, target_temp), continue_to(to), continue_after(after), timer(timer_type)
 	{}
 
 	void Timer::invoke() {
@@ -57,8 +65,8 @@ namespace States {
 	}
 
 
-	Warmup::Warmup(uint8_t* after, Base* to, uint8_t* target_temp) :
-		Timer(config.fans_menu_speed, after, to, target_temp, Countimer::COUNT_UP)
+	Warmup::Warmup(const char* title, uint8_t* after, Base* to, uint8_t* target_temp) :
+		Timer(title, config.fans_menu_speed, after, to, target_temp, Countimer::COUNT_UP)
 	{}
 
 	Base* Warmup::loop() {
@@ -69,46 +77,47 @@ namespace States {
 	}
 
 
-	Confirm::Confirm(Base* to) :
-		Base(), us_last(0), continue_to(to)
+	Confirm::Confirm(const char* title) :
+		Base(title), us_last(0), beep(0)
 	{}
 
 	void Confirm::invoke() {
 		USB_PRINTLN(__PRETTY_FUNCTION__);
 		us_last = 0;
+		beep = config.finish_beep_mode;
 		Base::invoke();
 	}
 
 	Base* Confirm::loop() {
 		unsigned long us_now = millis();
-		if (config.finish_beep_mode && us_now - us_last > 1000) {
+		if (beep && us_now - us_last > 1000) {
 			hw.beep();
 			us_last = us_now;
+			if (beep != 2) {
+				beep = 0;
+			}
 		}
-		if (config.finish_beep_mode == 2) {
-			return nullptr;
-		}
-		return continue_to;
+
+		return nullptr;
+	}
+
+	const char* Confirm::get_message() {
+		return pgmstr_press2continue;
 	}
 
 
-	Error::Error() :
-		Base()
-	{}
-
-
 	/*** states definitions ***/
-	Base menu;
-	Confirm confirm(&menu);
-	Timer washing(config.fans_washing_speed, &config.washing_run_time, &confirm);
+	Base menu(pgmstr_emptystr);
+	Confirm confirm(pgmstr_finished);
+	Timer washing(pgmstr_washing, config.fans_washing_speed, &config.washing_run_time, &confirm);
 	// FIXME - would be better to set PI regulator and manage heater for drying/curing?
-	Timer drying(config.fans_drying_speed, &config.drying_run_time, &confirm);
-	Timer curing(config.fans_curing_speed, &config.curing_run_time, &confirm);
-	Timer drying_curing(config.fans_drying_speed, &config.drying_run_time, &curing);
-	Timer resin(config.fans_menu_speed, &config.resin_preheat_run_time, &confirm, &config.resin_target_temp);
+	Timer drying(pgmstr_drying, config.fans_drying_speed, &config.drying_run_time, &confirm);
+	Timer curing(pgmstr_curing, config.fans_curing_speed, &config.curing_run_time, &confirm);
+	Timer drying_curing(pgmstr_drying, config.fans_drying_speed, &config.drying_run_time, &curing);
+	Timer resin(pgmstr_heating, config.fans_menu_speed, &config.resin_preheat_run_time, &confirm, &config.resin_target_temp);
 	uint8_t max_warmup_run_time = MAX_WARMUP_RUN_TIME;
-	Warmup warmup_print(&max_warmup_run_time, nullptr, &config.target_temp);
-	Warmup warmup_resin(&max_warmup_run_time, &resin, &config.resin_target_temp);
+	Warmup warmup_print(pgmstr_warmup, &max_warmup_run_time, nullptr, &config.target_temp);
+	Warmup warmup_resin(pgmstr_warmup, &max_warmup_run_time, &resin, &config.resin_target_temp);
 
 
 	// states data

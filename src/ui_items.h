@@ -12,6 +12,7 @@ namespace UI {
 		Base(const char* label, uint8_t last_char = RIGHT_CHAR, bool menu_action = false);
 		virtual char* get_menu_label(char* buffer, uint8_t buffer_size);
 		virtual void show();
+		virtual void loop();
 		Base* process_events(Events events);
 		virtual void event_cover_opened();
 		virtual void event_cover_closed();
@@ -120,11 +121,20 @@ namespace UI {
 	// UI::State
 	class State : public Base {
 	public:
-		State(const char* label, States::Base* state, States::Base* state_long_press);
+		State(const char* label, States::Base* state, States::Base* state_long_press, Base* menu_short_press_running, Base* menu_short_press_finished);
 		void show();
+		void loop();
+		Base* event_button_short_press();
 		Base* event_button_long_press();
 	protected:
 		States::Base* state;
 		States::Base* const state_long_press;
+		Base* const menu_short_press_running;
+		Base* const menu_short_press_finished;
+	private:
+		const char* old_title;
+		const char* old_message;
+		unsigned long us_last;
+		uint8_t loop_count;
 	};
 }

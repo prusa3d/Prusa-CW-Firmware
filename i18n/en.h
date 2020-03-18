@@ -10,6 +10,7 @@ static const char pgmstr_minutes[] PROGMEM = _(" min.");
 static const char pgmstr_gt[] PROGMEM = " >";
 static const char pgmstr_lt[] PROGMEM = "< ";
 static const char pgmstr_emptystr[] PROGMEM = "";
+static const char pgmstr_space[] PROGMEM = " ";
 
 // run time menu
 static const char pgmstr_run_time[] PROGMEM = _("Run-time");
@@ -85,8 +86,18 @@ static const char pgmstr_led_intensity[] PROGMEM = _("LED intensity");
 static const char pgmstr_washing[] PROGMEM = _("Washing");
 static const char pgmstr_resin_preheat[] PROGMEM = _("Resin preheat");
 
-// TODO
+// state menu
+static const char pgmstr_progress[] PROGMEM = { '|', '/', '-', BACKSLASH_CHAR };
+
+// confirm state
+static const char pgmstr_finished[] PROGMEM = _("Finished");
+static const char pgmstr_press2continue[] PROGMEM = _("Press to continue");
+
+// resin state
 static const char pgmstr_heating[] PROGMEM = _("Heating");
+
+
+// TODO
 static const char pgmstr_selftest[] PROGMEM = _("Run selftest");
 static const char pgmstr_ipa_tank_removed[] PROGMEM = _("IPA tank removed");
 static const char pgmstr_pause[] PROGMEM = _("Pause");
@@ -99,8 +110,6 @@ static const char pgmstr_fan2_failure[] PROGMEM = _("FAN2 failure");
 static const char pgmstr_heater_failure[] PROGMEM = _("HEATER failure");
 static const char pgmstr_heater_error[] PROGMEM = _("Heater fan error");
 static const char pgmstr_please_restart[] PROGMEM = _("Please restart");
-static const char pgmstr_finished[] PROGMEM = _("Finished");
-static const char pgmstr_press2continue[] PROGMEM = _("Press to continue");
 static const char pgmstr_open_cover[] PROGMEM = _("Open the cover");
 static const char pgmstr_close_cover[] PROGMEM = _("Close the cover");
 static const char pgmstr_test_failed[] PROGMEM = _("Test failed");
@@ -115,7 +124,6 @@ static const char pgmstr_fan1_test[] PROGMEM = _("FAN1:   x/100ms");
 static const char pgmstr_fan2_test[] PROGMEM = _("FAN2:   x/100ms");
 static const char pgmstr_mode_gear[] PROGMEM = _("Mode/Gear:");
 // untranslated constants
-static const char pgmstr_space[] PROGMEM = " ";
 static const char pgmstr_double_space[] PROGMEM = "  ";
 static const char pgmstr_slash[] PROGMEM = "/";
 
@@ -124,4 +132,3 @@ static const char pgmstr_double_lt[] PROGMEM = "<<";
 static const char pgmstr_max_symb[] PROGMEM = ">|";
 static const char pgmstr_min_symb[] PROGMEM = "|<";
 
-static const char pgmstr_progress[] PROGMEM = { '|', '/', '-', BACKSLASH_CHAR };

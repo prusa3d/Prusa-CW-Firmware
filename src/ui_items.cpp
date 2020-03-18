@@ -2,6 +2,7 @@
 #include "ui_items.h"
 #include "defines.h"
 #include "config.h"
+#include "states.h"
 
 namespace UI {
 
@@ -28,6 +29,10 @@ namespace UI {
 
 	void Base::show() {
 //		USB_PRINTLN(__PRETTY_FUNCTION__);
+		// do nothing
+	}
+
+	void Base::loop() {
 		// do nothing
 	}
 
@@ -320,13 +325,63 @@ namespace UI {
 
 
 	// UI::State
-	State::State(const char* label, States::Base* state, States::Base* state_long_press) :
-		Base(label, PLAY_CHAR), state(state), state_long_press(state_long_press)
+	State::State(const char* label, States::Base* state, States::Base* state_long_press, Base* menu_short_press_running, Base* menu_short_press_finished) :
+		Base(label, PLAY_CHAR),
+		state(state),
+		state_long_press(state_long_press),
+		menu_short_press_running(menu_short_press_running),
+		menu_short_press_finished(menu_short_press_finished),
+		old_title(nullptr),
+		old_message(nullptr),
+		us_last(0),
+		loop_count(0)
 	{}
 
 	void State::show() {
 		USB_PRINTLN(__PRETTY_FUNCTION__);
+		old_title = nullptr;
+		old_message = nullptr;
+		loop_count = 0;
+		us_last = 0;
 		States::change(state);
+	}
+
+	void State::loop() {
+		const char* tmp_str = States::active_state->get_title();
+		if (tmp_str != old_title) {
+			lcd.print_P(tmp_str, 1, 0);
+			old_title = tmp_str;
+		}
+		tmp_str = States::active_state->get_message();
+		if (tmp_str) {
+			if (tmp_str != old_message) {
+				lcd.print_P(tmp_str, 1, 2);
+				old_message = tmp_str;
+				lcd.print_P(pgmstr_space, 19, 0);
+			}
+		} else {
+			// spinner
+			lcd.setCursor(19, 0);
+			uint8_t c = pgm_read_byte(pgmstr_progress + loop_count);
+			lcd.write(c);
+			unsigned long us_now = millis();
+			if (us_now - us_last > 100) {
+				us_last = us_now;
+				if (++loop_count >= sizeof(pgmstr_progress)) {
+					loop_count = 0;
+				}
+			}
+		}
+	}
+
+	Base* State::event_button_short_press() {
+		USB_PRINTLN(__PRETTY_FUNCTION__);
+		if (old_message) {
+			States::change(state_long_press);
+			return menu_short_press_finished;
+		} else {
+			return menu_short_press_running;
+		}
 	}
 
 	Base* State::event_button_long_press() {

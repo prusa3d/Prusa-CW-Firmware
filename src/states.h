@@ -9,12 +9,14 @@ namespace States {
 
 	class Base {
 	public:
-		Base(uint8_t* fans_duties = config.fans_menu_speed, uint8_t* target_temp = nullptr);
+		Base(const char* title, uint8_t* fans_duties = config.fans_menu_speed, uint8_t* target_temp = nullptr);
 		virtual void invoke();
 		virtual void cancel();
 		virtual Base* loop();
-//		virtual void add_leave_callback();
+		virtual const char* get_title();
+		virtual const char* get_message();
 	protected:
+		const char* const title;
 		uint8_t* const fans_duties;
 		uint8_t* const target_temp;
 	};
@@ -22,7 +24,7 @@ namespace States {
 
 	class Timer : public Base {
 	public:
-		Timer(uint8_t* fans_duties, uint8_t* after, Base* to, uint8_t* target_temp = nullptr, Countimer::CountType timer_type = Countimer::COUNT_DOWN);
+		Timer(const char* title, uint8_t* fans_duties, uint8_t* after, Base* to, uint8_t* target_temp = nullptr, Countimer::CountType timer_type = Countimer::COUNT_DOWN);
 		void invoke();
 		void cancel();
 		Base* loop();
@@ -37,27 +39,23 @@ namespace States {
 
 	class Warmup : public Timer {
 	public:
-		Warmup(uint8_t* after, Base* to, uint8_t* target_temp);
+		Warmup(const char* title, uint8_t* after, Base* to, uint8_t* target_temp);
 		Base* loop();
 	};
 
 
 	class Confirm : public Base {
 	public:
-		Confirm(Base* to);
+		Confirm(const char* title);
 		void invoke();
 		Base* loop();
+		const char* get_message();
 	private:
 		unsigned long us_last;
-		Base* continue_to;
+		uint8_t beep;
 	};
 
-
-	class Error : public Base {
-	public:
-		Error();
-	};
-
+	extern Base* active_state;
 
 	extern Base menu;
 	extern Confirm confirm;
