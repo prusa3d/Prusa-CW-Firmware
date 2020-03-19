@@ -41,7 +41,8 @@
 #define MAX_TARGET_TEMP_C	40
 #define MIN_TARGET_TEMP_F	MIN_TARGET_TEMP_C * 1.8 + 32
 #define MAX_TARGET_TEMP_F	MAX_TARGET_TEMP_C * 1.8 + 32
-#define MAX_WARMUP_RUN_TIME	1
+#define MAX_WARMUP_RUN_TIME	30		// minutes
+#define INC_DEC_TIME_STEP	30		// seconds
 // motor speeds (smaller is faster)
 #define WASHING_ROTATION_START	200
 #define MIN_WASHING_SPEED		70

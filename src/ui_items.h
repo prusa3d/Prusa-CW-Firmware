@@ -126,15 +126,20 @@ namespace UI {
 		void loop();
 		Base* event_button_short_press();
 		Base* event_button_long_press();
+		void event_control_up();
+		void event_control_down();
 	protected:
 		States::Base* state;
 		States::Base* const state_long_press;
 		Base* const menu_short_press_running;
 		Base* const menu_short_press_finished;
 	private:
+		void clear_time_boundaries();
 		const char* old_title;
 		const char* old_message;
-		unsigned long us_last;
+		uint16_t old_time;
+		unsigned long spin_us_last;
+		unsigned long bound_us_last;
 		uint8_t loop_count;
 	};
 }

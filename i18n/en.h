@@ -10,9 +10,8 @@ static const char pgmstr_minutes[] PROGMEM = _(" min.");
 static const char pgmstr_gt[] PROGMEM = " >";
 static const char pgmstr_lt[] PROGMEM = "< ";
 static const char pgmstr_emptystr[] PROGMEM = "";
-static const char pgmstr_space[] PROGMEM = " ";
 
-// run time menu
+// run-time menu
 static const char pgmstr_run_time[] PROGMEM = _("Run-time");
 static const char pgmstr_curing_run_time[] PROGMEM = _("Curing run-time");
 static const char pgmstr_drying_run_time[] PROGMEM = _("Drying run-time");
@@ -89,6 +88,13 @@ static const char pgmstr_resin_preheat[] PROGMEM = _("Resin preheat");
 // state menu
 static const char pgmstr_progress[] PROGMEM = { '|', '/', '-', BACKSLASH_CHAR };
 
+// all states
+static const char pgmstr_double_gt[] PROGMEM = ">>";
+static const char pgmstr_double_lt[] PROGMEM = "<<";
+static const char pgmstr_max_symb[] PROGMEM = ">|";
+static const char pgmstr_min_symb[] PROGMEM = "|<";
+static const char pgmstr_double_space[] PROGMEM = "  ";
+
 // confirm state
 static const char pgmstr_finished[] PROGMEM = _("Finished");
 static const char pgmstr_press2continue[] PROGMEM = _("Press to continue");
@@ -124,11 +130,6 @@ static const char pgmstr_fan1_test[] PROGMEM = _("FAN1:   x/100ms");
 static const char pgmstr_fan2_test[] PROGMEM = _("FAN2:   x/100ms");
 static const char pgmstr_mode_gear[] PROGMEM = _("Mode/Gear:");
 // untranslated constants
-static const char pgmstr_double_space[] PROGMEM = "  ";
 static const char pgmstr_slash[] PROGMEM = "/";
 
-static const char pgmstr_double_gt[] PROGMEM = ">>";
-static const char pgmstr_double_lt[] PROGMEM = "<<";
-static const char pgmstr_max_symb[] PROGMEM = ">|";
-static const char pgmstr_min_symb[] PROGMEM = "|<";
 

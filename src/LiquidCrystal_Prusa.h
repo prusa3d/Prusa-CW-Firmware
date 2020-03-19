@@ -83,7 +83,8 @@ public:
 
 	void print(uint8_t number, uint8_t col = 255, uint8_t row = 255, uint8_t denom = 100, unsigned char filler = ' ');
 	void print(float, uint8_t col = 255, uint8_t row = 255);
-	void printTime(uint8_t min, uint8_t sec, uint8_t col = 255, uint8_t row = 255);
+	void printTime(uint16_t time, uint8_t col = 255, uint8_t row = 255);
+	void printTime(uint8_t min, uint8_t sec, uint8_t col = 255, uint8_t row = 255);	// TODO remove when unused
 	void print(const char*, uint8_t col = 255, uint8_t row = 255);
 	void print_P(const char*, uint8_t col = 255, uint8_t row = 255);
 	void clearLine(uint8_t row);

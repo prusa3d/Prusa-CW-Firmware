@@ -300,6 +300,15 @@ void LiquidCrystal_Prusa::print(float number, uint8_t col, uint8_t row) {
 	print(integer, 255, 255, 1);
 }
 
+void LiquidCrystal_Prusa::printTime(uint16_t time, uint8_t col, uint8_t row) {
+	uint8_t min = time / 60;
+	uint8_t sec = time % 60;
+	print(min, col, row, 10, '0');
+	write(':');
+	print(sec, 255, 255, 10, '0');
+}
+
+// TODO remove when unused
 void LiquidCrystal_Prusa::printTime(uint8_t min, uint8_t sec, uint8_t col, uint8_t row) {
 	print(min, col, row, 10, '0');
 	write(':');

@@ -19,14 +19,20 @@ public:
 	// Set up counter time(hours, minutes, seconds) for existing timer.
 	void setCounter(uint8_t hours, uint8_t minutes, uint8_t seconds);
 
+	// Set up counter time in seconds for existing timer.
+	void setCounterInSeconds(uint16_t seconds);
+
 	// Returns timer's current hours.
-	uint16_t getCurrentHours();
+	uint8_t getCurrentHours();
 
 	// Returns timer's current minutes.
 	uint8_t getCurrentMinutes();
 
 	// Returns timer's current seconds.
 	uint8_t getCurrentSeconds();
+
+	// Returns timer's current time in seconds.
+	uint16_t getCurrentTimeInSeconds();
 
 	void setInterval(timer_callback callback, uint32_t interval);
 

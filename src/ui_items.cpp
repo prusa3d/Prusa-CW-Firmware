@@ -333,7 +333,9 @@ namespace UI {
 		menu_short_press_finished(menu_short_press_finished),
 		old_title(nullptr),
 		old_message(nullptr),
-		us_last(0),
+		old_time(UINT16_MAX),
+		spin_us_last(0),
+		bound_us_last(0),
 		loop_count(0)
 	{}
 
@@ -341,23 +343,25 @@ namespace UI {
 		USB_PRINTLN(__PRETTY_FUNCTION__);
 		old_title = nullptr;
 		old_message = nullptr;
+		old_time = UINT16_MAX;
+		spin_us_last = 0;
+		bound_us_last = 0;
 		loop_count = 0;
-		us_last = 0;
 		States::change(state);
 	}
 
 	void State::loop() {
 		const char* tmp_str = States::active_state->get_title();
 		if (tmp_str != old_title) {
+			lcd.clear();
 			lcd.print_P(tmp_str, 1, 0);
 			old_title = tmp_str;
 		}
 		tmp_str = States::active_state->get_message();
 		if (tmp_str) {
 			if (tmp_str != old_message) {
-				lcd.print_P(tmp_str, 1, 2);
 				old_message = tmp_str;
-				lcd.print_P(pgmstr_space, 19, 0);
+				lcd.print_P(tmp_str, 1, 2);
 			}
 		} else {
 			// spinner
@@ -365,10 +369,26 @@ namespace UI {
 			uint8_t c = pgm_read_byte(pgmstr_progress + loop_count);
 			lcd.write(c);
 			unsigned long us_now = millis();
-			if (us_now - us_last > 100) {
-				us_last = us_now;
+			if (us_now - spin_us_last > 100) {
+				spin_us_last = us_now;
 				if (++loop_count >= sizeof(pgmstr_progress)) {
 					loop_count = 0;
+				}
+			}
+			if (bound_us_last && us_now - bound_us_last > 1000) {
+				clear_time_boundaries();
+				bound_us_last = 0;
+			}
+			// time
+			uint16_t time = States::active_state->get_time();
+			if (time != UINT16_MAX && time != old_time) {
+				old_time = time;
+				lcd.printTime(time, LAYOUT_TIME_X, LAYOUT_TIME_Y);
+				// temperature
+				float temp = States::active_state->get_temperature();
+				if (temp > 0) {
+					lcd.print(temp, LAYOUT_TEMP_X, LAYOUT_TEMP_Y);
+					lcd.print_P(config.SI_unit_system ? pgmstr_celsius : pgmstr_fahrenheit);
 				}
 			}
 		}
@@ -388,5 +408,30 @@ namespace UI {
 		USB_PRINTLN(__PRETTY_FUNCTION__);
 		States::change(state_long_press);
 		return Base::event_button_long_press();
+	}
+
+	void State::event_control_up() {
+		USB_PRINTLN(__PRETTY_FUNCTION__);
+		clear_time_boundaries();
+		const char* symbol = States::active_state->increase_time();
+		if (symbol) {
+			lcd.print_P(symbol, LAYOUT_TIME_GT, LAYOUT_TIME_Y);
+			bound_us_last = millis();
+		}
+	}
+
+	void State::event_control_down() {
+		USB_PRINTLN(__PRETTY_FUNCTION__);
+		clear_time_boundaries();
+		const char* symbol = States::active_state->decrease_time();
+		if (symbol) {
+			lcd.print_P(symbol, LAYOUT_TIME_LT, LAYOUT_TIME_Y);
+			bound_us_last = millis();
+		}
+	}
+
+	void State::clear_time_boundaries() {
+		lcd.print_P(pgmstr_double_space, LAYOUT_TIME_GT, LAYOUT_TIME_Y);
+		lcd.print_P(pgmstr_double_space, LAYOUT_TIME_LT, LAYOUT_TIME_Y);
 	}
 }

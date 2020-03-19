@@ -229,11 +229,6 @@ void setup() {
 	UI::init();
 }
 
-void lcd_clear_time_boundaries() {
-	lcd.print_P(pgmstr_double_space, LAYOUT_TIME_GT, LAYOUT_TIME_Y);
-	lcd.print_P(pgmstr_double_space, LAYOUT_TIME_LT, LAYOUT_TIME_Y);
-}
-
 void redraw_selftest_vals() {
 	if (selftest.phase == 3 && selftest.vent_test != true) {
 		lcd.print(selftest.fan_tacho[0], 7, 1);
@@ -491,6 +486,7 @@ void menu_move(bool sound_echo) {
 			} else {
 				lcd.print_P(cover_open ? pgmstr_cover_is_open : (paused ? pgmstr_paused : pgmstr_washing));
 			}
+/*
 			if (curing_mode && drying_mode && config.heat_to_target_temp && !preheat_complete) {
 				lcd_clear_time_boundaries();
 			} else {
@@ -528,6 +524,7 @@ void menu_move(bool sound_echo) {
 					}
 				}
 			}
+*/
 			redraw_ms = true; // for print MM:SS part
 			break;
 
@@ -1180,6 +1177,7 @@ void leave_action() {
 }
 
 //! @brief Display remaining time
+/* DONE
 void lcd_time_print() {
 	static uint8_t running_count = 0;
 	uint8_t mins;
@@ -1228,6 +1226,7 @@ void lcd_time_print() {
 		}
 	}
 }
+*/
 /*
 void preheat() {
 	uint8_t tmpTargetTemp = config.curing_machine_mode == 3 ? config.resin_target_temp : config.target_temp;

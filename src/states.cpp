@@ -28,9 +28,36 @@ namespace States {
 		return nullptr;
 	}
 
+	uint16_t Base::get_time() {
+		return UINT16_MAX;
+	}
 
-	Timer::Timer(const char* title, uint8_t* fans_duties, uint8_t* after, Base* to, uint8_t* target_temp, Countimer::CountType timer_type) :
-		Base(title, fans_duties, target_temp), continue_to(to), continue_after(after), timer(timer_type)
+	float Base::get_temperature() {
+		return -1.0;
+	}
+
+	const char* Base::decrease_time() {
+		return nullptr;
+	}
+
+	const char* Base::increase_time() {
+		return nullptr;
+	}
+
+
+	Timer::Timer(const char* title,
+		uint8_t* fans_duties,
+		uint8_t* after,
+		Base* to,
+		bool return_temperature,
+		uint8_t* target_temp,
+		Countimer::CountType timer_type)
+	:
+		Base(title, fans_duties, target_temp),
+		continue_to(to),
+		continue_after(after),
+		return_temperature(return_temperature),
+		timer(timer_type)
 	{}
 
 	void Timer::invoke() {
@@ -51,13 +78,39 @@ namespace States {
 		if (timer.isCounterCompleted()) {
 			return continue_to;
 		}
-		static uint8_t last = -1;
-		uint8_t actual = timer.getCurrentSeconds();
-		if (last != actual) {
-			USB_PRINTLN(actual);
-			last = actual;
-		}
 		return nullptr;
+	}
+
+	uint16_t Timer::get_time() {
+		return timer.getCurrentTimeInSeconds();
+	}
+
+	float Timer::get_temperature() {
+		if (return_temperature) {
+			return hw.chamber_temp;
+		} else {
+			return -1.0;
+		}
+	}
+
+	const char* Timer::decrease_time() {
+		uint16_t secs = timer.getCurrentTimeInSeconds();
+		if (secs < INC_DEC_TIME_STEP) {
+			return pgmstr_min_symb;
+		} else {
+			timer.setCounterInSeconds(secs - INC_DEC_TIME_STEP);
+			return pgmstr_double_lt;
+		}
+	}
+
+	const char* Timer::increase_time() {
+		uint16_t secs = timer.getCurrentTimeInSeconds();
+		if (secs > 10 * 60 - INC_DEC_TIME_STEP) {
+			return pgmstr_max_symb;
+		} else {
+			timer.setCounterInSeconds(secs + INC_DEC_TIME_STEP);
+			return pgmstr_double_gt;
+		}
 	}
 
 	void Timer::set_continue_to(Base* to) {
@@ -66,7 +119,7 @@ namespace States {
 
 
 	Warmup::Warmup(const char* title, uint8_t* after, Base* to, uint8_t* target_temp) :
-		Timer(title, config.fans_menu_speed, after, to, target_temp, Countimer::COUNT_UP)
+		Timer(title, config.fans_menu_speed, after, to, true, target_temp, Countimer::COUNT_UP)
 	{}
 
 	Base* Warmup::loop() {
@@ -74,6 +127,14 @@ namespace States {
 			return continue_to;
 		}
 		return Timer::loop();
+	}
+
+	const char* Warmup::decrease_time() {
+		return nullptr;
+	}
+
+	const char* Warmup::increase_time() {
+		return nullptr;
 	}
 
 
@@ -97,7 +158,6 @@ namespace States {
 				beep = 0;
 			}
 		}
-
 		return nullptr;
 	}
 
@@ -111,10 +171,10 @@ namespace States {
 	Confirm confirm(pgmstr_finished);
 	Timer washing(pgmstr_washing, config.fans_washing_speed, &config.washing_run_time, &confirm);
 	// FIXME - would be better to set PI regulator and manage heater for drying/curing?
-	Timer drying(pgmstr_drying, config.fans_drying_speed, &config.drying_run_time, &confirm);
-	Timer curing(pgmstr_curing, config.fans_curing_speed, &config.curing_run_time, &confirm);
-	Timer drying_curing(pgmstr_drying, config.fans_drying_speed, &config.drying_run_time, &curing);
-	Timer resin(pgmstr_heating, config.fans_menu_speed, &config.resin_preheat_run_time, &confirm, &config.resin_target_temp);
+	Timer drying(pgmstr_drying, config.fans_drying_speed, &config.drying_run_time, &confirm, true);
+	Timer curing(pgmstr_curing, config.fans_curing_speed, &config.curing_run_time, &confirm, true);
+	Timer drying_curing(pgmstr_drying, config.fans_drying_speed, &config.drying_run_time, &curing, true);
+	Timer resin(pgmstr_heating, config.fans_menu_speed, &config.resin_preheat_run_time, &confirm, true, &config.resin_target_temp);
 	uint8_t max_warmup_run_time = MAX_WARMUP_RUN_TIME;
 	Warmup warmup_print(pgmstr_warmup, &max_warmup_run_time, nullptr, &config.target_temp);
 	Warmup warmup_resin(pgmstr_warmup, &max_warmup_run_time, &resin, &config.resin_target_temp);
