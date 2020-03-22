@@ -309,7 +309,25 @@ uint8_t Hardware::get_fans_error() {
 	return fan_errors;
 }
 
-Events Hardware::get_events(bool sound_response) {
+
+Events Hardware::loop() {
+	unsigned long us_now = millis();
+	if (do_acceleration && us_now - accel_us_last >= 50) {
+		accel_us_last = us_now;
+		acceleration();
+	}
+	if (us_now - fans_us_last >= 500) {
+		fans_us_last = us_now;
+		fans_check();
+	}
+	if (us_now - therm_us_last >= 2000) {
+		therm_us_last = us_now;
+		chamber_temp = config.SI_unit_system ? hw.therm1_read() : celsius2fahrenheit(hw.therm1_read());
+		if (fans_target_temp) {
+			fans_PI_regulator();
+		}
+	}
+
 	Events events = {false, false, false, false, false, false, false, false};
 
 	if (get_heater_error())
@@ -362,30 +380,11 @@ Events Hardware::get_events(bool sound_response) {
 		events.control_down = true;
 	}
 
-	if (sound_response && (events.button_long_press || events.button_short_press || events.control_down || events.control_up)) {
+	if (config.sound_response && (events.button_long_press || events.button_short_press || events.control_down || events.control_up)) {
 		echo();
 	}
 
 	return events;
-}
-
-void Hardware::loop() {
-	unsigned long us_now = millis();
-	if (do_acceleration && us_now - accel_us_last >= 50) {
-		accel_us_last = us_now;
-		acceleration();
-	}
-	if (us_now - fans_us_last >= 500) {
-		fans_us_last = us_now;
-		fans_check();
-	}
-	if (us_now - therm_us_last >= 2000) {
-		therm_us_last = us_now;
-		chamber_temp = config.SI_unit_system ? hw.therm1_read() : celsius2fahrenheit(hw.therm1_read());
-		if (fans_target_temp) {
-			fans_PI_regulator();
-		}
-	}
 }
 
 Hardware hw;

@@ -49,9 +49,7 @@ public:
 	bool get_heater_error();
 	uint8_t get_fans_error();
 
-	Events get_events(bool sound_response);
-
-	void loop();
+	Events loop();
 
 	volatile int fan_tacho_count[3];
 	volatile uint8_t microstep_control;

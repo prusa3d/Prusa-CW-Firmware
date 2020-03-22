@@ -16,24 +16,35 @@ namespace UI {
 	class SI_switch : public Bool {
 	public:
 		SI_switch(const char* label, uint8_t& value, Temperature* const* to_change, uint8_t to_change_count);
-		bool in_menu_action();
+		Base* in_menu_action();
 	private:
 		Temperature* const* to_change;
 		uint8_t to_change_count;
 	};
 
 
+	// UI::Pause
+	class Pause : public Base {
+	public:
+		Pause(Base* back);
+		char* get_menu_label(char* buffer, uint8_t buffer_size);
+		Base* in_menu_action();
+	private:
+		Base* back;
+	};
+
+
 	// UI::Do_it
 	class Do_it : public State {
 	public:
-		Do_it(const char* label, uint8_t& curing_machine_mode, States::Base* long_press_state, Base* menu_short_press_running, Base* menu_short_press_finished);
+		Do_it(const char* label, uint8_t& curing_machine_mode, Base* menu_short_press_running, Base* menu_short_press_finished);
 		char* get_menu_label(char* buffer, uint8_t buffer_size);
-		void show();
+		void invoke();
 	private:
 		uint8_t& curing_machine_mode;
 	};
 
 
 	void init();
-	void loop();
+	void loop(Events& Events);
 }

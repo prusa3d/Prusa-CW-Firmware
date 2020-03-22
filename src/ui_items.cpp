@@ -7,12 +7,11 @@
 namespace UI {
 
 	// UI::Base
-	Base::Base(const char* label, uint8_t last_char, bool menu_action) :
-		label(label), last_char(last_char), menu_action(menu_action), long_press_ui_item(nullptr)
+	Base::Base(const char* label, uint8_t last_char) :
+		label(label), last_char(last_char), long_press_ui_item(nullptr)
 	{}
 
 	char* Base::get_menu_label(char* buffer, uint8_t buffer_size) {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		buffer[--buffer_size] = char(0);	// end of text
 		if (last_char)
 			buffer[--buffer_size] = last_char;
@@ -28,15 +27,18 @@ namespace UI {
 	}
 
 	void Base::show() {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
-		// do nothing
 	}
 
 	void Base::loop() {
-		// do nothing
 	}
 
-	Base* Base::process_events(Events events) {
+	void Base::invoke() {
+	}
+
+	void Base::leave() {
+	}
+
+	Base* Base::process_events(Events& events) {
 		if (events.cover_opened)
 			event_cover_opened();
 		if (events.cover_closed)
@@ -58,53 +60,52 @@ namespace UI {
 
 	void Base::event_cover_opened() {
 //		USB_PRINTLN(__PRETTY_FUNCTION__);
-		// do nothing
 	}
 
 	void Base::event_cover_closed() {
 //		USB_PRINTLN(__PRETTY_FUNCTION__);
-		// do nothing
 	}
 
 	void Base::event_tank_inserted() {
 //		USB_PRINTLN(__PRETTY_FUNCTION__);
-		// do nothing
 	}
 
 	void Base::event_tank_removed() {
 //		USB_PRINTLN(__PRETTY_FUNCTION__);
-		// do nothing
 	}
 
 	Base* Base::event_button_short_press() {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
-		// do nothing
 		return nullptr;
 	}
 
 	Base* Base::event_button_long_press() {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		return long_press_ui_item;
 	}
 
 	void Base::event_control_up() {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
-		// do nothing
 	}
 
 	void Base::event_control_down() {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
-		// do nothing
 	}
 
-	bool Base::in_menu_action() {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
-		// do nothing
-		return menu_action;
+	Base* Base::in_menu_action() {
+		// go to next level
+		return nullptr;
 	}
 
 	void Base::set_long_press_ui_item(Base *ui_item) {
 		long_press_ui_item = ui_item;
+	}
+
+
+	// UI::Text
+	Text::Text(const char* label) :
+		Base(label, 0)
+	{}
+
+	Base* Text::in_menu_action() {
+		// stay in menu
+		return this;
 	}
 
 
@@ -115,8 +116,12 @@ namespace UI {
 		max_items = items_count < DISPLAY_LINES ? items_count : DISPLAY_LINES;
 	}
 
+	void Menu::invoke() {
+		cursor_position = 0;
+		Base::invoke();
+	}
+
 	void Menu::show() {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		// buffer is one byte shorter (we are printing from position 1, not 0)
 		char buffer[DISPLAY_CHARS];
 		for (uint8_t i = 0; i < max_items; ++i) {
@@ -126,37 +131,33 @@ namespace UI {
 			else
 				lcd.write(' ');
 			items[i + menu_offset]->get_menu_label(buffer, sizeof(buffer));
-/*
-			USB_PRINT(" >");
-			USB_PRINT(buffer);
-			USB_PRINTLN("<");
-*/
 			lcd.print(buffer);
 		}
 	}
 
 	void Menu::event_tank_inserted() {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		show();
 	}
 
 	void Menu::event_tank_removed() {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		show();
 	}
 
 	Base* Menu::event_button_short_press() {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
-		if (items[menu_offset + cursor_position]->in_menu_action()) {
-			show();
-			return nullptr;
+		Base* menu_action = items[menu_offset + cursor_position]->in_menu_action();
+		if (menu_action) {
+			if (menu_action == items[menu_offset + cursor_position]) {
+				show();
+				return nullptr;
+			} else {
+				return menu_action;
+			}
 		} else {
 			return items[menu_offset + cursor_position];
 		}
 	}
 
 	void Menu::event_control_up() {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		if (cursor_position < max_items - 1) {
 			++cursor_position;
 			show();
@@ -167,7 +168,6 @@ namespace UI {
 	}
 
 	void Menu::event_control_down() {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		if (cursor_position) {
 			--cursor_position;
 			show();
@@ -184,7 +184,6 @@ namespace UI {
 	{}
 
 	void Value::show() {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		lcd.print_P(label, 1, 0);
 		lcd.print(value, 5, 2);
 		lcd.print_P(units);
@@ -197,7 +196,6 @@ namespace UI {
 	}
 
 	void Value::event_control_up() {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		if (value < max_value) {
 			value++;
 			show();
@@ -205,7 +203,6 @@ namespace UI {
 	}
 
 	void Value::event_control_down() {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		if (value > min_value) {
 			value--;
 			show();
@@ -258,7 +255,6 @@ namespace UI {
 	{}
 
 	char* Bool::get_menu_label(char* buffer, uint8_t buffer_size) {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		char* end = Base::get_menu_label(buffer, buffer_size);
 		const char* from = value ? true_text : false_text;
 		uint8_t c = pgm_read_byte(from);
@@ -269,11 +265,10 @@ namespace UI {
 		return end;
 	}
 
-	bool Bool::in_menu_action() {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
+	Base* Bool::in_menu_action() {
 		value ^= 1;
 		write_config();
-		return true;
+		return this;
 	}
 
 
@@ -286,7 +281,6 @@ namespace UI {
 	}
 
 	void Option::show() {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		lcd.print_P(label, 1, 0);
 		lcd.clearLine(2);
 		uint8_t len = strlen_P(options[value]);
@@ -308,7 +302,6 @@ namespace UI {
 	}
 
 	void Option::event_control_up() {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		if (value < options_count - 1) {
 			value++;
 			show();
@@ -316,7 +309,6 @@ namespace UI {
 	}
 
 	void Option::event_control_down() {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		if (value) {
 			value--;
 			show();
@@ -325,10 +317,9 @@ namespace UI {
 
 
 	// UI::State
-	State::State(const char* label, States::Base* state, States::Base* state_long_press, Base* menu_short_press_running, Base* menu_short_press_finished) :
+	State::State(const char* label, States::Base* state, Base* menu_short_press_running, Base* menu_short_press_finished) :
 		Base(label, PLAY_CHAR),
 		state(state),
-		state_long_press(state_long_press),
 		menu_short_press_running(menu_short_press_running),
 		menu_short_press_finished(menu_short_press_finished),
 		old_title(nullptr),
@@ -336,18 +327,18 @@ namespace UI {
 		old_time(UINT16_MAX),
 		spin_us_last(0),
 		bound_us_last(0),
-		loop_count(0)
+		spin_count(0)
 	{}
 
 	void State::show() {
-		USB_PRINTLN(__PRETTY_FUNCTION__);
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		old_title = nullptr;
 		old_message = nullptr;
 		old_time = UINT16_MAX;
 		spin_us_last = 0;
 		bound_us_last = 0;
-		loop_count = 0;
-		States::change(state);
+		spin_count = 0;
+		Base::show();
 	}
 
 	void State::loop() {
@@ -364,15 +355,17 @@ namespace UI {
 				lcd.print_P(tmp_str, 1, 2);
 			}
 		} else {
-			// spinner
-			lcd.setCursor(19, 0);
-			uint8_t c = pgm_read_byte(pgmstr_progress + loop_count);
-			lcd.write(c);
 			unsigned long us_now = millis();
-			if (us_now - spin_us_last > 100) {
-				spin_us_last = us_now;
-				if (++loop_count >= sizeof(pgmstr_progress)) {
-					loop_count = 0;
+			// spinner
+			if (States::active_state->is_running()) {
+				lcd.setCursor(19, 0);
+				uint8_t c = pgm_read_byte(pgmstr_progress + spin_count);
+				lcd.write(c);
+				if (us_now - spin_us_last > 100) {
+					spin_us_last = us_now;
+					if (++spin_count >= sizeof(pgmstr_progress)) {
+						spin_count = 0;
+					}
 				}
 			}
 			if (bound_us_last && us_now - bound_us_last > 1000) {
@@ -394,24 +387,27 @@ namespace UI {
 		}
 	}
 
+	void State::invoke() {
+		States::change(state);
+		Base::invoke();
+	}
+
+	void State::leave() {
+		States::change(&States::menu);
+		Base::invoke();
+	}
+
 	Base* State::event_button_short_press() {
-		USB_PRINTLN(__PRETTY_FUNCTION__);
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		if (old_message) {
-			States::change(state_long_press);
 			return menu_short_press_finished;
 		} else {
 			return menu_short_press_running;
 		}
 	}
 
-	Base* State::event_button_long_press() {
-		USB_PRINTLN(__PRETTY_FUNCTION__);
-		States::change(state_long_press);
-		return Base::event_button_long_press();
-	}
-
 	void State::event_control_up() {
-		USB_PRINTLN(__PRETTY_FUNCTION__);
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		clear_time_boundaries();
 		const char* symbol = States::active_state->increase_time();
 		if (symbol) {
@@ -421,7 +417,7 @@ namespace UI {
 	}
 
 	void State::event_control_down() {
-		USB_PRINTLN(__PRETTY_FUNCTION__);
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		clear_time_boundaries();
 		const char* symbol = States::active_state->decrease_time();
 		if (symbol) {

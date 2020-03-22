@@ -9,11 +9,13 @@ namespace UI {
 	// UI::Base
 	class Base {
 	public:
-		Base(const char* label, uint8_t last_char = RIGHT_CHAR, bool menu_action = false);
+		Base(const char* label, uint8_t last_char = RIGHT_CHAR);
 		virtual char* get_menu_label(char* buffer, uint8_t buffer_size);
 		virtual void show();
 		virtual void loop();
-		Base* process_events(Events events);
+		virtual void invoke();
+		virtual void leave();
+		Base* process_events(Events& events);
 		virtual void event_cover_opened();
 		virtual void event_cover_closed();
 		virtual void event_tank_inserted();
@@ -22,13 +24,20 @@ namespace UI {
 		virtual Base* event_button_long_press();
 		virtual void event_control_up();
 		virtual void event_control_down();
-		virtual bool in_menu_action();
+		virtual Base* in_menu_action();
 		void set_long_press_ui_item(Base *ui_item);
 	protected:
 		const char* label;
 		uint8_t last_char;
-		bool menu_action;
 		Base* long_press_ui_item;
+	};
+
+
+	// UI::Text
+	class Text : public Base {
+	public:
+		Text(const char* label);
+		Base* in_menu_action();
 	};
 
 
@@ -37,6 +46,7 @@ namespace UI {
 	public:
 		Menu(const char* label, Base* const* items, uint8_t items_count);
 		void show();
+		void invoke();
 		void event_tank_inserted();
 		void event_tank_removed();
 		Base* event_button_short_press();
@@ -94,11 +104,10 @@ namespace UI {
 	public:
 		Bool(const char* label, uint8_t& value, const char* true_text = pgmstr_on, const char* false_text = pgmstr_off);
 		char* get_menu_label(char* buffer, uint8_t buffer_size);
-		bool in_menu_action();
-	private:
+		Base* in_menu_action();
+	protected:
 		const char* true_text;
 		const char* false_text;
-	protected:
 		uint8_t& value;
 	};
 
@@ -121,16 +130,16 @@ namespace UI {
 	// UI::State
 	class State : public Base {
 	public:
-		State(const char* label, States::Base* state, States::Base* state_long_press, Base* menu_short_press_running, Base* menu_short_press_finished);
+		State(const char* label, States::Base* state, Base* menu_short_press_running, Base* menu_short_press_finished);
 		void show();
 		void loop();
+		void invoke();
+		void leave();
 		Base* event_button_short_press();
-		Base* event_button_long_press();
 		void event_control_up();
 		void event_control_down();
 	protected:
 		States::Base* state;
-		States::Base* const state_long_press;
 		Base* const menu_short_press_running;
 		Base* const menu_short_press_finished;
 	private:
@@ -140,6 +149,6 @@ namespace UI {
 		uint16_t old_time;
 		unsigned long spin_us_last;
 		unsigned long bound_us_last;
-		uint8_t loop_count;
+		uint8_t spin_count;
 	};
 }

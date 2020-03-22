@@ -10,8 +10,8 @@ namespace States {
 	class Base {
 	public:
 		Base(const char* title, uint8_t* fans_duties = config.fans_menu_speed, uint8_t* target_temp = nullptr);
-		virtual void invoke();
-		virtual void cancel();
+		virtual void start();
+		virtual void stop();
 		virtual Base* loop();
 		virtual const char* get_title();
 		virtual const char* get_message();
@@ -19,6 +19,8 @@ namespace States {
 		virtual float get_temperature();
 		virtual const char* decrease_time();
 		virtual const char* increase_time();
+		virtual bool is_running();
+		virtual void pause_continue();
 	protected:
 		const char* const title;
 		uint8_t* const fans_duties;
@@ -35,13 +37,16 @@ namespace States {
 			bool return_temperature = false,
 			uint8_t* target_temp = nullptr,
 			Countimer::CountType timer_type = Countimer::COUNT_DOWN);
-		void invoke();
-		void cancel();
+		void start();
+		void stop();
 		Base* loop();
+		const char* get_title();
 		uint16_t get_time();
 		float get_temperature();
 		const char* decrease_time();
 		const char* increase_time();
+		bool is_running();
+		void pause_continue();
 		void set_continue_to(Base* to);
 	protected:
 		Base* continue_to;
@@ -64,7 +69,7 @@ namespace States {
 	class Confirm : public Base {
 	public:
 		Confirm(const char* title);
-		void invoke();
+		void start();
 		Base* loop();
 		const char* get_message();
 	private:
@@ -85,6 +90,6 @@ namespace States {
 	extern Warmup warmup_resin;
 
 	void init();
-	void loop();
+	void loop(Events& events);
 	void change(Base* new_state);
 }

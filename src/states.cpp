@@ -7,12 +7,12 @@ namespace States {
 		title(title), fans_duties(fans_duties), target_temp(target_temp)
 	{}
 
-	void Base::invoke() {
+	void Base::start() {
 		USB_PRINTLN(__PRETTY_FUNCTION__);
 		hw.set_fans(fans_duties, target_temp);
 	}
 
-	void Base::cancel() {
+	void Base::stop() {
 		USB_PRINTLN(__PRETTY_FUNCTION__);
 	}
 
@@ -44,6 +44,13 @@ namespace States {
 		return nullptr;
 	}
 
+	bool Base::is_running() {
+		return true;
+	}
+
+	void Base::pause_continue() {
+	}
+
 
 	Timer::Timer(const char* title,
 		uint8_t* fans_duties,
@@ -60,17 +67,17 @@ namespace States {
 		timer(timer_type)
 	{}
 
-	void Timer::invoke() {
+	void Timer::start() {
 		USB_PRINTLN(__PRETTY_FUNCTION__);
 		timer.setCounter(0, *continue_after, 0);
 		timer.start();
-		Base::invoke();
+		Base::start();
 	}
 
-	void Timer::cancel() {
+	void Timer::stop() {
 		USB_PRINTLN(__PRETTY_FUNCTION__);
 		timer.stop();
-		Base::cancel();
+		Base::stop();
 	}
 
 	Base* Timer::loop() {
@@ -79,6 +86,10 @@ namespace States {
 			return continue_to;
 		}
 		return nullptr;
+	}
+
+	const char* Timer::get_title() {
+		return timer.isStopped() ? pgmstr_paused : title;
 	}
 
 	uint16_t Timer::get_time() {
@@ -113,6 +124,18 @@ namespace States {
 		}
 	}
 
+	bool Timer::is_running() {
+		return !timer.isStopped();
+	}
+
+	void Timer::pause_continue() {
+		if (timer.isStopped()) {
+			timer.start();
+		} else {
+			timer.pause();
+		}
+	}
+
 	void Timer::set_continue_to(Base* to) {
 		continue_to = to;
 	}
@@ -142,11 +165,11 @@ namespace States {
 		Base(title), us_last(0), beep(0)
 	{}
 
-	void Confirm::invoke() {
+	void Confirm::start() {
 		USB_PRINTLN(__PRETTY_FUNCTION__);
 		us_last = 0;
 		beep = config.finish_beep_mode;
-		Base::invoke();
+		Base::start();
 	}
 
 	Base* Confirm::loop() {
@@ -184,10 +207,11 @@ namespace States {
 	Base* active_state = &menu;
 
 	void init() {
-		active_state->invoke();
+		active_state->start();
 	}
 
-	void loop() {
+	void loop(Events& events) {
+		// TODO process events too!
 		Base* new_state = active_state->loop();
 		if (new_state) {
 			change(new_state);
@@ -195,8 +219,8 @@ namespace States {
 	}
 
 	void change(Base* new_state) {
-		active_state->cancel();
+		active_state->stop();
 		active_state = new_state;
-		active_state->invoke();
+		active_state->start();
 	}
 }

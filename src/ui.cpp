@@ -7,11 +7,10 @@ namespace UI {
 
 	// UI:SN
 	SN::SN(const char* label) :
-		Base(label, 0, true)
+		Base(label)
 	{}
 
 	char* SN::get_menu_label(char* buffer, uint8_t buffer_size) {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		strncpy_P(buffer, pgmstr_sn, buffer_size);
 		// sizeof() != strlen()
 		uint8_t bs = buffer_size - (sizeof(pgmstr_sn) - 1);
@@ -24,23 +23,47 @@ namespace UI {
 		Bool(label, value, pgmstr_celsius_units, pgmstr_fahrenheit_units), to_change(to_change), to_change_count(to_change_count)
 	{}
 
-	bool SI_switch::in_menu_action() {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
+	Base* SI_switch::in_menu_action() {
 		for (uint8_t i = 0; i < to_change_count; ++i) {
 			to_change[i]->units_change(value^1);
 		}
 		Bool::in_menu_action();
-		return true;
+		return this;
+	}
+
+
+	// UI::Pause
+	Pause::Pause(Base* back) :
+		Base(pgmstr_emptystr), back(back)
+	{}
+
+	char* Pause::get_menu_label(char* buffer, uint8_t buffer_size) {
+		USB_PRINTLN(__PRETTY_FUNCTION__);
+		buffer[--buffer_size] = char(0);	// end of text
+		memset(buffer, ' ', buffer_size++);
+		const char* from = States::active_state->is_running() ? pgmstr_pause : pgmstr_continue;
+		uint8_t c = pgm_read_byte(from);
+		while (--buffer_size && c) {
+			*buffer = c;
+			++buffer;
+			c = pgm_read_byte(++from);
+		}
+		return buffer;
+	}
+
+	Base* Pause::in_menu_action() {
+		USB_PRINTLN(__PRETTY_FUNCTION__);
+		States::active_state->pause_continue();
+		return back;
 	}
 
 
 	// UI::Do_it
-	Do_it::Do_it(const char* label, uint8_t& curing_machine_mode, States::Base* long_press_state, Base* menu_short_press_running, Base* menu_short_press_finished) :
-		State(label, nullptr, long_press_state, menu_short_press_running, menu_short_press_finished), curing_machine_mode(curing_machine_mode)
+	Do_it::Do_it(const char* label, uint8_t& curing_machine_mode, Base* menu_short_press_running, Base* menu_short_press_finished) :
+		State(label, nullptr, menu_short_press_running, menu_short_press_finished), curing_machine_mode(curing_machine_mode)
 	{}
 
 	char* Do_it::get_menu_label(char* buffer, uint8_t buffer_size) {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		if (hw.is_tank_inserted()) {
 			label = pgmstr_washing;
 		} else {
@@ -59,8 +82,7 @@ namespace UI {
 		return State::get_menu_label(buffer, buffer_size);
 	}
 
-	void Do_it::show() {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
+	void Do_it::invoke() {
 		if (hw.is_tank_inserted()) {
 			state = &States::washing;
 		} else {
@@ -77,12 +99,13 @@ namespace UI {
 			}
 			state = &States::warmup_print;
 		}
-		State::show();
+		State::invoke();
 	}
 
 
 	/*** menu definitions ***/
 	Base back(pgmstr_back, BACK_CHAR);
+	Base stop(pgmstr_stop, STOP_CHAR);
 
 	// run time menu
 	Minutes curing_run_time(pgmstr_curing_run_time, config.curing_run_time);
@@ -144,11 +167,11 @@ namespace UI {
 
 	// info menu
 	SN serial_number(pgmstr_serial_number);
-	Base fw_version(pgmstr_fw_version, 0, true);
-	Base build_nr(pgmstr_build_nr, 0, true);
-	Base fw_hash(pgmstr_fw_hash, 0, true);
+	Text fw_version(pgmstr_fw_version);
+	Text build_nr(pgmstr_build_nr);
+	Text fw_hash(pgmstr_fw_hash);
 #if FW_LOCAL_CHANGES
-	Base workspace_dirty(pgmstr_workspace_dirty, 0, true);
+	Text workspace_dirty(pgmstr_workspace_dirty);
 	Base* const info_items[] = {&back, &serial_number, &fw_version, &build_nr, &fw_hash, &workspace_dirty};
 #else
 	Base* const info_items[] = {&back, &serial_number, &fw_version, &build_nr, &fw_hash};
@@ -162,9 +185,14 @@ namespace UI {
 	Base* const config_items[] = {&back, &speed_menu, &curing_machine_mode, &temperature_menu, &sound_menu, &fans_menu, &led_pwm_value, &info_menu};
 	Menu config_menu(pgmstr_settings, config_items, COUNT_ITEMS(config_items));
 
+	// run menu
+	Pause pause(&back);
+	Base* const run_items[] = {&pause, &stop, &back};
+	Menu run_menu(pgmstr_emptystr, run_items, COUNT_ITEMS(run_items));
+
 	// home menu
-	Do_it do_it(pgmstr_emptystr, config.curing_machine_mode, &States::menu, nullptr, &back);
-	State resin_preheat(pgmstr_resin_preheat, &States::warmup_resin, &States::menu, nullptr, &back);
+	Do_it do_it(pgmstr_emptystr, config.curing_machine_mode, &run_menu, &back);
+	State resin_preheat(pgmstr_resin_preheat, &States::warmup_resin, &run_menu, &back);
 	Base* const home_items[] = {&do_it, &resin_preheat, &run_time_menu, &config_menu};
 	Menu home_menu(pgmstr_emptystr, home_items, COUNT_ITEMS(home_items));
 
@@ -180,15 +208,19 @@ namespace UI {
 		home_menu.set_long_press_ui_item(&curing_machine_mode);
 		do_it.set_long_press_ui_item(&back);
 		resin_preheat.set_long_press_ui_item(&back);
+		active_menu->invoke();
 		active_menu->show();
 	}
 
-	void loop() {
+	void loop(Events& events) {
 		active_menu->loop();
-		Base* new_menu = active_menu->process_events(hw.get_events((bool)config.sound_response));
-		if (new_menu == &back || new_menu == active_menu) {
+		Base* new_menu = active_menu->process_events(events);
+		if (new_menu == &stop || new_menu == &back || new_menu == active_menu) {
 			if (menu_depth) {
-				active_menu = menu_stack[--menu_depth];
+				do {
+					active_menu->leave();
+					active_menu = menu_stack[--menu_depth];
+				} while (new_menu == &stop && menu_depth);
 				lcd.clear();
 				active_menu->show();
 			} else {
@@ -199,6 +231,7 @@ namespace UI {
 				menu_stack[menu_depth++] = active_menu;
 				active_menu = new_menu;
 				lcd.clear();
+				active_menu->invoke();
 				active_menu->show();
 			} else {
 				USB_PRINTLN("ERROR: MAX_MENU_DEPTH reached!");

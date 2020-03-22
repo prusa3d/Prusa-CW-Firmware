@@ -14,44 +14,6 @@
 #include "states.h"
 
 const char* pgmstr_serial_number = reinterpret_cast<const char*>(0x7fe0); // see SN_LENGTH!!!
-
-Countimer tDown(Countimer::COUNT_DOWN);
-Countimer tUp(Countimer::COUNT_UP);
-
-Selftest selftest;
-
-enum menu_state : uint8_t {
-	HOME,
-	SPEED_STATE,
-	SPEED_CURING,
-	SPEED_WASHING,
-	TIME,
-	TIME_CURING,
-	TIME_DRYING,
-	TIME_WASHING,
-	TIME_RESIN_PREHEAT,
-	SETTINGS,
-	TEMPERATURES,
-	TARGET_TEMP,
-	RESIN_TARGET_TEMP,
-	RUN_MODE,
-	SOUND_SETTINGS,
-	FANS,
-	LED_INTENSITY,
-	FAN1_CURING,
-	FAN1_DRYING,
-	FAN2_CURING,
-	FAN2_DRYING,
-	RUNNING,
-	RUN_MENU,
-	BEEP,
-	INFO,
-	CONFIRM,
-	ERROR,
-	SELFTEST
-};
-
-
 volatile uint16_t* const bootKeyPtr = (volatile uint16_t *)(RAMEND - 1);
 static volatile uint16_t bootKeyPtrVal __attribute__ ((section (".noinit")));
 
@@ -99,38 +61,48 @@ uint8_t Play[8] = {
 	B00000
 };
 
-const uint8_t max_preheat_run_time = 30;
+uint8_t Stop[8] = {
+	B00000,
+	B10001,
+	B01010,
+	B00100,
+	B01010,
+	B10001,
+	B00000,
+	B00000
+};
 
-// TODO remove
-volatile uint8_t rotary_diff = 128;
 
-bool redraw_ms = true;
-bool mode_flag = true;	//helping var for selftesting
+//Selftest selftest;
 
-menu_state state = HOME;
+//const uint8_t max_preheat_run_time = 30;
 
-uint8_t menu_position = 0;
-uint8_t last_menu_position = 0;
-uint8_t last_seconds = 0;
+//volatile uint8_t rotary_diff = 128;
 
-unsigned long time_now = 0;
-unsigned long therm_read_time_now = 0;
+//bool redraw_ms = true;
+//bool mode_flag = true;	//helping var for selftesting
 
-unsigned long us_last = 0;
-unsigned long led_time_now = 0;
+//uint8_t menu_position = 0;
+//uint8_t last_menu_position = 0;
+//uint8_t last_seconds = 0;
 
-long remain = 0;
+//unsigned long time_now = 0;
 
-bool curing_mode = false;
-bool drying_mode = false;
-bool paused = false;
-bool cover_open = false;
-bool gastro_pan = false;
-bool paused_time = false;
-bool led_start = false;
+//unsigned long us_last = 0;
+//unsigned long led_time_now = 0;
 
-bool preheat_complete = false;
-bool pid_mode = false;
+//long remain = 0;
+
+//bool curing_mode = false;
+//bool drying_mode = false;
+//bool paused = false;
+//bool cover_open = false;
+//bool gastro_pan = false;
+//bool paused_time = false;
+//bool led_start = false;
+
+//bool preheat_complete = false;
+//bool pid_mode = false;
 
 // 1ms timer for read controls
 void setupTimer0() {
@@ -178,17 +150,7 @@ void fan_tacho3() {
 	hw.fan_tacho_count[2]++;
 }
 
-static void menu_move(bool sound_echo);
-static void machine_running();
-static void button_press();
-static void start_drying();
-static void stop_curing_drying();
-static void leave_action();
-static void start_curing();
-static void start_washing();
-static void lcd_time_print();
-
-
+/*
 void run_stop() {
 	menu_position = 0;
 	pid_mode = false;
@@ -202,6 +164,7 @@ void run_stop() {
 	tDown.stop();
 	tUp.stop();
 }
+*/
 
 void setup() {
 
@@ -224,11 +187,12 @@ void setup() {
 	lcd.createChar(BACK_CHAR, Back);
 	lcd.createChar(RIGHT_CHAR, Right);
 	lcd.createChar(PLAY_CHAR, Play);
+	lcd.createChar(STOP_CHAR, Stop);
 
 	States::init();
 	UI::init();
 }
-
+/*
 void redraw_selftest_vals() {
 	if (selftest.phase == 3 && selftest.vent_test != true) {
 		lcd.print(selftest.fan_tacho[0], 7, 1);
@@ -241,7 +205,6 @@ void redraw_selftest_vals() {
 	if (selftest.phase == 6 && selftest.rotation_test != true) {
 		lcd.print((uint8_t)mode_flag, 12, 1);
 		lcd.setCursor(14,1);
-		/* FIXME do it better!
 		if (mode_flag) {
 			if (speed_control.curing_speed <= 11)
 				lcd.print((uint8_t)(speed_control.curing_speed - 1));
@@ -249,7 +212,6 @@ void redraw_selftest_vals() {
 			if (speed_control.washing_speed <= 11)
 				lcd.print(uint8_t(speed_control.washing_speed - 1));
 		}
-		*/
 	}
 	if (selftest.phase == 3 || selftest.phase == 4 || selftest.phase == 5) {
 		uint8_t lcd_min = selftest.tCountDown.getCurrentMinutes();
@@ -257,21 +219,22 @@ void redraw_selftest_vals() {
 		lcd.printTime(lcd_min, lcd_sec, 7, 3);
 	}
 }
+*/
 
 void loop() {
 	if (*bootKeyPtr != MAGIC_KEY) {
 		wdt_reset();
 	}
 
-	hw.loop();
-	States::loop();
-	UI::loop();
+	Events events = hw.loop();
+	States::loop(events);
+	UI::loop(events);
+}
 
 
 /*
 	tDown.run();
 	tUp.run();
-*/
 
 	if (state == SELFTEST) {
 
@@ -309,7 +272,6 @@ void loop() {
 							hw.stop_led();
 						}
 					} else {
-						/* FIXME do it better!
 						if (selftest.isCounterRunning) {
 							selftest.fail_flag = true;
 							selftest.tCountDown.stop();
@@ -317,13 +279,10 @@ void loop() {
 							selftest.led_test = true;
 							hw.stop_led();
 						}
-						*/
 					}
 				} else {
-					/* FIXME do it better!
 					if (selftest.isCounterRunning)
 						selftest.tCountDown.pause();
-					*/
 				}
 				break;
 
@@ -341,10 +300,8 @@ void loop() {
 							selftest.heat_test(hw.get_heater_error());
 						} else {
 							selftest.fans_speed[1] = 0;
-							/* FIXME do it better!
 							if (selftest.isCounterRunning)
 								selftest.heat_test(hw.get_heater_error());
-							*/
 						}
 					} else {
 						selftest.fans_speed[0] = 0;
@@ -357,7 +314,6 @@ void loop() {
 				break;
 
 			case 6:
-				/* FIXME do it better!
 				if (!selftest.rotation_test && selftest.motor_rotation_timer()) {
 					if (selftest.is_first_loop()) {
 						speed_control.curing_speed = 1;
@@ -394,7 +350,6 @@ void loop() {
 						selftest.rotation_test = true;
 					}
 				}
-				*/
 				break;
 
 			default:
@@ -403,8 +358,8 @@ void loop() {
 	}
 
 	if (hw.get_heater_error()) {
-		tDown.stop();
-		tUp.stop();
+		//tDown.stop();
+		//tUp.stop();
 		hw.stop_heater();
 		hw.stop_motor();
 		//hw.set_fans_duty(fans_menu_speed);
@@ -413,7 +368,7 @@ void loop() {
 		state = ERROR;
 	}
 
-/* TODO long press event
+TODO long press event
 			switch (state) {
 				case INFO:
 					state = SELFTEST;
@@ -436,6 +391,8 @@ void loop() {
 		lcd.createChar(BACKSLASH_CHAR, Backslash);
 		lcd.createChar(BACK_CHAR, Back);
 		lcd.createChar(RIGHT_CHAR, Right);
+		lcd.createChar(PLAY_CHAR, Play);
+		lcd.createChar(STOP_CHAR, Stop);
 		menu_move(false);
 
 		if (state == HOME || state == TEMPERATURES || state == SOUND_SETTINGS || state == SPEED_STATE) {
@@ -444,8 +401,7 @@ void loop() {
 		}
 	}
 */
-}
-
+/*
 void menu_move(bool sound_echo) {
 
 // ***********
@@ -454,13 +410,11 @@ void menu_move(bool sound_echo) {
 
 	switch (state) {
 		case RUN_MENU:
-			/*
 			if (!curing_mode && paused_time) {
 				generic_menu_P(3, paused ? pgmstr_ipa_tank_removed : pgmstr_pause, pgmstr_stop, pgmstr_back);
 			} else {
 				generic_menu_P(3, paused ? pgmstr_continue : pgmstr_pause, pgmstr_stop, pgmstr_back);
 			}
-			*/
 			break;
 
 		case RUNNING:
@@ -486,7 +440,6 @@ void menu_move(bool sound_echo) {
 			} else {
 				lcd.print_P(cover_open ? pgmstr_cover_is_open : (paused ? pgmstr_paused : pgmstr_washing));
 			}
-/*
 			if (curing_mode && drying_mode && config.heat_to_target_temp && !preheat_complete) {
 				lcd_clear_time_boundaries();
 			} else {
@@ -524,17 +477,14 @@ void menu_move(bool sound_echo) {
 					}
 				}
 			}
-*/
 			redraw_ms = true; // for print MM:SS part
 			break;
 
 		case SELFTEST:
 			if (selftest.phase == 0) {
-				/*
 				generic_menu_P(2, pgmstr_back, pgmstr_selftest);
 				lcd_print_back();
 				lcd_print_right(1);
-				*/
 			} else if (selftest.phase == 1) {
 				lcd.setCursor(1,0);
 				if (!selftest.cover_test) {
@@ -578,7 +528,8 @@ void menu_move(bool sound_echo) {
 	}
 	rotary_diff = 128;
 }
-
+*/
+/*
 void machine_running() {
 
 	if (curing_mode) {
@@ -761,7 +712,8 @@ void machine_running() {
 		start_washing();
 	}
 }
-
+*/
+/*
 void button_press() {
 	if (config.sound_response) {
 		hw.echo();
@@ -983,7 +935,8 @@ void button_press() {
 	menu_move(true);
 	//delay(475);
 }
-
+*/
+/*
 void start_drying() {
 	if (cover_open == false && paused == false) {
 		if (config.heat_to_target_temp || (config.curing_machine_mode == 3)) {
@@ -1053,7 +1006,8 @@ void start_drying() {
 	}
 	lcd_time_print();
 }
-
+*/
+/*
 void start_curing() {
 	hw.stop_heater();
 	if (cover_open == false && paused == false) {
@@ -1103,7 +1057,8 @@ void start_curing() {
 	}
 	lcd_time_print();
 }
-
+*/
+/*
 void start_washing() {
 	if (cover_open) {
 		cover_open = false;
@@ -1144,7 +1099,8 @@ void start_washing() {
 		leave_action();
 	}
 }
-
+*/
+/*
 void stop_curing_drying() {
 	pid_mode = false;
 	hw.stop_led();
@@ -1156,7 +1112,6 @@ void leave_action() {
 	hw.stop_motor();
 	hw.stop_heater();
 
-	/* DONE
 	//hw.set_fans_duty(fans_menu_speed);
 	switch (config.finish_beep_mode) {
 		case 2:
@@ -1172,10 +1127,9 @@ void leave_action() {
 			break;
 	}
 	menu_move(true);
-	*/
 
 }
-
+*/
 //! @brief Display remaining time
 /* DONE
 void lcd_time_print() {
@@ -1242,8 +1196,7 @@ void preheat() {
 #if 0
 //! @brief Get reset flags
 //! @return value of MCU Status Register - MCUSR as it was backed up by bootloader
-static uint8_t get_reset_flags()
-{
+static uint8_t get_reset_flags() {
 	return bootKeyPtrVal;
 }
 #endif
@@ -1256,7 +1209,6 @@ void get_key_from_boot(void) ATTR_INIT_SECTION(3);
 //! Do not call this function, it is placed in one of the initialization sections,
 //! which executes automatically before the main function of the application.
 //! Refer to the avr-libc manual for more information on the initialization sections.
-void get_key_from_boot(void)
-{
+void get_key_from_boot(void) {
 	bootKeyPtrVal = *bootKeyPtr;
 }
