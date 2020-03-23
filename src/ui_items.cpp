@@ -397,6 +397,18 @@ namespace UI {
 		Base::invoke();
 	}
 
+	void State::event_tank_inserted() {
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
+		old_time = UINT16_MAX;
+		Base::event_tank_inserted();
+	}
+
+	void State::event_tank_removed() {
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
+		old_time = UINT16_MAX;
+		Base::event_tank_removed();
+	}
+
 	Base* State::event_button_short_press() {
 //		USB_PRINTLN(__PRETTY_FUNCTION__);
 		if (old_message) {

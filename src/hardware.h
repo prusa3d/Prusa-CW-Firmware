@@ -45,7 +45,8 @@ public:
 	void beep();
 	void warning_beep();
 
-	void set_fans(uint8_t* duties, uint8_t* target_temp);
+	void set_fans(uint8_t* duties);
+	void set_target_temp(uint8_t target_temp);
 	bool get_heater_error();
 	uint8_t get_fans_error();
 

@@ -77,12 +77,8 @@ uint8_t Stop[8] = {
 
 //const uint8_t max_preheat_run_time = 30;
 
-//volatile uint8_t rotary_diff = 128;
-
-//bool redraw_ms = true;
 //bool mode_flag = true;	//helping var for selftesting
 
-//uint8_t menu_position = 0;
 //uint8_t last_menu_position = 0;
 //uint8_t last_seconds = 0;
 
@@ -152,7 +148,6 @@ void fan_tacho3() {
 
 /*
 void run_stop() {
-	menu_position = 0;
 	pid_mode = false;
 	state = HOME;
 	paused = false;
@@ -372,7 +367,6 @@ TODO long press event
 			switch (state) {
 				case INFO:
 					state = SELFTEST;
-					menu_position = 0;
 					menu_move(true);
 					break;
 				default:
@@ -403,10 +397,6 @@ TODO long press event
 */
 /*
 void menu_move(bool sound_echo) {
-
-// ***********
-	return;
-// ***********
 
 	switch (state) {
 		case RUN_MENU:
@@ -440,44 +430,6 @@ void menu_move(bool sound_echo) {
 			} else {
 				lcd.print_P(cover_open ? pgmstr_cover_is_open : (paused ? pgmstr_paused : pgmstr_washing));
 			}
-			if (curing_mode && drying_mode && config.heat_to_target_temp && !preheat_complete) {
-				lcd_clear_time_boundaries();
-			} else {
-				if (rotary_diff > 128) {
-					if (tDown.getCurrentMinutes() <= 9) {
-						uint8_t mins = tDown.getCurrentMinutes();
-						uint8_t secs = tDown.getCurrentSeconds();
-						lcd_clear_time_boundaries();
-						lcd.print_P(pgmstr_double_gt, LAYOUT_TIME_GT, LAYOUT_TIME_Y);
-
-						if (secs <= 30) {
-							tDown.setCounter(0, mins, secs + 30);
-						} else {
-							tDown.setCounter(0, mins + 1, 30 - (60 - secs));
-						}
-					} else {
-						lcd_clear_time_boundaries();
-						lcd.print_P(pgmstr_max_symb, LAYOUT_TIME_GT, LAYOUT_TIME_Y);
-					}
-				} else if (rotary_diff < 128) {
-					if (tDown.getCurrentSeconds() >= 30 || tDown.getCurrentMinutes() >= 1) {
-						uint8_t mins = tDown.getCurrentMinutes();
-						uint8_t secs = tDown.getCurrentSeconds();
-						lcd_clear_time_boundaries();
-						lcd.print_P(pgmstr_double_lt, LAYOUT_TIME_LT, LAYOUT_TIME_Y);
-
-						if (secs >= 30) {
-							tDown.setCounter(0, mins, secs - 30);
-						} else {
-							tDown.setCounter(0, mins - 1, 60 - (30 - secs));
-						}
-					} else {
-						lcd_clear_time_boundaries();
-						lcd.print_P(pgmstr_min_symb, LAYOUT_TIME_LT, LAYOUT_TIME_Y);
-					}
-				}
-			}
-			redraw_ms = true; // for print MM:SS part
 			break;
 
 		case SELFTEST:
@@ -526,7 +478,6 @@ void menu_move(bool sound_echo) {
 		default:
 			break;
 	}
-	rotary_diff = 128;
 }
 */
 /*
@@ -798,7 +749,6 @@ void button_press() {
 
 					us_last = millis();
 
-					menu_position = 0;
 					state = RUNNING;
 					menu_move(true);
 					break;
@@ -825,7 +775,6 @@ void button_press() {
 								hw.run_motor();
 								//hw.set_fans_duty(config.fans_curing_speed);
 							}
-							menu_position = 0;
 							state = RUNNING;
 						}
 					} else {
@@ -840,7 +789,6 @@ void button_press() {
 								hw.run_motor();
 								//hw.set_fans_duty(fans_washing_speed);
 							}
-							menu_position = 0;
 							state = RUNNING;
 						}
 					}
@@ -851,7 +799,6 @@ void button_press() {
 					break;
 
 				case 2:
-					menu_position = 0;
 					state = RUNNING;
 					break;
 
@@ -923,15 +870,12 @@ void button_press() {
 				default:
 					break;
 			}
-			menu_position = 0;
 			break;
 
 		default:
 			break;
 	}
-//	scrolling_list_set(menu_position);
 
-	rotary_diff = 128;
 	menu_move(true);
 	//delay(475);
 }
@@ -1108,7 +1052,6 @@ void stop_curing_drying() {
 }
 
 void leave_action() {
-	menu_position = 0;
 	hw.stop_motor();
 	hw.stop_heater();
 
@@ -1155,7 +1098,6 @@ void lcd_time_print() {
 	}
 
 	if (state == RUNNING && (secs != last_seconds || redraw_ms)) {
-		redraw_ms = false;
 		last_seconds = secs;
 		lcd.printTime(mins, secs, LAYOUT_TIME_X, LAYOUT_TIME_Y);
 
