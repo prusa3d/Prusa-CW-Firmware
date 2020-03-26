@@ -38,7 +38,7 @@ namespace UI {
 	{}
 
 	char* Pause::get_menu_label(char* buffer, uint8_t buffer_size) {
-		USB_PRINTLN(__PRETTY_FUNCTION__);
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		buffer[--buffer_size] = char(0);	// end of text
 		memset(buffer, ' ', buffer_size++);
 		const char* from = States::active_state->is_running() ? pgmstr_pause : pgmstr_continue;
@@ -52,7 +52,7 @@ namespace UI {
 	}
 
 	Base* Pause::in_menu_action() {
-		USB_PRINTLN(__PRETTY_FUNCTION__);
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		States::active_state->pause_continue();
 		return back;
 	}
@@ -206,8 +206,6 @@ namespace UI {
 			SI_changed[i]->init(config.SI_unit_system);
 		}
 		home_menu.set_long_press_ui_item(&curing_machine_mode);
-		do_it.set_long_press_ui_item(&back);
-		resin_preheat.set_long_press_ui_item(&back);
 		active_menu->invoke();
 		active_menu->show();
 	}

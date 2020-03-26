@@ -136,6 +136,8 @@ namespace UI {
 		void invoke();
 		void leave();
 		Base* event_button_short_press();
+		void event_cover_opened();
+		void event_cover_closed();
 		void event_tank_inserted();
 		void event_tank_removed();
 		void event_control_up();

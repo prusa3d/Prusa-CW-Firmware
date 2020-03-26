@@ -34,7 +34,7 @@ public:
 	void stop_heater();
 	bool is_heater_running();
 
-	void run_led(uint8_t pwm);
+	void run_led();
 	void stop_led();
 	bool is_led_on();
 
@@ -88,6 +88,7 @@ private:
 	bool tank_inserted;
 	bool button_active;
 	bool long_press_active;
+	bool heater_error;
 };
 
 extern Hardware hw;

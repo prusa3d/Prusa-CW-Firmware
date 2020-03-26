@@ -32,7 +32,8 @@ Hardware::Hardware() :
 		PI_summ_err(0),
 		do_acceleration(false),
 		button_active(false),
-		long_press_active(false) {
+		long_press_active(false),
+		heater_error(false) {
 
 	outputchip.begin();
 	outputchip.pinMode(0B0000000010010111);
@@ -187,8 +188,8 @@ bool Hardware::is_heater_running() {
 	return (bool)fan_duty[2];
 }
 
-void Hardware::run_led(uint8_t pwm) {
-	analogWrite(LED_PWM_PIN, map(pwm, 0, 100, 0, 255));
+void Hardware::run_led() {
+	analogWrite(LED_PWM_PIN, map(config.led_pwm_value, 0, 100, 0, 255));
 	outputchip.digitalWrite(LED_RELE_PIN, HIGH);
 }
 
@@ -244,6 +245,7 @@ void Hardware::set_fans(uint8_t* duties) {
 
 void Hardware::set_target_temp(uint8_t target_temp) {
 	fans_target_temp = target_temp;
+	PI_summ_err = 0;
 }
 
 void Hardware::fans_duty() {
@@ -264,22 +266,30 @@ void Hardware::fans_duty() {
 }
 
 void Hardware::fans_PI_regulator() {
+	// FIXME this is not working as expected :(
+	USB_PRINT("actual: ");
+	USB_PRINTLN(chamber_temp);
+	USB_PRINT("target: ");
+	USB_PRINTLN(fans_target_temp);
 	double err_value = chamber_temp - fans_target_temp;
+	USB_PRINT("err: ");
+	USB_PRINTLN(err_value);
 	PI_summ_err += err_value;
+	USB_PRINT("sum: ");
+	USB_PRINTLN(PI_summ_err);
 
 	if ((PI_summ_err > 10000) || (PI_summ_err < -10000)) {
 		PI_summ_err = 10000;
 	}
 
 	double new_speed = P * err_value + I * PI_summ_err;		// TODO uint8_t?
+	USB_PRINT("PI new value: ");
+	USB_PRINTLN(new_speed);
 	if (new_speed > 100) {
 		new_speed = 100;
 	} else if (new_speed < MIN_FAN_SPEED) {
 		new_speed = MIN_FAN_SPEED;
 	}
-
-	USB_PRINT("PI new value: ");
-	USB_PRINTLN(new_speed);
 
 	if (new_speed != fan_duty[0] || new_speed != fan_duty[1]) {
 		fan_duty[0] = new_speed;
@@ -306,7 +316,7 @@ void Hardware::fans_check() {
 }
 
 bool Hardware::get_heater_error() {
-	return (bool)(fan_errors & FAN3_ERROR_MASK);
+	return heater_error;
 }
 
 uint8_t Hardware::get_fans_error() {
@@ -332,10 +342,14 @@ Events Hardware::loop() {
 		}
 	}
 
+
 	Events events = {false, false, false, false, false, false, false, false};
 
-	if (get_heater_error())
+	if (heater_error)
 		return events;
+
+	// failed once, failed every time
+	heater_error = (bool)(fan_errors & FAN3_ERROR_MASK);
 
 	// cover
 	bool cover_closed_now = is_cover_closed();

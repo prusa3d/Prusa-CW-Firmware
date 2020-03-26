@@ -14,11 +14,12 @@ namespace States {
 		virtual void start();
 		virtual void stop();
 		virtual Base* loop();
-		void process_events(Events& events);
+		Base* process_events(Events& events);
 		virtual void event_cover_opened();
 		virtual void event_cover_closed();
 		virtual void event_tank_inserted();
 		virtual void event_tank_removed();
+		virtual Base* event_button_long_press();
 		virtual const char* get_title();
 		virtual const char* get_message();
 		virtual uint16_t get_time();
@@ -41,12 +42,12 @@ namespace States {
 			uint8_t* fans_duties,
 			uint8_t* after,
 			Base* to,
-			bool curing_mode = false,
 			Countimer::CountType timer_type = Countimer::COUNT_DOWN);
 		void start();
 		void stop();
 		Base* loop();
 		void event_tank_removed();
+		Base* event_button_long_press();
 		const char* get_title();
 		uint16_t get_time();
 		const char* decrease_time();
@@ -56,12 +57,38 @@ namespace States {
 		void set_continue_to(Base* to);
 	protected:
 		Base* continue_to;
+		virtual void do_pause();
+		virtual void do_continue();
 	private:
+		virtual bool get_curing_mode();
+		virtual const char* get_hw_pause_reason();
+		uint8_t* const continue_after;
+		Countimer timer;
+	};
+
+
+	// States::Curing
+	class Curing : public Timer {
+	public:
+		Curing(
+			const char* title,
+			uint8_t* fans_duties,
+			uint8_t* after,
+			Base* to);
+		void start();
+		void stop();
+		Base* loop();
+		void event_tank_removed();
+		void event_tank_inserted();
+		void event_cover_opened();
+		float get_temperature();
+	protected:
 		void do_pause();
 		void do_continue();
-		uint8_t* const continue_after;
-		bool curing_mode;
-		Countimer timer;
+	private:
+		bool get_curing_mode();
+		const char* get_hw_pause_reason();
+		unsigned long led_us_last;
 	};
 
 
@@ -76,9 +103,18 @@ namespace States {
 			uint8_t* target_temp = nullptr,
 			Countimer::CountType timer_type = Countimer::COUNT_DOWN);
 		void start();
+		void stop();
+		void event_tank_removed();
+		void event_tank_inserted();
+		void event_cover_opened();
 		float get_temperature();
 	protected:
 		uint8_t* const target_temp;
+		void do_pause();
+		void do_continue();
+	private:
+		bool get_curing_mode();
+		const char* get_hw_pause_reason();
 	};
 
 
@@ -95,13 +131,13 @@ namespace States {
 	// States::Confirm
 	class Confirm : public Base {
 	public:
-		Confirm(const char* title);
+		Confirm(const char* title, const char* message);
 		void start();
 		Base* loop();
 		const char* get_message();
 	private:
-		unsigned long us_last;
-		uint8_t beep;
+		const char* const message;
+		unsigned long beep_us_last;
 	};
 
 
@@ -110,9 +146,10 @@ namespace States {
 
 	extern Base menu;
 	extern Confirm confirm;
+	extern Confirm heater_error;
 	extern Timer washing;
 	extern TimerHeater drying;
-	extern TimerHeater curing;
+	extern Curing curing;
 	extern TimerHeater drying_curing;
 	extern TimerHeater resin;
 	extern Warmup warmup_print;

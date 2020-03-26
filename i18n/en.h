@@ -42,23 +42,23 @@ static const char pgmstr_finish_beep[] PROGMEM = _("Finish beep");
 
 // fans curing speed
 static const char pgmstr_fans_curing[] PROGMEM = _("Fans curing speed");
-static const char pgmstr_fan1_curing_speed[] PROGMEM = _("FAN1 curing speed");
-static const char pgmstr_fan2_curing_speed[] PROGMEM = _("FAN2 curing speed");
+static const char pgmstr_fan1_curing_speed[] PROGMEM = _("Fan1 curing speed");
+static const char pgmstr_fan2_curing_speed[] PROGMEM = _("Fan2 curing speed");
 
 // fans drying speed
 static const char pgmstr_fans_drying[] PROGMEM = _("Fans drying speed");
-static const char pgmstr_fan1_drying_speed[] PROGMEM = _("FAN1 drying speed");
-static const char pgmstr_fan2_drying_speed[] PROGMEM = _("FAN2 drying speed");
+static const char pgmstr_fan1_drying_speed[] PROGMEM = _("Fan1 drying speed");
+static const char pgmstr_fan2_drying_speed[] PROGMEM = _("Fan2 drying speed");
 
 // fans washing speed
 static const char pgmstr_fans_washing[] PROGMEM = _("Fans washing speed");
-static const char pgmstr_fan1_washing_speed[] PROGMEM = _("FAN1 washing speed");
-static const char pgmstr_fan2_washing_speed[] PROGMEM = _("FAN2 washing speed");
+static const char pgmstr_fan1_washing_speed[] PROGMEM = _("Fan1 washing speed");
+static const char pgmstr_fan2_washing_speed[] PROGMEM = _("Fan2 washing speed");
 
 // fans menu speed
 static const char pgmstr_fans_menu[] PROGMEM = _("Fans menu speed");
-static const char pgmstr_fan1_menu_speed[] PROGMEM = _("FAN1 menu speed");
-static const char pgmstr_fan2_menu_speed[] PROGMEM = _("FAN2 menu speed");
+static const char pgmstr_fan1_menu_speed[] PROGMEM = _("Fan1 menu speed");
+static const char pgmstr_fan2_menu_speed[] PROGMEM = _("Fan2 menu speed");
 
 // fans menu
 static const char pgmstr_fans[] PROGMEM = _("Fans");
@@ -100,7 +100,10 @@ static const char pgmstr_max_symb[] PROGMEM = ">|";
 static const char pgmstr_min_symb[] PROGMEM = "|<";
 static const char pgmstr_double_space[] PROGMEM = "  ";
 static const char pgmstr_paused[] PROGMEM = _("Paused");
-static const char pgmstr_cover_is_open[] PROGMEM = _("The cover is open");
+static const char pgmstr_close_cover[] PROGMEM = _("Close the cover");
+static const char pgmstr_remove_tank[] PROGMEM = _("Remove IPA tank");
+static const char pgmstr_heater_error[] PROGMEM = _("Heater fan error");
+static const char pgmstr_please_restart[] PROGMEM = _("Please restart");
 
 // confirm state
 static const char pgmstr_finished[] PROGMEM = _("Finished");
@@ -110,28 +113,23 @@ static const char pgmstr_press2continue[] PROGMEM = _("Press to continue");
 static const char pgmstr_heating[] PROGMEM = _("Heating");
 
 // washing state
-static const char pgmstr_ipa_tank_removed[] PROGMEM = _("IPA tank removed");
+static const char pgmstr_insert_tank[] PROGMEM = _("Insert IPA tank");
 
 
 // TODO
 static const char pgmstr_selftest[] PROGMEM = _("Run selftest");
-static const char pgmstr_fan1_failure[] PROGMEM = _("FAN1 failure");
-static const char pgmstr_fan2_failure[] PROGMEM = _("FAN2 failure");
+static const char pgmstr_fan1_failure[] PROGMEM = _("Fan1 failure");
+static const char pgmstr_fan2_failure[] PROGMEM = _("Fan2 failure");
 static const char pgmstr_heater_failure[] PROGMEM = _("HEATER failure");
-static const char pgmstr_heater_error[] PROGMEM = _("Heater fan error");
-static const char pgmstr_please_restart[] PROGMEM = _("Please restart");
 static const char pgmstr_open_cover[] PROGMEM = _("Open the cover");
-static const char pgmstr_close_cover[] PROGMEM = _("Close the cover");
 static const char pgmstr_test_failed[] PROGMEM = _("Test failed");
 static const char pgmstr_test_success[] PROGMEM = _("Test successful");
-static const char pgmstr_remove_tank[] PROGMEM = _("Remove IPA tank");
-static const char pgmstr_insert_tank[] PROGMEM = _("Insert IPA tank");
 static const char pgmstr_fan_test[] PROGMEM = _("Fan test");
 static const char pgmstr_led_test[] PROGMEM = _("LED test");
 static const char pgmstr_heater_test[] PROGMEM = _("Heater test");
 static const char pgmstr_rotetion_test[] PROGMEM = _("Rotation test");
-static const char pgmstr_fan1_test[] PROGMEM = _("FAN1:   x/100ms");
-static const char pgmstr_fan2_test[] PROGMEM = _("FAN2:   x/100ms");
+static const char pgmstr_fan1_test[] PROGMEM = _("Fan1:   x/100ms");
+static const char pgmstr_fan2_test[] PROGMEM = _("Fan2:   x/100ms");
 static const char pgmstr_mode_gear[] PROGMEM = _("Mode/Gear:");
 // untranslated constants
 static const char pgmstr_slash[] PROGMEM = "/";

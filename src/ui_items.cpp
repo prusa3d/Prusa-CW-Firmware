@@ -397,6 +397,18 @@ namespace UI {
 		Base::invoke();
 	}
 
+	void State::event_cover_opened() {
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
+		old_time = UINT16_MAX;
+		Base::event_cover_opened();
+	}
+
+	void State::event_cover_closed() {
+//		USB_PRINTLN(__PRETTY_FUNCTION__);
+		old_time = UINT16_MAX;
+		Base::event_cover_closed();
+	}
+
 	void State::event_tank_inserted() {
 //		USB_PRINTLN(__PRETTY_FUNCTION__);
 		old_time = UINT16_MAX;
@@ -420,21 +432,25 @@ namespace UI {
 
 	void State::event_control_up() {
 //		USB_PRINTLN(__PRETTY_FUNCTION__);
-		clear_time_boundaries();
-		const char* symbol = States::active_state->increase_time();
-		if (symbol) {
-			lcd.print_P(symbol, LAYOUT_TIME_GT, LAYOUT_TIME_Y);
-			bound_us_last = millis();
+		if (!States::active_state->get_message()) {
+			clear_time_boundaries();
+			const char* symbol = States::active_state->increase_time();
+			if (symbol) {
+				lcd.print_P(symbol, LAYOUT_TIME_GT, LAYOUT_TIME_Y);
+				bound_us_last = millis();
+			}
 		}
 	}
 
 	void State::event_control_down() {
 //		USB_PRINTLN(__PRETTY_FUNCTION__);
-		clear_time_boundaries();
-		const char* symbol = States::active_state->decrease_time();
-		if (symbol) {
-			lcd.print_P(symbol, LAYOUT_TIME_LT, LAYOUT_TIME_Y);
-			bound_us_last = millis();
+		if (!States::active_state->get_message()) {
+			clear_time_boundaries();
+			const char* symbol = States::active_state->decrease_time();
+			if (symbol) {
+				lcd.print_P(symbol, LAYOUT_TIME_LT, LAYOUT_TIME_Y);
+				bound_us_last = millis();
+			}
 		}
 	}
 
