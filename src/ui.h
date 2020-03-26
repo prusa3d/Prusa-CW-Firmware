@@ -5,7 +5,7 @@
 namespace UI {
 
 	// UI:SN
-	class SN : public Base {
+	class SN : public Text {
 	public:
 		SN(const char* label);
 		char* get_menu_label(char* buffer, uint8_t buffer_size);

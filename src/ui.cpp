@@ -7,7 +7,7 @@ namespace UI {
 
 	// UI:SN
 	SN::SN(const char* label) :
-		Base(label)
+		Text(label)
 	{}
 
 	char* SN::get_menu_label(char* buffer, uint8_t buffer_size) {
