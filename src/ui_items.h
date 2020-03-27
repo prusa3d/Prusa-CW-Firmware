@@ -2,7 +2,7 @@
 
 #include "hardware.h"
 #include "i18n.h"
-#include "states.h"
+#include "states_items.h"
 
 namespace UI {
 
@@ -25,11 +25,9 @@ namespace UI {
 		virtual void event_control_up();
 		virtual void event_control_down();
 		virtual Base* in_menu_action();
-		void set_long_press_ui_item(Base *ui_item);
 	protected:
 		const char* label;
 		uint8_t last_char;
-		Base* long_press_ui_item;
 	};
 
 
@@ -38,6 +36,14 @@ namespace UI {
 	public:
 		Text(const char* label);
 		Base* in_menu_action();
+	};
+
+
+	// UI:SN
+	class SN : public Text {
+	public:
+		SN(const char* label);
+		char* get_menu_label(char* buffer, uint8_t buffer_size);
 	};
 
 
@@ -50,10 +56,13 @@ namespace UI {
 		void event_tank_inserted();
 		void event_tank_removed();
 		Base* event_button_short_press();
+		Base* event_button_long_press();
 		void event_control_up();
 		void event_control_down();
+		void set_long_press_ui_item(Base *ui_item);
 	private:
 		Base* const* const items;
+		Base* long_press_ui_item;
 		uint8_t const items_count;
 		uint8_t menu_offset;
 		uint8_t cursor_position;
@@ -112,6 +121,17 @@ namespace UI {
 	};
 
 
+	// UI::SI_switch
+	class SI_switch : public Bool {
+	public:
+		SI_switch(const char* label, uint8_t& value, Temperature* const* to_change, uint8_t to_change_count);
+		Base* in_menu_action();
+	private:
+		Temperature* const* to_change;
+		uint8_t to_change_count;
+	};
+
+
 	// UI::Option
 	class Option : public Base {
 	public:
@@ -130,7 +150,7 @@ namespace UI {
 	// UI::State
 	class State : public Base {
 	public:
-		State(const char* label, States::Base* state, Base* menu_short_press_running, Base* menu_short_press_finished);
+		State(const char* label, States::Base* state, Base* state_menu = nullptr);
 		void show();
 		void loop();
 		void invoke();
@@ -144,8 +164,7 @@ namespace UI {
 		void event_control_down();
 	protected:
 		States::Base* state;
-		Base* const menu_short_press_running;
-		Base* const menu_short_press_finished;
+		Base* const state_menu;
 	private:
 		void clear_time_boundaries();
 		const char* old_title;
@@ -155,4 +174,27 @@ namespace UI {
 		unsigned long bound_us_last;
 		uint8_t spin_count;
 	};
+
+
+	// UI::Do_it
+	class Do_it : public State {
+	public:
+		Do_it(const char* label, uint8_t& curing_machine_mode, Base* state_menu = nullptr);
+		char* get_menu_label(char* buffer, uint8_t buffer_size);
+		void invoke();
+	private:
+		uint8_t& curing_machine_mode;
+	};
+
+
+	// UI::Pause
+	class Pause : public Base {
+	public:
+		Pause(Base* back);
+		char* get_menu_label(char* buffer, uint8_t buffer_size);
+		Base* in_menu_action();
+	private:
+		Base* back;
+	};
+
 }

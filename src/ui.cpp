@@ -1,107 +1,10 @@
 #include "LiquidCrystal_Prusa.h"
-#include "ui.h"
 #include "defines.h"
 #include "config.h"
+#include "ui.h"
+#include "states.h"
 
 namespace UI {
-
-	// UI:SN
-	SN::SN(const char* label) :
-		Text(label)
-	{}
-
-	char* SN::get_menu_label(char* buffer, uint8_t buffer_size) {
-		strncpy_P(buffer, pgmstr_sn, buffer_size);
-		// sizeof() != strlen()
-		uint8_t bs = buffer_size - (sizeof(pgmstr_sn) - 1);
-		return Base::get_menu_label(buffer + sizeof(pgmstr_sn) - 1, bs < SN_LENGTH+1 ? bs : SN_LENGTH+1);
-	}
-
-
-	// UI::SI_switch
-	SI_switch::SI_switch(const char* label, uint8_t& value, Temperature* const* to_change, uint8_t to_change_count) :
-		Bool(label, value, pgmstr_celsius_units, pgmstr_fahrenheit_units), to_change(to_change), to_change_count(to_change_count)
-	{}
-
-	Base* SI_switch::in_menu_action() {
-		for (uint8_t i = 0; i < to_change_count; ++i) {
-			to_change[i]->units_change(value^1);
-		}
-		Bool::in_menu_action();
-		return this;
-	}
-
-
-	// UI::Pause
-	Pause::Pause(Base* back) :
-		Base(pgmstr_emptystr), back(back)
-	{}
-
-	char* Pause::get_menu_label(char* buffer, uint8_t buffer_size) {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
-		buffer[--buffer_size] = char(0);	// end of text
-		memset(buffer, ' ', buffer_size++);
-		const char* from = States::active_state->is_running() ? pgmstr_pause : pgmstr_continue;
-		uint8_t c = pgm_read_byte(from);
-		while (--buffer_size && c) {
-			*buffer = c;
-			++buffer;
-			c = pgm_read_byte(++from);
-		}
-		return buffer;
-	}
-
-	Base* Pause::in_menu_action() {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
-		States::active_state->pause_continue();
-		return back;
-	}
-
-
-	// UI::Do_it
-	Do_it::Do_it(const char* label, uint8_t& curing_machine_mode, Base* menu_short_press_running, Base* menu_short_press_finished) :
-		State(label, nullptr, menu_short_press_running, menu_short_press_finished), curing_machine_mode(curing_machine_mode)
-	{}
-
-	char* Do_it::get_menu_label(char* buffer, uint8_t buffer_size) {
-		if (hw.is_tank_inserted()) {
-			label = pgmstr_washing;
-		} else {
-			switch (curing_machine_mode) {
-				case 2:
-					label = pgmstr_drying;
-					break;
-				case 1:
-					label = pgmstr_curing;
-					break;
-				default:
-					label = pgmstr_drying_curing;
-					break;
-			}
-		}
-		return State::get_menu_label(buffer, buffer_size);
-	}
-
-	void Do_it::invoke() {
-		if (hw.is_tank_inserted()) {
-			state = &States::washing;
-		} else {
-			switch (curing_machine_mode) {
-				case 2:
-					States::warmup_print.set_continue_to(&States::drying);
-					break;
-				case 1:
-					States::warmup_print.set_continue_to(&States::curing);
-					break;
-				default:
-					States::warmup_print.set_continue_to(&States::drying_curing);
-					break;
-			}
-			state = &States::warmup_print;
-		}
-		State::invoke();
-	}
-
 
 	/*** menu definitions ***/
 	Base back(pgmstr_back, BACK_CHAR);
@@ -191,12 +94,18 @@ namespace UI {
 	Menu run_menu(pgmstr_emptystr, run_items, COUNT_ITEMS(run_items));
 
 	// home menu
-	Do_it do_it(pgmstr_emptystr, config.curing_machine_mode, &run_menu, &back);
-	State resin_preheat(pgmstr_resin_preheat, &States::warmup_resin, &run_menu, &back);
+	Do_it do_it(pgmstr_emptystr, config.curing_machine_mode, &run_menu);
+	State resin_preheat(pgmstr_resin_preheat, &States::warmup_resin, &run_menu);
 	Base* const home_items[] = {&do_it, &resin_preheat, &run_time_menu, &config_menu};
 	Menu home_menu(pgmstr_emptystr, home_items, COUNT_ITEMS(home_items));
 
-	// menu data
+	// selftest menu
+	State selftest(pgmstr_selftest, &States::selftest_cover, nullptr);
+	Base* const selftest_items[] = {&back, &selftest};
+	Menu selftest_menu(pgmstr_emptystr, selftest_items, COUNT_ITEMS(selftest_items));
+
+
+	/*** menu data ***/
 	Base* menu_stack[MAX_MENU_DEPTH];
 	uint8_t menu_depth = 0;
 	Base* active_menu = &home_menu;
@@ -206,6 +115,7 @@ namespace UI {
 			SI_changed[i]->init(config.SI_unit_system);
 		}
 		home_menu.set_long_press_ui_item(&curing_machine_mode);
+		info_menu.set_long_press_ui_item(&selftest_menu);
 		active_menu->invoke();
 		active_menu->show();
 	}
@@ -213,7 +123,7 @@ namespace UI {
 	void loop(Events& events) {
 		active_menu->loop();
 		Base* new_menu = active_menu->process_events(events);
-		if (new_menu == &stop || new_menu == &back || new_menu == active_menu) {
+		if (new_menu == &stop || new_menu == &back || new_menu == active_menu || States::active_state->is_finished()) {
 			if (menu_depth) {
 				do {
 					active_menu->leave();

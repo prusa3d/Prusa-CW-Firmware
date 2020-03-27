@@ -1,14 +1,14 @@
 #include "LiquidCrystal_Prusa.h"
-#include "ui_items.h"
 #include "defines.h"
 #include "config.h"
+#include "ui_items.h"
 #include "states.h"
 
 namespace UI {
 
 	// UI::Base
 	Base::Base(const char* label, uint8_t last_char) :
-		label(label), last_char(last_char), long_press_ui_item(nullptr)
+		label(label), last_char(last_char)
 	{}
 
 	char* Base::get_menu_label(char* buffer, uint8_t buffer_size) {
@@ -59,19 +59,15 @@ namespace UI {
 	}
 
 	void Base::event_cover_opened() {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
 	}
 
 	void Base::event_cover_closed() {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
 	}
 
 	void Base::event_tank_inserted() {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
 	}
 
 	void Base::event_tank_removed() {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
 	}
 
 	Base* Base::event_button_short_press() {
@@ -79,7 +75,7 @@ namespace UI {
 	}
 
 	Base* Base::event_button_long_press() {
-		return long_press_ui_item;
+		return nullptr;
 	}
 
 	void Base::event_control_up() {
@@ -91,10 +87,6 @@ namespace UI {
 	Base* Base::in_menu_action() {
 		// go to next level
 		return nullptr;
-	}
-
-	void Base::set_long_press_ui_item(Base *ui_item) {
-		long_press_ui_item = ui_item;
 	}
 
 
@@ -109,9 +101,22 @@ namespace UI {
 	}
 
 
+	// UI:SN
+	SN::SN(const char* label) :
+		Text(label)
+	{}
+
+	char* SN::get_menu_label(char* buffer, uint8_t buffer_size) {
+		strncpy_P(buffer, pgmstr_sn, buffer_size);
+		// sizeof() != strlen()
+		uint8_t bs = buffer_size - (sizeof(pgmstr_sn) - 1);
+		return Base::get_menu_label(buffer + sizeof(pgmstr_sn) - 1, bs < SN_LENGTH+1 ? bs : SN_LENGTH+1);
+	}
+
+
 	// UI::Menu
 	Menu::Menu(const char* label, Base* const* items, uint8_t items_count) :
-		Base(label), items(items), items_count(items_count), menu_offset(0), cursor_position(0)
+		Base(label), items(items), long_press_ui_item(nullptr), items_count(items_count), menu_offset(0), cursor_position(0)
 	{
 		max_items = items_count < DISPLAY_LINES ? items_count : DISPLAY_LINES;
 	}
@@ -157,6 +162,10 @@ namespace UI {
 		}
 	}
 
+	Base* Menu::event_button_long_press() {
+		return long_press_ui_item;
+	}
+
 	void Menu::event_control_up() {
 		if (cursor_position < max_items - 1) {
 			++cursor_position;
@@ -175,6 +184,10 @@ namespace UI {
 			--menu_offset;
 			show();
 		}
+	}
+
+	void Menu::set_long_press_ui_item(Base *ui_item) {
+		long_press_ui_item = ui_item;
 	}
 
 
@@ -239,7 +252,6 @@ namespace UI {
 	}
 
 	void Temperature::units_change(bool SI) {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		init(SI);
 		if (SI) {
 			value = round(fahrenheit2celsius(value));
@@ -268,6 +280,20 @@ namespace UI {
 	Base* Bool::in_menu_action() {
 		value ^= 1;
 		write_config();
+		return this;
+	}
+
+
+	// UI::SI_switch
+	SI_switch::SI_switch(const char* label, uint8_t& value, Temperature* const* to_change, uint8_t to_change_count) :
+		Bool(label, value, pgmstr_celsius_units, pgmstr_fahrenheit_units), to_change(to_change), to_change_count(to_change_count)
+	{}
+
+	Base* SI_switch::in_menu_action() {
+		for (uint8_t i = 0; i < to_change_count; ++i) {
+			to_change[i]->units_change(value^1);
+		}
+		Bool::in_menu_action();
 		return this;
 	}
 
@@ -317,11 +343,10 @@ namespace UI {
 
 
 	// UI::State
-	State::State(const char* label, States::Base* state, Base* menu_short_press_running, Base* menu_short_press_finished) :
+	State::State(const char* label, States::Base* state, Base* state_menu) :
 		Base(label, PLAY_CHAR),
 		state(state),
-		menu_short_press_running(menu_short_press_running),
-		menu_short_press_finished(menu_short_press_finished),
+		state_menu(state_menu),
 		old_title(nullptr),
 		old_message(nullptr),
 		old_time(UINT16_MAX),
@@ -331,7 +356,6 @@ namespace UI {
 	{}
 
 	void State::show() {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		old_title = nullptr;
 		old_message = nullptr;
 		old_time = UINT16_MAX;
@@ -357,7 +381,7 @@ namespace UI {
 		} else {
 			unsigned long us_now = millis();
 			// spinner
-			if (States::active_state->is_running()) {
+			if (!States::active_state->is_paused()) {
 				lcd.setCursor(19, 0);
 				uint8_t c = pgm_read_byte(pgmstr_progress + spin_count);
 				lcd.write(c);
@@ -398,41 +422,34 @@ namespace UI {
 	}
 
 	void State::event_cover_opened() {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		old_time = UINT16_MAX;
 		Base::event_cover_opened();
 	}
 
 	void State::event_cover_closed() {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		old_time = UINT16_MAX;
 		Base::event_cover_closed();
 	}
 
 	void State::event_tank_inserted() {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		old_time = UINT16_MAX;
 		Base::event_tank_inserted();
 	}
 
 	void State::event_tank_removed() {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
 		old_time = UINT16_MAX;
 		Base::event_tank_removed();
 	}
 
 	Base* State::event_button_short_press() {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
-		if (old_message) {
-			return menu_short_press_finished;
-		} else {
-			return menu_short_press_running;
+		if (States::active_state->is_menu_available()) {
+			return state_menu;
 		}
+		return nullptr;
 	}
 
 	void State::event_control_up() {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
-		if (!States::active_state->get_message()) {
+		if (States::active_state->get_time() != UINT16_MAX) {
 			clear_time_boundaries();
 			const char* symbol = States::active_state->increase_time();
 			if (symbol) {
@@ -443,8 +460,7 @@ namespace UI {
 	}
 
 	void State::event_control_down() {
-//		USB_PRINTLN(__PRETTY_FUNCTION__);
-		if (!States::active_state->get_message()) {
+		if (States::active_state->get_time() != UINT16_MAX) {
 			clear_time_boundaries();
 			const char* symbol = States::active_state->decrease_time();
 			if (symbol) {
@@ -458,4 +474,74 @@ namespace UI {
 		lcd.print_P(pgmstr_double_space, LAYOUT_TIME_GT, LAYOUT_TIME_Y);
 		lcd.print_P(pgmstr_double_space, LAYOUT_TIME_LT, LAYOUT_TIME_Y);
 	}
+
+
+	// UI::Do_it
+	Do_it::Do_it(const char* label, uint8_t& curing_machine_mode, Base* state_menu) :
+		State(label, nullptr, state_menu), curing_machine_mode(curing_machine_mode)
+	{}
+
+	char* Do_it::get_menu_label(char* buffer, uint8_t buffer_size) {
+		if (hw.is_tank_inserted()) {
+			label = pgmstr_washing;
+		} else {
+			switch (curing_machine_mode) {
+				case 2:
+					label = pgmstr_drying;
+					break;
+				case 1:
+					label = pgmstr_curing;
+					break;
+				default:
+					label = pgmstr_drying_curing;
+					break;
+			}
+		}
+		return State::get_menu_label(buffer, buffer_size);
+	}
+
+	void Do_it::invoke() {
+		if (hw.is_tank_inserted()) {
+			state = &States::washing;
+		} else {
+			switch (curing_machine_mode) {
+				case 2:
+					States::warmup_print.set_continue_to(&States::drying);
+					break;
+				case 1:
+					States::warmup_print.set_continue_to(&States::curing);
+					break;
+				default:
+					States::warmup_print.set_continue_to(&States::drying_curing);
+					break;
+			}
+			state = &States::warmup_print;
+		}
+		State::invoke();
+	}
+
+
+	// UI::Pause
+	Pause::Pause(Base* back) :
+		Base(pgmstr_emptystr), back(back)
+	{}
+
+	char* Pause::get_menu_label(char* buffer, uint8_t buffer_size) {
+		buffer[--buffer_size] = char(0);	// end of text
+		memset(buffer, ' ', buffer_size++);
+		const char* from = States::active_state->is_paused() ? pgmstr_continue : pgmstr_pause;
+		uint8_t c = pgm_read_byte(from);
+		while (--buffer_size && c) {
+			*buffer = c;
+			++buffer;
+			c = pgm_read_byte(++from);
+		}
+		return buffer;
+	}
+
+	Base* Pause::in_menu_action() {
+		States::active_state->pause_continue();
+		return back;
+	}
+
 }

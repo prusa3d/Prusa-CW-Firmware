@@ -7,7 +7,8 @@
 #define EEPROM_BASE		E2END + 1 - EEPROM_OFFSET
 static_assert(sizeof(eeprom_v2_t) <= EEPROM_OFFSET, "eeprom_t doesn't fit in it's reserved space in the memory.");
 
-char config_magic[MAGIC_SIZE] = "CW1v2";
+const char config_magic[MAGIC_SIZE] PROGMEM = "CW1v2";
+const char legacy_magic1[MAGIC_SIZE] PROGMEM = "CURWA";
 
 //! @brief configuration
 //!
@@ -38,7 +39,9 @@ eeprom_v2_t config = {
 };
 
 void write_config() {
-	EEPROM.put(EEPROM_BASE, reinterpret_cast<uint8_t*>(config_magic), MAGIC_SIZE);
+	char magic[MAGIC_SIZE];
+	strncpy_P(magic, config_magic, MAGIC_SIZE);
+	EEPROM.put(EEPROM_BASE, reinterpret_cast<uint8_t*>(magic), MAGIC_SIZE);
 	EEPROM.put(EEPROM_BASE + MAGIC_SIZE, reinterpret_cast<uint8_t*>(&config), sizeof(config));
 }
 
@@ -53,10 +56,10 @@ void write_config() {
 void read_config() {
 	char test_magic[MAGIC_SIZE];
 	EEPROM.get(EEPROM_BASE, reinterpret_cast<uint8_t*>(test_magic), MAGIC_SIZE);
-	if (!strncmp(config_magic, test_magic, MAGIC_SIZE)) {
+	if (!strncmp_P(test_magic, config_magic, MAGIC_SIZE)) {
 		// latest magic
 		EEPROM.get(EEPROM_BASE + MAGIC_SIZE, reinterpret_cast<uint8_t*>(&config), sizeof(config));
-	} else if (!strncmp("CURWA", test_magic, MAGIC_SIZE)) {
+	} else if (!strncmp_P(test_magic, legacy_magic1, MAGIC_SIZE)) {
 		// legacy magic
 		uint8_t tmp = config.resin_target_temp;	// remember default
 		EEPROM.get(EEPROM_BASE + MAGIC_SIZE, reinterpret_cast<uint8_t*>(&config), sizeof(eeprom_v1_t));

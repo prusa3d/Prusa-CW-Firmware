@@ -4,8 +4,6 @@
 
 #define COUNTIMER_MAX_MINUTES_SECONDS 59
 
-typedef void(*timer_callback)(void);
-
 class Countimer {
 public:
 	enum CountType {
@@ -14,10 +12,10 @@ public:
 		COUNT_DOWN = 2
 	};
 
-	Countimer(CountType countType);
+	Countimer();
 
-	// Set up counter time(hours, minutes, seconds) for existing timer.
-	void setCounter(uint8_t hours, uint8_t minutes, uint8_t seconds);
+	// Set up counter time(hours, minutes, seconds and type) for existing timer.
+	void setCounter(uint8_t hours, uint8_t minutes, uint8_t seconds, CountType countType);
 
 	// Set up counter time in seconds for existing timer.
 	void setCounterInSeconds(uint16_t seconds);
@@ -33,8 +31,6 @@ public:
 
 	// Returns timer's current time in seconds.
 	uint16_t getCurrentTimeInSeconds();
-
-	void setInterval(timer_callback callback, uint32_t interval);
 
 	// Returns true if counter is completed, otherwise returns false.
 	bool isCounterCompleted();
@@ -65,9 +61,6 @@ private:
 	// Counting up timer.
 	void countDown();
 	
-	void callback();
-	void complete();
-
 	// Counting down timer.
 	void countUp();
 
@@ -81,11 +74,7 @@ private:
 	// Stores cached user's time.
 	uint32_t _countTime;
 
-	// Function to execute.
-	timer_callback _callback;
-
 	// Function to execute when timer is complete.
-	timer_callback _onComplete;
 	bool _isCounterCompleted;
 	bool _isStopped;
 	CountType _countType;

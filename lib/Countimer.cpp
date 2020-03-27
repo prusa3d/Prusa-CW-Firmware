@@ -1,20 +1,18 @@
 #include <stdio.h>
 #include "Countimer.h"
 
-Countimer::Countimer(CountType countType) :
+Countimer::Countimer() :
 	_interval(1),
 	_previousMillis(0),
 	_currentCountTime(0),
 	_startCountTime(0),
 	_countTime(0),
-	_callback(NULL),
-	_onComplete(NULL),
 	_isCounterCompleted(false),
 	_isStopped(true),
-	_countType(countType)
+	_countType(CountType::COUNT_NONE)
 { }
 
-void Countimer::setCounter(uint8_t hours, uint8_t minutes, uint8_t seconds) {
+void Countimer::setCounter(uint8_t hours, uint8_t minutes, uint8_t seconds, CountType countType) {
 	if (minutes > COUNTIMER_MAX_MINUTES_SECONDS) {
 		minutes = COUNTIMER_MAX_MINUTES_SECONDS;
 	}
@@ -22,6 +20,7 @@ void Countimer::setCounter(uint8_t hours, uint8_t minutes, uint8_t seconds) {
 	if (seconds > COUNTIMER_MAX_MINUTES_SECONDS) {
 		seconds = COUNTIMER_MAX_MINUTES_SECONDS;
 	}
+	_countType = countType;
 	setCounterInSeconds((hours * 3600L) + (minutes * 60L) + seconds);
 }
 
@@ -35,11 +34,6 @@ void Countimer::setCounterInSeconds(uint16_t seconds) {
 	}
 
 	_startCountTime = _currentCountTime;
-}
-
-void Countimer::setInterval(timer_callback callback, uint32_t interval) {
-	_interval = interval;
-	_callback = callback;
 }
 
 uint8_t Countimer::getCurrentHours() {
@@ -107,8 +101,6 @@ void Countimer::run() {
 			countDown();
 		} else if (_countType == COUNT_UP) {
 			countUp();
-		} else {
-			callback();
 		}
 		_previousMillis = millis();
 	}
@@ -116,32 +108,16 @@ void Countimer::run() {
 
 void Countimer::countDown() {
 	if (_currentCountTime > 0) {
-		callback();
 		_currentCountTime -= _interval;
 	} else {
 		stop();
-		complete();
 	}
 }
 
 void Countimer::countUp() {
 	if (_currentCountTime < _countTime) {
-		callback();
 		_currentCountTime += _interval;
 	} else {
 		stop();
-		complete();
-	}
-}
-
-void Countimer::callback() {
-	if (_callback != NULL) {
-		_callback();
-	}
-}
-
-void Countimer::complete() {
-	if (_onComplete != NULL) {
-		_onComplete();
 	}
 }

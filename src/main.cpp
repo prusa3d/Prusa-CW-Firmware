@@ -7,7 +7,6 @@
 #include "hardware.h"
 #include "Countimer.h"
 #include "USBCore.h"
-#include "Selftest.h"
 #include "i18n.h"
 #include "config.h"
 #include "ui.h"
@@ -17,7 +16,7 @@ const char* pgmstr_serial_number = reinterpret_cast<const char*>(0x7fe0); // see
 volatile uint16_t* const bootKeyPtr = (volatile uint16_t *)(RAMEND - 1);
 static volatile uint16_t bootKeyPtrVal __attribute__ ((section (".noinit")));
 
-uint8_t Back[8] = {
+const uint8_t Back[8] PROGMEM = {
 	B00100,
 	B01110,
 	B11111,
@@ -28,7 +27,7 @@ uint8_t Back[8] = {
 	B00000
 };
 
-uint8_t Right[8] = {
+const uint8_t Right[8] PROGMEM = {
 	B00000,
 	B00100,
 	B00010,
@@ -39,7 +38,7 @@ uint8_t Right[8] = {
 	B00000
 };
 
-uint8_t Backslash[8] = {
+const uint8_t Backslash[8] PROGMEM = {
 	B00000,
 	B10000,
 	B01000,
@@ -50,7 +49,7 @@ uint8_t Backslash[8] = {
 	B00000
 };
 
-uint8_t Play[8] = {
+const uint8_t Play[8] PROGMEM = {
 	B00000,
 	B01000,
 	B01100,
@@ -61,7 +60,7 @@ uint8_t Play[8] = {
 	B00000
 };
 
-uint8_t Stop[8] = {
+const uint8_t Stop[8] PROGMEM = {
 	B00000,
 	B10001,
 	B01010,
@@ -72,8 +71,6 @@ uint8_t Stop[8] = {
 	B00000
 };
 
-
-//Selftest selftest;
 
 // 1ms timer for read controls
 void setupTimer0() {
@@ -146,6 +143,7 @@ void setup() {
 
 	States::init();
 	UI::init();
+
 }
 /*
 void redraw_selftest_vals() {
@@ -184,6 +182,7 @@ void loop() {
 	Events events = hw.loop();
 	States::loop(events);
 	UI::loop(events);
+
 }
 
 
@@ -309,15 +308,6 @@ void loop() {
 			}
 	}
 
-TODO long press event
-			switch (state) {
-				case INFO:
-					state = SELFTEST;
-					menu_move(true);
-					break;
-				default:
-					break;
-			}
 */
 /*
 	// FIXME is this needed to fix ESD shock? Any better solution?

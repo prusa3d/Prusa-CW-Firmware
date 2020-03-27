@@ -66,7 +66,7 @@ static const char pgmstr_fans[] PROGMEM = _("Fans");
 // info menu
 static const char pgmstr_information[] PROGMEM = _("Information");
 static const char pgmstr_fw_version[] PROGMEM = _("FW version: ")  FW_VERSION;
-static const char pgmstr_sn[] PROGMEM = "SN:";
+static const char pgmstr_sn[] PROGMEM = "SN: ";
 static const char pgmstr_build_nr[] PROGMEM = _("Build: ") FW_BUILDNR;
 static const char pgmstr_fw_hash[] PROGMEM = FW_HASH;
 #if FW_LOCAL_CHANGES
@@ -89,6 +89,9 @@ static const char pgmstr_stop[] PROGMEM = _("Stop");
 // home menu
 static const char pgmstr_washing[] PROGMEM = _("Washing");
 static const char pgmstr_resin_preheat[] PROGMEM = _("Resin preheat");
+
+// self test menu
+static const char pgmstr_selftest[] PROGMEM = _("Selftest");
 
 // state menu
 static const char pgmstr_progress[] PROGMEM = { '|', '/', '-', BACKSLASH_CHAR };
@@ -115,19 +118,22 @@ static const char pgmstr_heating[] PROGMEM = _("Heating");
 // washing state
 static const char pgmstr_insert_tank[] PROGMEM = _("Insert IPA tank");
 
+// selftest states
+static const char pgmstr_heater_test[] PROGMEM = _("Heater test");
+static const char pgmstr_led_test[] PROGMEM = _("LED test");
+static const char pgmstr_rotation_test[] PROGMEM = _("Rotation test");
+static const char pgmstr_fans_test[] PROGMEM = _("Fans test");
+static const char pgmstr_ipatank_test[] PROGMEM = _("IPA tank test");
+static const char pgmstr_cover_test[] PROGMEM = _("Cover test");
+
 
 // TODO
-static const char pgmstr_selftest[] PROGMEM = _("Run selftest");
 static const char pgmstr_fan1_failure[] PROGMEM = _("Fan1 failure");
 static const char pgmstr_fan2_failure[] PROGMEM = _("Fan2 failure");
 static const char pgmstr_heater_failure[] PROGMEM = _("HEATER failure");
 static const char pgmstr_open_cover[] PROGMEM = _("Open the cover");
 static const char pgmstr_test_failed[] PROGMEM = _("Test failed");
 static const char pgmstr_test_success[] PROGMEM = _("Test successful");
-static const char pgmstr_fan_test[] PROGMEM = _("Fan test");
-static const char pgmstr_led_test[] PROGMEM = _("LED test");
-static const char pgmstr_heater_test[] PROGMEM = _("Heater test");
-static const char pgmstr_rotetion_test[] PROGMEM = _("Rotation test");
 static const char pgmstr_fan1_test[] PROGMEM = _("Fan1:   x/100ms");
 static const char pgmstr_fan2_test[] PROGMEM = _("Fan2:   x/100ms");
 static const char pgmstr_mode_gear[] PROGMEM = _("Mode/Gear:");

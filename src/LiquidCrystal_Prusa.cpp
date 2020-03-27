@@ -267,11 +267,11 @@ void LiquidCrystal_Prusa::noAutoscroll(void) {
 
 // Allows us to fill the first 8 CGRAM locations
 // with custom characters
-void LiquidCrystal_Prusa::createChar(uint8_t location, uint8_t charmap[]) {
+void LiquidCrystal_Prusa::createChar(uint8_t location, const uint8_t* charmap) {
 	location &= 0x7; // we only have 8 locations 0-7
 	command(LCD_SETCGRAMADDR | (location << 3));
 	for (uint8_t i = 0; i < 8; i++) {
-		write(charmap[i]);
+		write(pgm_read_byte(charmap++));
 	}
 }
 
@@ -303,13 +303,6 @@ void LiquidCrystal_Prusa::print(float number, uint8_t col, uint8_t row) {
 void LiquidCrystal_Prusa::printTime(uint16_t time, uint8_t col, uint8_t row) {
 	uint8_t min = time / 60;
 	uint8_t sec = time % 60;
-	print(min, col, row, 10, '0');
-	write(':');
-	print(sec, 255, 255, 10, '0');
-}
-
-// TODO remove when unused
-void LiquidCrystal_Prusa::printTime(uint8_t min, uint8_t sec, uint8_t col, uint8_t row) {
 	print(min, col, row, 10, '0');
 	write(':');
 	print(sec, 255, 255, 10, '0');
