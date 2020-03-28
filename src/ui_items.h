@@ -108,6 +108,15 @@ namespace UI {
 	};
 
 
+	// UI:LcdBrightness
+	class LcdBrightness : public Percent {
+	public:
+		LcdBrightness(const char* label, uint8_t& value);
+		void event_control_up();
+		void event_control_down();
+	};
+
+
 	// UI:Bool
 	class Bool : public Base {
 	public:

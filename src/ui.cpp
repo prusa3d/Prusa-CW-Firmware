@@ -84,8 +84,9 @@ namespace UI {
 	// config menu
 	const char* curing_machine_mode_options[] = {pgmstr_drying_curing, pgmstr_curing, pgmstr_drying};
 	Option curing_machine_mode(pgmstr_run_mode, config.curing_machine_mode, curing_machine_mode_options, COUNT_ITEMS(curing_machine_mode_options));
-	Percent led_pwm_value(pgmstr_led_intensity, config.led_pwm_value, 1);
-	Base* const config_items[] = {&back, &speed_menu, &curing_machine_mode, &temperature_menu, &sound_menu, &fans_menu, &led_pwm_value, &info_menu};
+	Percent led_intensity(pgmstr_led_intensity, config.led_intensity, 1);
+	LcdBrightness lcd_brightness(pgmstr_lcd_brightness, config.lcd_brightness);
+	Base* const config_items[] = {&back, &speed_menu, &curing_machine_mode, &temperature_menu, &sound_menu, &fans_menu, &led_intensity, &lcd_brightness, &info_menu};
 	Menu config_menu(pgmstr_settings, config_items, COUNT_ITEMS(config_items));
 
 	// run menu

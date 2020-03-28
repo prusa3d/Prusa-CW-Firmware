@@ -122,6 +122,13 @@ void setup() {
 
 	read_config();
 
+	lcd.setBrightness(config.lcd_brightness);
+	lcd.createChar(BACKSLASH_CHAR, Backslash);
+	lcd.createChar(BACK_CHAR, Back);
+	lcd.createChar(RIGHT_CHAR, Right);
+	lcd.createChar(PLAY_CHAR, Play);
+	lcd.createChar(STOP_CHAR, Stop);
+
 	// FAN tachos
 	pinMode(FAN1_TACHO_PIN, INPUT_PULLUP);
 	pinMode(FAN2_TACHO_PIN, INPUT_PULLUP);
@@ -134,12 +141,6 @@ void setup() {
 	setupTimer0();
 	setupTimer3();
 	interrupts();
-
-	lcd.createChar(BACKSLASH_CHAR, Backslash);
-	lcd.createChar(BACK_CHAR, Back);
-	lcd.createChar(RIGHT_CHAR, Right);
-	lcd.createChar(PLAY_CHAR, Play);
-	lcd.createChar(STOP_CHAR, Stop);
 
 	States::init();
 	UI::init();

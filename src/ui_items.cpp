@@ -261,6 +261,22 @@ namespace UI {
 	}
 
 
+	// UI::LcdBrightness
+	LcdBrightness::LcdBrightness(const char* label, uint8_t& value) :
+		Percent(label, value, 5)
+	{}
+
+	void LcdBrightness::event_control_up() {
+		Percent::event_control_up();
+		lcd.setBrightness(value);
+	}
+
+	void LcdBrightness::event_control_down() {
+		Percent::event_control_down();
+		lcd.setBrightness(value);
+	}
+
+
 	// UI::Bool
 	Bool::Bool(const char* label, uint8_t& value, const char* true_text, const char* false_text) :
 		Base(label, 0), true_text(true_text), false_text(false_text), value(value)

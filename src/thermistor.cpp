@@ -22,23 +22,22 @@
 static void* heater_ttbl_map[] = ARRAY_BY_HOTENDS((void*)HEATER_0_TEMPTABLE, (void*)HEATER_1_TEMPTABLE, (void*)HEATER_2_TEMPTABLE, (void*)HEATER_3_TEMPTABLE, (void*)HEATER_4_TEMPTABLE);
 static uint8_t heater_ttbllen_map[] = ARRAY_BY_HOTENDS(HEATER_0_TEMPTABLE_LEN, HEATER_1_TEMPTABLE_LEN, HEATER_2_TEMPTABLE_LEN, HEATER_3_TEMPTABLE_LEN, HEATER_4_TEMPTABLE_LEN);
 
-thermistor::thermistor(int pin, int sensorNumber)
+thermistor::thermistor(uint8_t pin, uint8_t sensorNumber)
 {
   pinMode(pin, INPUT);
   _pin = pin;
   _sensorNumber = sensorNumber;
 }
 float thermistor::analog2temp() {
-  uint8_t e = _sensorNumber;
-  int raw  =  0;
+  int raw = 0;
   for (uint8_t j = 1; j <= OVERSAMPLENR; j++) {
     raw += analogRead(_pin);
   }
   float celsius = FLT_MAX;
-  if (heater_ttbl_map[e] != NULL) {
+  if (heater_ttbl_map[_sensorNumber] != NULL) {
     uint8_t i;
-    short(*tt)[][2] = (short(*)[][2])(heater_ttbl_map[e]);
-    for (i = 1; i < heater_ttbllen_map[e]; i++) {
+    short(*tt)[][2] = (short(*)[][2])(heater_ttbl_map[_sensorNumber]);
+    for (i = 1; i < heater_ttbllen_map[_sensorNumber]; i++) {
       if (PGM_RD_W((*tt)[i][0]) > raw) {
         celsius = PGM_RD_W((*tt)[i - 1][1]) +
                   (raw - PGM_RD_W((*tt)[i - 1][0])) *
@@ -49,7 +48,7 @@ float thermistor::analog2temp() {
     }
     
     // Overflow: Set to last value in the table
-    if (i == heater_ttbllen_map[e]){ celsius = PGM_RD_W((*tt)[i - 1][1]);}
+    if (i == heater_ttbllen_map[_sensorNumber]){ celsius = PGM_RD_W((*tt)[i - 1][1]);}
 
     return celsius;
   }

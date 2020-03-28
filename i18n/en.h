@@ -80,6 +80,7 @@ static const char pgmstr_drying_curing[] PROGMEM = _("Drying/curing");
 static const char pgmstr_curing[] PROGMEM = _("Curing");
 static const char pgmstr_drying[] PROGMEM = _("Drying");
 static const char pgmstr_led_intensity[] PROGMEM = _("LED intensity");
+static const char pgmstr_lcd_brightness[] PROGMEM = _("LCD brightness");
 
 // run menu
 static const char pgmstr_pause[] PROGMEM = _("Pause");

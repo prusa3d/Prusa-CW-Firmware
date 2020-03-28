@@ -189,7 +189,7 @@ bool Hardware::is_heater_running() {
 }
 
 void Hardware::run_led() {
-	analogWrite(LED_PWM_PIN, map(config.led_pwm_value, 0, 100, 0, 255));
+	analogWrite(LED_PWM_PIN, map(config.led_intensity, 0, 100, 0, 255));
 	outputchip.digitalWrite(LED_RELE_PIN, HIGH);
 }
 

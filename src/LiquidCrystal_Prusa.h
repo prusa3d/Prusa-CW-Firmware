@@ -1,6 +1,7 @@
 #pragma once
 
 #include <inttypes.h>
+#include "defines.h"
 
 // commands
 #define LCD_CLEARDISPLAY 0x01
@@ -39,26 +40,13 @@
 #define LCD_1LINE 0x00
 #define LCD_5x10DOTS 0x04
 #define LCD_5x8DOTS 0x00
+#define DISPLAY_FUNCTION LCD_4BITMODE | LCD_2LINE | LCD_5x8DOTS
 
 class LiquidCrystal_Prusa {
 public:
-	LiquidCrystal_Prusa(uint8_t rs, uint8_t enable, uint8_t pwm,
-		uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3,
-		uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7);
-	LiquidCrystal_Prusa(uint8_t rs, uint8_t rw, uint8_t enable, uint8_t pwm,
-		uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3,
-		uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7);
-	LiquidCrystal_Prusa(uint8_t rs, uint8_t rw, uint8_t enable, uint8_t pwm,
-		uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3);
-	LiquidCrystal_Prusa(uint8_t rs, uint8_t enable, uint8_t pwm,
-		uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3);
-
-	void init(uint8_t fourbitmode, uint8_t rs, uint8_t rw, uint8_t enable, uint8_t pwm,
-		uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3,
-		uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7);
+	LiquidCrystal_Prusa();
 
 	void begin();
-
 	void reinit();
 	void clear();
 	void home();
@@ -80,6 +68,7 @@ public:
 	void setCursor(uint8_t, uint8_t);
 	void command(uint8_t);
 	void write(uint8_t);
+	void setBrightness(uint8_t);
 
 	void print(uint8_t number, uint8_t col = 255, uint8_t row = 255, uint8_t denom = 100, unsigned char filler = ' ');
 	void print(float, uint8_t col = 255, uint8_t row = 255);
@@ -91,19 +80,12 @@ public:
 private:
 	void send(uint8_t, uint8_t);
 	void write4bits(uint8_t);
-	void write8bits(uint8_t);
 	void pulseEnable();
 
-	uint8_t _rs_pin; // LOW: command.	HIGH: character.
-	uint8_t _rw_pin; // LOW: write to LCD.	HIGH: read from LCD.
-	uint8_t _enable_pin; // activated by a HIGH pulse.
-	uint8_t _pwm_pin; // brightness control pin
-	uint8_t _data_pins[8];
-
-	uint8_t _displayfunction;
 	uint8_t _displaycontrol;
 	uint8_t _displaymode;
 
+	uint8_t _data_pins[4] = { LCD_PINS_D4, LCD_PINS_D5, LCD_PINS_D6, LCD_PINS_D7 };
 	uint8_t _row_offsets[4] = { 0x00, 0x40, 0x14, 0x54 };
 };
 

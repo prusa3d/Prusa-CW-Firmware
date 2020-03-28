@@ -23,70 +23,18 @@
 // Note, however, that resetting the Arduino doesn't reset the LCD, so we
 // can't assume that it's in that state when a sketch starts (and the
 // LiquidCrystal_Prusa constructor is called).
+//
+//	LCD_PINS_RS - LOW: command / HIGH: character.
+//	LCD_PINS_ENABLE - activated by a HIGH pulse.
+//	LCD_PWM_PIN - brightness control pin
 
-LiquidCrystal_Prusa::LiquidCrystal_Prusa(uint8_t rs, uint8_t rw, uint8_t enable, uint8_t pwm,
-			uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3,
-			uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7)
+
+LiquidCrystal_Prusa::LiquidCrystal_Prusa()
 {
-	init(0, rs, rw, enable, pwm, d0, d1, d2, d3, d4, d5, d6, d7);
-}
-
-LiquidCrystal_Prusa::LiquidCrystal_Prusa(uint8_t rs, uint8_t enable, uint8_t pwm,
-			uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3,
-			uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7)
-{
-	init(0, rs, 255, enable, pwm, d0, d1, d2, d3, d4, d5, d6, d7);
-}
-
-LiquidCrystal_Prusa::LiquidCrystal_Prusa(uint8_t rs, uint8_t rw, uint8_t enable, uint8_t pwm,
-			uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3)
-{
-	init(1, rs, rw, enable, pwm, d0, d1, d2, d3, 0, 0, 0, 0);
-}
-
-LiquidCrystal_Prusa::LiquidCrystal_Prusa(uint8_t rs, uint8_t enable, uint8_t pwm,
-			uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3)
-{
-	init(1, rs, 255, enable, pwm, d0, d1, d2, d3, 0, 0, 0, 0);
-}
-
-void LiquidCrystal_Prusa::init(uint8_t fourbitmode, uint8_t rs, uint8_t rw, uint8_t enable, uint8_t pwm,
-			 uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3,
-			 uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7)
-{
-	_rs_pin = rs;
-	_rw_pin = rw;
-	_enable_pin = enable;
-	_pwm_pin = pwm;
-
-	_data_pins[0] = d0;
-	_data_pins[1] = d1;
-	_data_pins[2] = d2;
-	_data_pins[3] = d3;
-	_data_pins[4] = d4;
-	_data_pins[5] = d5;
-	_data_pins[6] = d6;
-	_data_pins[7] = d7;
-
-	pinMode(_rs_pin, OUTPUT);
-	// we can save 1 pin by not using RW. Indicate by passing 255 instead of pin#
-	if (_rw_pin != 255) {
-		pinMode(_rw_pin, OUTPUT);
-	}
-
-	if (_pwm_pin != 255) {
-		pinMode(_pwm_pin, OUTPUT);
-		// TODO method for PWM brightness control
-		digitalWrite(_pwm_pin, HIGH);
-	}
-
-	pinMode(_enable_pin, OUTPUT);
-
-	if (fourbitmode)
-		_displayfunction = LCD_4BITMODE | LCD_1LINE | LCD_5x8DOTS | LCD_2LINE;
-	else
-		_displayfunction = LCD_8BITMODE | LCD_1LINE | LCD_5x8DOTS | LCD_2LINE;
-
+	pinMode(LCD_PINS_RS, OUTPUT);
+	pinMode(LCD_PWM_PIN, OUTPUT);
+	digitalWrite(LCD_PWM_PIN, HIGH);
+	pinMode(LCD_PINS_ENABLE, OUTPUT);
 	begin();
 }
 
@@ -96,49 +44,29 @@ void LiquidCrystal_Prusa::begin() {
 	// before sending commands. Arduino can turn on way befer 4.5V so we'll wait 50
 	delayMicroseconds(50000);
 	// Now we pull both RS and R/W low to begin commands
-	digitalWrite(_rs_pin, LOW);
-	digitalWrite(_enable_pin, LOW);
-	if (_rw_pin != 255) {
-		digitalWrite(_rw_pin, LOW);
-	}
+	digitalWrite(LCD_PINS_RS, LOW);
+	digitalWrite(LCD_PINS_ENABLE, LOW);
 
-	//put the LCD into 4 bit or 8 bit mode
-	if (! (_displayfunction & LCD_8BITMODE)) {
-		// this is according to the hitachi HD44780 datasheet
-		// figure 24, pg 46
+	// 4 bit mode
+	// this is according to the hitachi HD44780 datasheet
+	// figure 24, pg 46
+	// we start in 8bit mode, try to set 4 bit mode
+	write4bits(0x03);
+	delayMicroseconds(4500); // wait min 4.1ms
 
-		// we start in 8bit mode, try to set 4 bit mode
-		write4bits(0x03);
-		delayMicroseconds(4500); // wait min 4.1ms
+	// second try
+	write4bits(0x03);
+	delayMicroseconds(4500); // wait min 4.1ms
 
-		// second try
-		write4bits(0x03);
-		delayMicroseconds(4500); // wait min 4.1ms
+	// third go!
+	write4bits(0x03);
+	delayMicroseconds(150);
 
-		// third go!
-		write4bits(0x03);
-		delayMicroseconds(150);
-
-		// finally, set to 4-bit interface
-		write4bits(0x02);
-	} else {
-		// this is according to the hitachi HD44780 datasheet
-		// page 45 figure 23
-
-		// Send function set command sequence
-		command(LCD_FUNCTIONSET | _displayfunction);
-		delayMicroseconds(4500);	// wait more than 4.1ms
-
-		// second try
-		command(LCD_FUNCTIONSET | _displayfunction);
-		delayMicroseconds(150);
-
-		// third go
-		command(LCD_FUNCTIONSET | _displayfunction);
-	}
+	// finally, set to 4-bit interface
+	write4bits(0x02);
 
 	// finally, set # lines, font size, etc.
-	command(LCD_FUNCTIONSET | _displayfunction);
+	command(LCD_FUNCTIONSET | DISPLAY_FUNCTION);
 	delayMicroseconds(60);
 	// turn the display on with no cursor or blinking default
 	_displaycontrol = LCD_DISPLAYON | LCD_CURSOROFF | LCD_BLINKOFF;
@@ -172,7 +100,7 @@ void LiquidCrystal_Prusa::reinit() {
 	write4bits(0x02);
 
 	// finally, set # lines, font size, etc.
-	command(LCD_FUNCTIONSET | _displayfunction);
+	command(LCD_FUNCTIONSET | DISPLAY_FUNCTION);
 	//delayMicroseconds(60);
 
 	command(LCD_ENTRYMODESET | _displaymode);
@@ -275,6 +203,10 @@ void LiquidCrystal_Prusa::createChar(uint8_t location, const uint8_t* charmap) {
 	}
 }
 
+void LiquidCrystal_Prusa::setBrightness(uint8_t brightness) {
+	analogWrite(LCD_PWM_PIN, map(brightness, 0, 100, 0, 255));
+}
+
 void LiquidCrystal_Prusa::print(uint8_t number, uint8_t col, uint8_t row, uint8_t denom, unsigned char filler) {
 	setCursor(col, row);
 	div_t division;
@@ -346,27 +278,17 @@ inline void LiquidCrystal_Prusa::write(uint8_t value) {
 
 // write either command or data, with automatic 4/8-bit selection
 void LiquidCrystal_Prusa::send(uint8_t value, uint8_t mode) {
-	digitalWrite(_rs_pin, mode);
-
-	// if there is a RW pin indicated, set it low to Write
-	if (_rw_pin != 255) {
-		digitalWrite(_rw_pin, LOW);
-	}
-
-	if (_displayfunction & LCD_8BITMODE) {
-		write8bits(value);
-	} else {
-		write4bits(value>>4);
-		write4bits(value);
-	}
+	digitalWrite(LCD_PINS_RS, mode);
+	write4bits(value>>4);
+	write4bits(value);
 }
 
 void LiquidCrystal_Prusa::pulseEnable(void) {
-	digitalWrite(_enable_pin, LOW);
+	digitalWrite(LCD_PINS_ENABLE, LOW);
 	delayMicroseconds(1);
-	digitalWrite(_enable_pin, HIGH);
+	digitalWrite(LCD_PINS_ENABLE, HIGH);
 	delayMicroseconds(1);		// enable pulse must be >450ns
-	digitalWrite(_enable_pin, LOW);
+	digitalWrite(LCD_PINS_ENABLE, LOW);
 	delayMicroseconds(50);		// commands need > 37us to settle
 }
 
@@ -378,12 +300,5 @@ void LiquidCrystal_Prusa::write4bits(uint8_t value) {
 	pulseEnable();
 }
 
-void LiquidCrystal_Prusa::write8bits(uint8_t value) {
-	for (uint8_t i = 0; i < 8; i++) {
-		pinMode(_data_pins[i], OUTPUT);
-		digitalWrite(_data_pins[i], (value >> i) & 0x01);
-	}
-	pulseEnable();
-}
 
-LiquidCrystal_Prusa lcd(LCD_PINS_RS, LCD_PINS_ENABLE, LCD_PWM_PIN, LCD_PINS_D4, LCD_PINS_D5, LCD_PINS_D6, LCD_PINS_D7);
+LiquidCrystal_Prusa lcd;

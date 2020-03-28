@@ -1,11 +1,13 @@
 #pragma once
 
+#include <stdint.h>
+
 class thermistor
 {
   public:
-    thermistor(int pin, int sensorNumber);
+    thermistor(uint8_t pin, uint8_t sensorNumber);
     float analog2temp();
   private:
-    int _pin;
-    int _sensorNumber;
+    uint8_t _pin;
+    uint8_t _sensorNumber;
 };
