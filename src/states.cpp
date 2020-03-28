@@ -24,8 +24,8 @@ namespace States {
 
 	Base selftest_rotation(pgmstr_rotation_test);
 	Base selftest_fans(pgmstr_fans_test);
-	Base selftest_tank(pgmstr_ipatank_test);
-	Base selftest_cover(pgmstr_cover_test);
+	TestSwitch selftest_tank(pgmstr_ipatank_test, pgmstr_remove_tank, pgmstr_insert_tank, hw.is_tank_inserted, &confirm);
+	TestSwitch selftest_cover(pgmstr_cover_test, pgmstr_open_cover, pgmstr_close_cover, hw.is_cover_closed, &selftest_tank);
 
 
 	/*** states data ***/

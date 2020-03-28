@@ -11,29 +11,36 @@ float fahrenheit2celsius(float fahrenheit) {
 	return (fahrenheit - 32) / 1.8;
 }
 
-Hardware::Hardware() :
-		fan_tacho_count{0, 0, 0},
-		microstep_control(WASHING_ROTATION_START),
-		therm1(THERM_READ_PIN, 5),
-		outputchip(0, 8),
-		myStepper(CS_PIN),
-		lcd_encoder_bits(0),
-		rotary_diff(0),
-		target_accel_period(WASHING_ROTATION_START),
-		fan_duty{0, 0, 0},
-		fan_pwm_pins{FAN1_PWM_PIN, FAN2_PWM_PIN},
-		fan_enable_pins{FAN1_PIN, FAN2_PIN},
-		fan_tacho_last_count{0, 0, 0},
-		fan_errors(0),
-		accel_us_last(0),
-		fans_us_last(0),
-		therm_us_last(0),
-		button_timer(0),
-		PI_summ_err(0),
-		do_acceleration(false),
-		button_active(false),
-		long_press_active(false),
-		heater_error(false) {
+
+volatile int Hardware::fan_tacho_count[3] = {0, 0, 0};
+volatile uint8_t Hardware::microstep_control(WASHING_ROTATION_START);
+float Hardware::chamber_temp = 0;
+thermistor Hardware::therm1(THERM_READ_PIN, 5);
+MCP Hardware::outputchip(0, 8);
+Trinamic_TMC2130 Hardware::myStepper(CS_PIN);
+uint8_t Hardware::lcd_encoder_bits(0);
+volatile int8_t Hardware::rotary_diff(0);
+uint8_t Hardware::target_accel_period(WASHING_ROTATION_START);
+uint8_t Hardware::fan_duty[3] = {0, 0, 0};
+uint8_t Hardware::fan_pwm_pins[2] = {FAN1_PWM_PIN, FAN2_PWM_PIN};
+uint8_t Hardware::fan_enable_pins[2] = {FAN1_PIN, FAN2_PIN};
+uint8_t Hardware::fans_target_temp(0);
+int Hardware::fan_tacho_last_count[3] = {0, 0, 0};
+uint8_t Hardware::fan_errors(0);
+unsigned long Hardware::accel_us_last(0);
+unsigned long Hardware::fans_us_last(0);
+unsigned long Hardware::therm_us_last(0);
+unsigned long Hardware::button_timer(0);
+double Hardware::PI_summ_err(0);
+bool Hardware::do_acceleration(false);
+bool Hardware::cover_closed(false);
+bool Hardware::tank_inserted(false);
+bool Hardware::button_active(false);
+bool Hardware::long_press_active(false);
+bool Hardware::heater_error(false);
+
+
+Hardware::Hardware() {
 
 	outputchip.begin();
 	outputchip.pinMode(0B0000000010010111);
@@ -199,6 +206,7 @@ void Hardware::stop_led() {
 }
 
 bool Hardware::is_led_on() {
+	// FIXME? this is not check if LED works or not
 	return outputchip.digitalRead(LED_RELE_PIN) == HIGH;
 }
 

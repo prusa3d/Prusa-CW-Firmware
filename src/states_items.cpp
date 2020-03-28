@@ -3,8 +3,12 @@
 namespace States {
 
 	// States::Base
-	Base::Base(const char* title, uint8_t* fans_duties) :
-		title(title), fans_duties(fans_duties)
+	Base::Base(
+		const char* title,
+		uint8_t* fans_duties)
+	:
+		title(title),
+		fans_duties(fans_duties)
 	{}
 
 	void Base::start() {
@@ -226,7 +230,8 @@ namespace States {
 		uint8_t* after,
 		Base* to)
 	:
-		Timer(title, fans_duties, after, to), led_us_last(0)
+		Timer(title, fans_duties, after, to),
+		led_us_last(0)
 	{}
 
 	void Curing::start() {
@@ -300,7 +305,8 @@ namespace States {
 		uint8_t* target_temp,
 		Countimer::CountType timer_type)
 	:
-		Timer(title, fans_duties, after, to, timer_type), target_temp(target_temp)
+		Timer(title, fans_duties, after, to, timer_type),
+		target_temp(target_temp)
 	{}
 
 	void TimerHeater::start() {
@@ -361,7 +367,12 @@ namespace States {
 
 
 	// States::Warmup
-	Warmup::Warmup(const char* title, uint8_t* after, Base* to, uint8_t* target_temp) :
+	Warmup::Warmup(
+		const char* title,
+		uint8_t* after,
+		Base* to,
+		uint8_t* target_temp)
+	:
 		TimerHeater(title, config.fans_menu_speed, after, to, target_temp, Countimer::COUNT_UP)
 	{}
 
@@ -382,8 +393,14 @@ namespace States {
 
 
 	// States::Confirm
-	Confirm::Confirm(const char* title, const char* message) :
-		Base(title), message(message), beep_us_last(0), finished(false)
+	Confirm::Confirm(
+		const char* title,
+		const char* message)
+	:
+		Base(title),
+		message(message),
+		beep_us_last(0),
+		finished(false)
 	{}
 
 	void Confirm::start() {
@@ -416,6 +433,50 @@ namespace States {
 
 	bool Confirm::is_finished() {
 		return finished;
+	}
+
+
+	// States::TestSwitch
+	TestSwitch::TestSwitch(
+		const char* title,
+		const char* message_on,
+		const char* message_off,
+		bool (*value_getter)(),
+		Base* to)
+	:
+		Base(title),
+		message_on(message_on),
+		message_off(message_off),
+		value_getter(value_getter),
+		continue_to(to),
+		test_count(0),
+		old_state(false)
+	{}
+
+	void TestSwitch::start() {
+		Base::start();
+		old_state = value_getter();
+		test_count = SWITCH_TEST_COUNT;
+	}
+
+	Base* TestSwitch::loop() {
+		if (!test_count) {
+			return continue_to;
+		}
+		return Base::loop();
+	}
+
+	Base* TestSwitch::event_button_long_press() {
+		return continue_to;
+	}
+
+	const char* TestSwitch::get_message() {
+		bool state = value_getter();
+		if (old_state != state && test_count) {
+			old_state = state;
+			--test_count;
+		}
+		return state ? message_on : message_off;
 	}
 
 }

@@ -31,7 +31,6 @@
 #define FAN1_ERROR_MASK		B001
 #define FAN2_ERROR_MASK		B010
 #define FAN3_ERROR_MASK		B100
-#define MIN_FAN_SPEED		30		// 0-100 %
 
 // various constants
 #define LED_DELAY			1000
@@ -44,6 +43,8 @@
 #define MAX_TARGET_TEMP_F	MAX_TARGET_TEMP_C * 1.8 + 32
 #define MAX_WARMUP_RUN_TIME	30		// minutes
 #define INC_DEC_TIME_STEP	30		// seconds
+#define MIN_FAN_SPEED		30		// 0-100 %
+#define SWITCH_TEST_COUNT	10
 // motor speeds (smaller is faster)
 #define WASHING_ROTATION_START	200
 #define MIN_WASHING_SPEED		70

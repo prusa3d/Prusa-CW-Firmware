@@ -17,7 +17,7 @@ namespace States {
 	extern TimerHeater resin;
 	extern Warmup warmup_print;
 	extern Warmup warmup_resin;
-	extern Base selftest_cover;
+	extern TestSwitch selftest_cover;
 
 	void init();
 	void loop(Events& events);

@@ -126,13 +126,13 @@ static const char pgmstr_rotation_test[] PROGMEM = _("Rotation test");
 static const char pgmstr_fans_test[] PROGMEM = _("Fans test");
 static const char pgmstr_ipatank_test[] PROGMEM = _("IPA tank test");
 static const char pgmstr_cover_test[] PROGMEM = _("Cover test");
+static const char pgmstr_open_cover[] PROGMEM = _("Open the cover");
 
 
 // TODO
 static const char pgmstr_fan1_failure[] PROGMEM = _("Fan1 failure");
 static const char pgmstr_fan2_failure[] PROGMEM = _("Fan2 failure");
 static const char pgmstr_heater_failure[] PROGMEM = _("HEATER failure");
-static const char pgmstr_open_cover[] PROGMEM = _("Open the cover");
 static const char pgmstr_test_failed[] PROGMEM = _("Test failed");
 static const char pgmstr_test_success[] PROGMEM = _("Test successful");
 static const char pgmstr_fan1_test[] PROGMEM = _("Fan1:   x/100ms");

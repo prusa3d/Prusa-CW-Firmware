@@ -10,7 +10,9 @@ namespace States {
 	// States::Base
 	class Base {
 	public:
-		Base(const char* title, uint8_t* fans_duties = config.fans_menu_speed);
+		Base(
+			const char* title,
+			uint8_t* fans_duties = config.fans_menu_speed);
 		virtual void start();
 		virtual void stop();
 		virtual Base* loop();
@@ -125,7 +127,11 @@ namespace States {
 	// States::Warmup
 	class Warmup : public TimerHeater {
 	public:
-		Warmup(const char* title, uint8_t* after, Base* to, uint8_t* target_temp);
+		Warmup(
+			const char* title,
+			uint8_t* after,
+			Base* to,
+			uint8_t* target_temp);
 		Base* loop();
 		const char* decrease_time();
 		const char* increase_time();
@@ -135,7 +141,9 @@ namespace States {
 	// States::Confirm
 	class Confirm : public Base {
 	public:
-		Confirm(const char* title, const char* message);
+		Confirm(
+			const char* title,
+			const char* message);
 		void start();
 		Base* loop();
 		Base* event_button_short_press();
@@ -145,6 +153,29 @@ namespace States {
 		const char* const message;
 		unsigned long beep_us_last;
 		bool finished;
+	};
+
+
+	// States::TestSwitch
+	class TestSwitch : public Base {
+	public:
+		TestSwitch(
+			const char* title,
+			const char* message_on,
+			const char* message_off,
+			bool (*value_getter)(),
+			Base* to);
+		void start();
+		Base* loop();
+		Base* event_button_long_press();
+		const char* get_message();
+	private:
+		const char* const message_on;
+		const char* const message_off;
+		bool (*value_getter)();
+		Base* continue_to;
+		uint8_t test_count;
+		bool old_state;
 	};
 
 }

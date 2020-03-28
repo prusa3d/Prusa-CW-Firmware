@@ -391,6 +391,7 @@ namespace UI {
 		tmp_str = States::active_state->get_message();
 		if (tmp_str) {
 			if (tmp_str != old_message) {
+				lcd.clearLine(2);
 				old_message = tmp_str;
 				lcd.print_P(tmp_str, 1, 2);
 			}

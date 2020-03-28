@@ -23,72 +23,72 @@ class Hardware {
 public:
 	Hardware();
 
-	void encoder_read();
+	static void encoder_read();
 
-	void run_motor();
-	void stop_motor();
-	void speed_configuration(bool curing_mode);
-	void acceleration();
+	static void run_motor();
+	static void stop_motor();
+	static void speed_configuration(bool curing_mode);
+	static void acceleration();
 
-	void run_heater();
-	void stop_heater();
-	bool is_heater_running();
+	static void run_heater();
+	static void stop_heater();
+	static bool is_heater_running();
 
-	void run_led();
-	void stop_led();
-	bool is_led_on();
+	static void run_led();
+	static void stop_led();
+	static bool is_led_on();
 
-	bool is_cover_closed();
-	bool is_tank_inserted();
+	static bool is_cover_closed();
+	static bool is_tank_inserted();
 
-	void echo();
-	void beep();
-	void warning_beep();
+	static void echo();
+	static void beep();
+	static void warning_beep();
 
-	void set_fans(uint8_t* duties);
-	void set_target_temp(uint8_t target_temp);
-	bool get_heater_error();
-	uint8_t get_fans_error();
+	static void set_fans(uint8_t* duties);
+	static void set_target_temp(uint8_t target_temp);
+	static bool get_heater_error();
+	static uint8_t get_fans_error();
 
-	Events loop();
+	static Events loop();
 
-	volatile int fan_tacho_count[3];
-	volatile uint8_t microstep_control;
-	float chamber_temp;
+	static volatile int fan_tacho_count[3];
+	static volatile uint8_t microstep_control;
+	static float chamber_temp;
 
 private:
-	thermistor therm1;
-	MCP outputchip;
-	Trinamic_TMC2130 myStepper;
+	static thermistor therm1;
+	static MCP outputchip;
+	static Trinamic_TMC2130 myStepper;
 
-	float therm1_read();
-	void fans_duty();
-	void fans_PI_regulator();
-	void fans_check();
+	static float therm1_read();
+	static void fans_duty();
+	static void fans_PI_regulator();
+	static void fans_check();
 
-	uint8_t lcd_encoder_bits;
-	volatile int8_t rotary_diff;
-	uint8_t target_accel_period;
+	static uint8_t lcd_encoder_bits;
+	static volatile int8_t rotary_diff;
+	static uint8_t target_accel_period;
 
-	uint8_t fan_duty[3];
-	uint8_t fan_pwm_pins[2];
-	uint8_t fan_enable_pins[2];
-	uint8_t fans_target_temp;
+	static uint8_t fan_duty[3];
+	static uint8_t fan_pwm_pins[2];
+	static uint8_t fan_enable_pins[2];
+	static uint8_t fans_target_temp;
 
-	int fan_tacho_last_count[3];
-	uint8_t fan_errors;
+	static int fan_tacho_last_count[3];
+	static uint8_t fan_errors;
 
-	unsigned long accel_us_last;
-	unsigned long fans_us_last;
-	unsigned long therm_us_last;
-	unsigned long button_timer;
-	double PI_summ_err;
-	bool do_acceleration;
-	bool cover_closed;
-	bool tank_inserted;
-	bool button_active;
-	bool long_press_active;
-	bool heater_error;
+	static unsigned long accel_us_last;
+	static unsigned long fans_us_last;
+	static unsigned long therm_us_last;
+	static unsigned long button_timer;
+	static double PI_summ_err;
+	static bool do_acceleration;
+	static bool cover_closed;
+	static bool tank_inserted;
+	static bool button_active;
+	static bool long_press_active;
+	static bool heater_error;
 };
 
 extern Hardware hw;
