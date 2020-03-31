@@ -12,7 +12,8 @@ float fahrenheit2celsius(float fahrenheit) {
 }
 
 
-volatile int Hardware::fan_tacho_count[3] = {0, 0, 0};
+uint16_t Hardware::fan_rpm[3] = {0, 0, 0};
+volatile uint8_t Hardware::fan_tacho_count[3] = {0, 0, 0};
 volatile uint8_t Hardware::microstep_control(WASHING_ROTATION_START);
 float Hardware::chamber_temp = 0;
 thermistor Hardware::therm1(THERM_READ_PIN, 5);
@@ -25,7 +26,6 @@ uint8_t Hardware::fan_duty[3] = {0, 0, 0};
 uint8_t Hardware::fan_pwm_pins[2] = {FAN1_PWM_PIN, FAN2_PWM_PIN};
 uint8_t Hardware::fan_enable_pins[2] = {FAN1_PIN, FAN2_PIN};
 uint8_t Hardware::fans_target_temp(0);
-int Hardware::fan_tacho_last_count[3] = {0, 0, 0};
 uint8_t Hardware::fan_errors(0);
 unsigned long Hardware::accel_us_last(0);
 unsigned long Hardware::fans_us_last(0);
@@ -256,20 +256,32 @@ void Hardware::set_target_temp(uint8_t target_temp) {
 	PI_summ_err = 0;
 }
 
+void Hardware::set_fan1_duty(uint8_t duty) {
+	fans_duty(0, duty);
+}
+
+void Hardware::set_fan2_duty(uint8_t duty) {
+	fans_duty(1, duty);
+}
+
 void Hardware::fans_duty() {
 	for (uint8_t i = 0; i < 2; ++i) {
-//		USB_PRINT("fan ");
-//		USB_PRINT(i);
-//		USB_PRINT("->");
-		if (fan_duty[i]) {
-//			USB_PRINTLN(fan_duty[i]);
-			analogWrite(fan_pwm_pins[i], map(fan_duty[i], 0, 100, 255, 0));
-			outputchip.digitalWrite(fan_enable_pins[i], HIGH);
-		} else {
-//			USB_PRINTLN("OFF");
-			outputchip.digitalWrite(fan_enable_pins[i], LOW);
-			digitalWrite(fan_pwm_pins[i], LOW);
-		}
+		fans_duty(i, fan_duty[i]);
+	}
+}
+
+void Hardware::fans_duty(uint8_t fan, uint8_t duty) {
+//	USB_PRINT("fan ");
+//	USB_PRINT(fan);
+//	USB_PRINT("->");
+	if (duty) {
+//		USB_PRINTLN(duty);
+		analogWrite(fan_pwm_pins[fan], map(duty, 0, 100, 255, 0));
+		outputchip.digitalWrite(fan_enable_pins[fan], HIGH);
+	} else {
+//		USB_PRINTLN("OFF");
+		outputchip.digitalWrite(fan_enable_pins[fan], LOW);
+		digitalWrite(fan_pwm_pins[fan], LOW);
 	}
 }
 
@@ -310,11 +322,14 @@ void Hardware::fans_check() {
 	for (uint8_t i = 0; i < 3; ++i) {
 		if (fan_duty[i]) {
 			fan_errors &= ~(1 << i);
-			fan_errors |= (fan_tacho_count[i] <= fan_tacho_last_count[i]) << i;
-			if (fan_tacho_count[i] >= 10000) {
-				fan_tacho_count[i] = 0;
-			}
-			fan_tacho_last_count[i] = fan_tacho_count[i];
+			fan_errors |= !fan_tacho_count[i] << i;
+			fan_rpm[i] = 60000 / FAN_CHECK_PERIOD * fan_tacho_count[i];
+			fan_tacho_count[i] = 0;
+//			USB_PRINT(i);
+//			USB_PRINT(": ");
+//			USB_PRINTLN(fan_rpm[i]);
+		} else {
+			fan_rpm[i] = 0;
 		}
 	}
 //	USB_PRINT("fan_errors: ");
@@ -336,7 +351,7 @@ Events Hardware::loop() {
 		accel_us_last = us_now;
 		acceleration();
 	}
-	if (us_now - fans_us_last >= 500) {
+	if (us_now - fans_us_last >= FAN_CHECK_PERIOD) {
 		fans_us_last = us_now;
 		fans_check();
 	}

@@ -16,14 +16,13 @@ namespace States {
 		virtual void start();
 		virtual void stop();
 		virtual Base* loop();
-		Base* process_events(Events& events);
+		void process_events(Events& events);
 		virtual void event_cover_opened();
 		virtual void event_cover_closed();
 		virtual void event_tank_inserted();
 		virtual void event_tank_removed();
-		virtual Base* event_button_short_press();
-		virtual Base* event_button_long_press();
 		virtual bool is_menu_available();
+		virtual bool short_press_cancel();
 		virtual const char* get_title();
 		virtual const char* get_message();
 		virtual uint16_t get_time();
@@ -33,9 +32,11 @@ namespace States {
 		virtual bool is_paused();
 		virtual void pause_continue();
 		virtual bool is_finished();
+		virtual void cancel();
 	protected:
 		const char* const title;
 		uint8_t* const fans_duties;
+		bool canceled;
 	};
 
 
@@ -52,7 +53,6 @@ namespace States {
 		void stop();
 		Base* loop();
 		void event_tank_removed();
-		Base* event_button_long_press();
 		bool is_menu_available();
 		const char* get_title();
 		uint16_t get_time();
@@ -146,13 +146,12 @@ namespace States {
 			const char* message);
 		void start();
 		Base* loop();
-		Base* event_button_short_press();
 		const char* get_message();
 		bool is_finished();
+		bool short_press_cancel();
 	private:
 		const char* const message;
 		unsigned long beep_us_last;
-		bool finished;
 	};
 
 
@@ -167,7 +166,6 @@ namespace States {
 			Base* to);
 		void start();
 		Base* loop();
-		Base* event_button_long_press();
 		const char* get_message();
 	private:
 		const char* const message_on;

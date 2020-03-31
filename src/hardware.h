@@ -47,12 +47,16 @@ public:
 
 	static void set_fans(uint8_t* duties);
 	static void set_target_temp(uint8_t target_temp);
+	static void set_fan1_duty(uint8_t duty);
+	static void set_fan2_duty(uint8_t duty);
+
 	static bool get_heater_error();
 	static uint8_t get_fans_error();
 
 	static Events loop();
 
-	static volatile int fan_tacho_count[3];
+	static uint16_t fan_rpm[3];
+	static volatile uint8_t fan_tacho_count[3];
 	static volatile uint8_t microstep_control;
 	static float chamber_temp;
 
@@ -63,6 +67,7 @@ private:
 
 	static float therm1_read();
 	static void fans_duty();
+	static void fans_duty(uint8_t fan, uint8_t duty);
 	static void fans_PI_regulator();
 	static void fans_check();
 
@@ -75,7 +80,6 @@ private:
 	static uint8_t fan_enable_pins[2];
 	static uint8_t fans_target_temp;
 
-	static int fan_tacho_last_count[3];
 	static uint8_t fan_errors;
 
 	static unsigned long accel_us_last;

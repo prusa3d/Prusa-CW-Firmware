@@ -10,7 +10,7 @@ CPP = avr-g++
 OBJCOPY = avr-objcopy
 
 CSTANDARD = -std=gnu11
-CPPSTANDARD = -std=gnu++11
+CPPSTANDARD = -std=gnu++17
 
 WARN = -Wall -Wextra
 CPPTUNING = -fno-exceptions -fno-threadsafe-statics

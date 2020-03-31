@@ -12,8 +12,6 @@
 
 #define DISPLAY_CHARS		20
 #define DISPLAY_LINES		4
-#define SN_LENGTH			15
-#define MAX_MENU_DEPTH		5
 
 #define LAYOUT_TIME_X		3
 #define LAYOUT_TIME_Y		2
@@ -43,8 +41,14 @@
 #define MAX_TARGET_TEMP_F	MAX_TARGET_TEMP_C * 1.8 + 32
 #define MAX_WARMUP_RUN_TIME	30		// minutes
 #define INC_DEC_TIME_STEP	30		// seconds
+#define MIN_LED_INTENSITY	1		// 0-100 %
+#define MIN_LCD_BRIGHTNESS	5		// 0-100 %
 #define MIN_FAN_SPEED		30		// 0-100 %
+#define FAN_CHECK_PERIOD	500		// us
 #define SWITCH_TEST_COUNT	10
+#define SN_LENGTH			15
+#define MAX_MENU_DEPTH		5
+#define MENU_REDRAW_US		1000
 // motor speeds (smaller is faster)
 #define WASHING_ROTATION_START	200
 #define MIN_WASHING_SPEED		70

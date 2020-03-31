@@ -59,8 +59,8 @@ namespace UI {
 	Menu fans_washing_menu(pgmstr_fans_washing, fans_washing_speed, COUNT_ITEMS(fans_washing_speed));
 
 	// fans menu speed
-	Percent fan1_menu_speed(pgmstr_fan1_menu_speed, config.fans_menu_speed[0], MIN_FAN_SPEED);
-	Percent fan2_menu_speed(pgmstr_fan2_menu_speed, config.fans_menu_speed[1], MIN_FAN_SPEED);
+	Percent_with_action fan1_menu_speed(pgmstr_fan1_menu_speed, config.fans_menu_speed[0], MIN_FAN_SPEED, hw.set_fan1_duty);
+	Percent_with_action fan2_menu_speed(pgmstr_fan2_menu_speed, config.fans_menu_speed[1], MIN_FAN_SPEED, hw.set_fan2_duty);
 	Base* const fans_menu_speed[] = {&back, &fan1_menu_speed, &fan2_menu_speed};
 	Menu fans_menu_menu(pgmstr_fans_menu, fans_menu_speed, COUNT_ITEMS(fans_menu_speed));
 
@@ -69,7 +69,7 @@ namespace UI {
 	Menu fans_menu(pgmstr_fans, fans_items, COUNT_ITEMS(fans_items));
 
 	// info menu
-	SN serial_number(pgmstr_serial_number);
+	SN serial_number(pgmstr_sn, pgmstr_serial_number);
 	Text fw_version(pgmstr_fw_version);
 	Text build_nr(pgmstr_build_nr);
 	Text fw_hash(pgmstr_fw_hash);
@@ -84,8 +84,8 @@ namespace UI {
 	// config menu
 	const char* curing_machine_mode_options[] = {pgmstr_drying_curing, pgmstr_curing, pgmstr_drying};
 	Option curing_machine_mode(pgmstr_run_mode, config.curing_machine_mode, curing_machine_mode_options, COUNT_ITEMS(curing_machine_mode_options));
-	Percent led_intensity(pgmstr_led_intensity, config.led_intensity, 1);
-	LcdBrightness lcd_brightness(pgmstr_lcd_brightness, config.lcd_brightness);
+	Percent led_intensity(pgmstr_led_intensity, config.led_intensity, MIN_LED_INTENSITY);
+	Percent_with_action lcd_brightness(pgmstr_lcd_brightness, config.lcd_brightness, MIN_LCD_BRIGHTNESS, lcd.setBrightness);
 	Base* const config_items[] = {&back, &speed_menu, &curing_machine_mode, &temperature_menu, &sound_menu, &fans_menu, &led_intensity, &lcd_brightness, &info_menu};
 	Menu config_menu(pgmstr_settings, config_items, COUNT_ITEMS(config_items));
 
@@ -99,6 +99,13 @@ namespace UI {
 	State resin_preheat(pgmstr_resin_preheat, &States::warmup_resin, &run_menu);
 	Base* const home_items[] = {&do_it, &resin_preheat, &run_time_menu, &config_menu};
 	Menu home_menu(pgmstr_emptystr, home_items, COUNT_ITEMS(home_items));
+
+	// hw menu
+	Live_value<uint16_t> fan1_rpm(pgmstr_fan1_rpm, hw.fan_rpm[0]);
+	Live_value<uint16_t> fan2_rpm(pgmstr_fan2_rpm, hw.fan_rpm[1]);
+	Live_value<uint16_t> fan3_rpm(pgmstr_fan3_rpm, hw.fan_rpm[2]);
+	Base* const hw_items[] = {&back, &fan1_rpm, &fan2_rpm, &fan3_rpm};
+	Menu_self_redraw hw_menu(pgmstr_emptystr, hw_items, COUNT_ITEMS(hw_items), MENU_REDRAW_US);
 
 	// selftest menu
 	State selftest(pgmstr_selftest, &States::selftest_cover, nullptr);
@@ -116,7 +123,9 @@ namespace UI {
 			SI_changed[i]->init(config.SI_unit_system);
 		}
 		home_menu.set_long_press_ui_item(&curing_machine_mode);
-		info_menu.set_long_press_ui_item(&selftest_menu);
+		info_menu.set_long_press_ui_item(&hw_menu);
+		run_menu.set_long_press_ui_item(&hw_menu);
+		config_menu.set_long_press_ui_item(&selftest_menu);
 		active_menu->invoke();
 		active_menu->show();
 	}

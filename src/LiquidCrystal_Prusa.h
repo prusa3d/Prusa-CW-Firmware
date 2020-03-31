@@ -2,6 +2,7 @@
 
 #include <inttypes.h>
 #include "defines.h"
+#include "simple_print.h"
 
 // commands
 #define LCD_CLEARDISPLAY 0x01
@@ -42,8 +43,10 @@
 #define LCD_5x8DOTS 0x00
 #define DISPLAY_FUNCTION LCD_4BITMODE | LCD_2LINE | LCD_5x8DOTS
 
-class LiquidCrystal_Prusa {
+class LiquidCrystal_Prusa : public SimplePrint {
 public:
+	using SimplePrint::print;
+	using SimplePrint::print_P;
 	LiquidCrystal_Prusa();
 
 	void begin();
@@ -68,13 +71,13 @@ public:
 	void setCursor(uint8_t, uint8_t);
 	void command(uint8_t);
 	void write(uint8_t);
-	void setBrightness(uint8_t);
+	static void setBrightness(uint8_t);
 
-	void print(uint8_t number, uint8_t col = 255, uint8_t row = 255, uint8_t denom = 100, unsigned char filler = ' ');
-	void print(float, uint8_t col = 255, uint8_t row = 255);
-	void printTime(uint16_t time, uint8_t col = 255, uint8_t row = 255);
-	void print(const char*, uint8_t col = 255, uint8_t row = 255);
-	void print_P(const char*, uint8_t col = 255, uint8_t row = 255);
+	void print(uint8_t number, uint8_t col, uint8_t row, uint8_t denom = 100, unsigned char filler = ' ');
+	void print(float number, uint8_t col, uint8_t row);
+	void printTime(uint16_t time, uint8_t col, uint8_t row);
+	void print(const char* str, uint8_t col, uint8_t row);
+	void print_P(const char* str, uint8_t col, uint8_t row);
 	void clearLine(uint8_t row);
 
 private:

@@ -8,11 +8,13 @@ namespace States {
 		uint8_t* fans_duties)
 	:
 		title(title),
-		fans_duties(fans_duties)
+		fans_duties(fans_duties),
+		canceled(false)
 	{}
 
 	void Base::start() {
 		hw.set_fans(fans_duties);
+		canceled = false;
 	}
 
 	void Base::stop() {
@@ -22,7 +24,7 @@ namespace States {
 		return nullptr;
 	}
 
-	Base* Base::process_events(Events& events) {
+	void Base::process_events(Events& events) {
 		if (events.cover_opened)
 			event_cover_opened();
 		if (events.cover_closed)
@@ -31,11 +33,6 @@ namespace States {
 			event_tank_inserted();
 		if (events.tank_removed)
 			event_tank_removed();
-		if (events.button_short_press)
-			return event_button_short_press();
-		if (events.button_long_press)
-			return event_button_long_press();
-		return nullptr;
 	}
 
 	void Base::event_cover_opened() {
@@ -50,15 +47,11 @@ namespace States {
 	void Base::event_tank_removed() {
 	}
 
-	Base* Base::event_button_short_press() {
-		return nullptr;
-	}
-
-	Base* Base::event_button_long_press() {
-		return nullptr;
-	}
-
 	bool Base::is_menu_available() {
+		return false;
+	}
+
+	bool Base::short_press_cancel() {
 		return false;
 	}
 
@@ -95,6 +88,10 @@ namespace States {
 
 	bool Base::is_finished() {
 		return false;
+	}
+
+	void Base::cancel() {
+		canceled = true;
 	}
 
 
@@ -135,7 +132,7 @@ namespace States {
 			return &heater_error;
 		}
 		timer.run();
-		if (timer.isCounterCompleted()) {
+		if (canceled || timer.isCounterCompleted()) {
 			return continue_to;
 		}
 		return nullptr;
@@ -143,10 +140,6 @@ namespace States {
 
 	void Timer::event_tank_removed() {
 		do_pause();
-	}
-
-	Base* Timer::event_button_long_press() {
-		return continue_to;
 	}
 
 	bool Timer::is_menu_available() {
@@ -399,13 +392,11 @@ namespace States {
 	:
 		Base(title),
 		message(message),
-		beep_us_last(0),
-		finished(false)
+		beep_us_last(0)
 	{}
 
 	void Confirm::start() {
 		beep_us_last = config.finish_beep_mode;
-		finished = false;
 		Base::start();
 	}
 
@@ -419,12 +410,11 @@ namespace States {
 				beep_us_last = 0;
 			}
 		}
-		return nullptr;
+		return Base::loop();
 	}
 
-	Base* Confirm::event_button_short_press() {
-		finished = true;
-		return Base::event_button_short_press();
+	bool Confirm::short_press_cancel() {
+		return true;
 	}
 
 	const char* Confirm::get_message() {
@@ -432,7 +422,7 @@ namespace States {
 	}
 
 	bool Confirm::is_finished() {
-		return finished;
+		return canceled;
 	}
 
 
@@ -460,14 +450,10 @@ namespace States {
 	}
 
 	Base* TestSwitch::loop() {
-		if (!test_count) {
+		if (canceled || !test_count) {
 			return continue_to;
 		}
 		return Base::loop();
-	}
-
-	Base* TestSwitch::event_button_long_press() {
-		return continue_to;
 	}
 
 	const char* TestSwitch::get_message() {

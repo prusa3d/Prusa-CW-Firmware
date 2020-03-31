@@ -226,11 +226,9 @@ size_t Serial_::write(const uint8_t *buffer, size_t size)
 		if (r > 0) {
 			return r;
 		} else {
-			setWriteError();
 			return 0;
 		}
 	}
-	setWriteError();
 	return 0;
 }
 

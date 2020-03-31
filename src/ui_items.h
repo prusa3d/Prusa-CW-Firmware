@@ -3,6 +3,7 @@
 #include "hardware.h"
 #include "i18n.h"
 #include "states_items.h"
+#include "simple_print.h"
 
 namespace UI {
 
@@ -42,8 +43,24 @@ namespace UI {
 	// UI:SN
 	class SN : public Text {
 	public:
-		SN(const char* label);
+		SN(const char* label, const char* sn);
 		char* get_menu_label(char* buffer, uint8_t buffer_size);
+	private:
+		const char* const sn;
+	};
+
+
+	// UI:Live_value
+	template<class T>
+	class Live_value : public Text, public SimplePrint {
+	public:
+		Live_value(const char* label, T& value);
+		char* get_menu_label(char* buffer, uint8_t buffer_size);
+	private:
+		void write(uint8_t c);
+		T& value;
+		char* end;
+		int8_t size;
 	};
 
 
@@ -67,6 +84,18 @@ namespace UI {
 		uint8_t menu_offset;
 		uint8_t cursor_position;
 		uint8_t max_items;
+	};
+
+
+	// UI::Menu_self_redraw
+	class Menu_self_redraw : public Menu {
+	public:
+		Menu_self_redraw(const char* label, Base* const* items, uint8_t items_count, uint16_t redraw_us);
+		void show();
+		void loop();
+	private:
+		uint16_t redraw_us;
+		unsigned long us_last;
 	};
 
 
@@ -108,12 +137,14 @@ namespace UI {
 	};
 
 
-	// UI:LcdBrightness
-	class LcdBrightness : public Percent {
+	// UI:Percent_with_action
+	class Percent_with_action : public Percent {
 	public:
-		LcdBrightness(const char* label, uint8_t& value);
+		Percent_with_action(const char* label, uint8_t& value, uint8_t min, void (*value_setter)(uint8_t));
 		void event_control_up();
 		void event_control_down();
+	private:
+		void (*value_setter)(uint8_t);
 	};
 
 
@@ -165,6 +196,7 @@ namespace UI {
 		void invoke();
 		void leave();
 		Base* event_button_short_press();
+		Base* event_button_long_press();
 		void event_cover_opened();
 		void event_cover_closed();
 		void event_tank_inserted();

@@ -91,6 +91,11 @@ static const char pgmstr_stop[] PROGMEM = _("Stop");
 static const char pgmstr_washing[] PROGMEM = _("Washing");
 static const char pgmstr_resin_preheat[] PROGMEM = _("Resin preheat");
 
+// hw menu
+static const char pgmstr_fan1_rpm[] PROGMEM = _("Fan1 RPM: ");
+static const char pgmstr_fan2_rpm[] PROGMEM = _("Fan2 RPM: ");
+static const char pgmstr_fan3_rpm[] PROGMEM = _("Fan3 RPM: ");
+
 // self test menu
 static const char pgmstr_selftest[] PROGMEM = _("Selftest");
 

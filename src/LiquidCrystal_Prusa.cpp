@@ -1,7 +1,4 @@
 #include "LiquidCrystal_Prusa.h"
-
-#include <stdio.h>
-
 #include "Arduino.h"
 #include "i18n.h"
 
@@ -29,7 +26,7 @@
 //	LCD_PWM_PIN - brightness control pin
 
 
-LiquidCrystal_Prusa::LiquidCrystal_Prusa()
+LiquidCrystal_Prusa::LiquidCrystal_Prusa() : SimplePrint()
 {
 	pinMode(LCD_PINS_RS, OUTPUT);
 	pinMode(LCD_PWM_PIN, OUTPUT);
@@ -126,9 +123,7 @@ void LiquidCrystal_Prusa::home() {
 }
 
 void LiquidCrystal_Prusa::setCursor(uint8_t col, uint8_t row) {
-	if (col != 255 && row != 255) {
-		command(LCD_SETDDRAMADDR | (col + _row_offsets[row]));
-	}
+	command(LCD_SETDDRAMADDR | (col + _row_offsets[row]));
 }
 
 // Turn the display on/off (quickly)
@@ -209,51 +204,27 @@ void LiquidCrystal_Prusa::setBrightness(uint8_t brightness) {
 
 void LiquidCrystal_Prusa::print(uint8_t number, uint8_t col, uint8_t row, uint8_t denom, unsigned char filler) {
 	setCursor(col, row);
-	div_t division;
-	while (denom) {
-		division = div(number, denom);
-		if (division.quot || denom == 1) {
-			write(division.quot + '0');
-			filler = '0';
-		} else {
-			write(filler);
-		}
-		number = division.rem;
-		denom /= 10;
-	}
+	SimplePrint::print(number, denom, filler);
 }
 
 void LiquidCrystal_Prusa::print(float number, uint8_t col, uint8_t row) {
-	number += 0.05;
-	uint8_t integer = (uint8_t)number;
-	print(integer, col, row, 100, ' ');
-	write('.');
-	integer = (number - integer) * 10;
-	print(integer, 255, 255, 1);
+	setCursor(col, row);
+	SimplePrint::print(number);
 }
 
 void LiquidCrystal_Prusa::printTime(uint16_t time, uint8_t col, uint8_t row) {
-	uint8_t min = time / 60;
-	uint8_t sec = time % 60;
-	print(min, col, row, 10, '0');
-	write(':');
-	print(sec, 255, 255, 10, '0');
+	setCursor(col, row);
+	SimplePrint::printTime(time);
 }
 
 void LiquidCrystal_Prusa::print(const char *str, uint8_t col, uint8_t row) {
 	setCursor(col, row);
-	uint8_t c;
-	while ((c = *(str++))) {
-		write(c);
-	}
+	SimplePrint::print(str);
 }
 
 void LiquidCrystal_Prusa::print_P(const char *str, uint8_t col, uint8_t row) {
 	setCursor(col, row);
-	uint8_t c;
-	while ((c = pgm_read_byte(str++))) {
-		write(c);
-	}
+	SimplePrint::print_P(str);
 }
 
 void LiquidCrystal_Prusa::clearLine(uint8_t row) {

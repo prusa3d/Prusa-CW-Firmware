@@ -22,8 +22,8 @@ namespace States {
 	uint8_t led_selftest_time = 10;
 	Curing selftest_led(pgmstr_led_test, config.fans_menu_speed, &led_selftest_time, &selftest_heater);
 
-	Base selftest_rotation(pgmstr_rotation_test);
 	Base selftest_fans(pgmstr_fans_test);
+	Base selftest_rotation(pgmstr_rotation_test);
 	TestSwitch selftest_tank(pgmstr_ipatank_test, pgmstr_remove_tank, pgmstr_insert_tank, hw.is_tank_inserted, &confirm);
 	TestSwitch selftest_cover(pgmstr_cover_test, pgmstr_open_cover, pgmstr_close_cover, hw.is_cover_closed, &selftest_tank);
 
@@ -36,10 +36,8 @@ namespace States {
 	}
 
 	void loop(Events& events) {
-		Base* new_state = active_state->process_events(events);
-		if (!new_state) {
-			new_state = active_state->loop();
-		}
+		active_state->process_events(events);
+		Base* new_state = active_state->loop();
 		if (new_state) {
 			change(new_state);
 		}

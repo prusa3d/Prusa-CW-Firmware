@@ -102,16 +102,44 @@ namespace UI {
 
 
 	// UI:SN
-	SN::SN(const char* label) :
-		Text(label)
+	SN::SN(const char* label, const char* sn) :
+		Text(label), sn(sn)
 	{}
 
 	char* SN::get_menu_label(char* buffer, uint8_t buffer_size) {
-		strncpy_P(buffer, pgmstr_sn, buffer_size);
-		// sizeof() != strlen()
-		uint8_t bs = buffer_size - (sizeof(pgmstr_sn) - 1);
-		return Base::get_menu_label(buffer + sizeof(pgmstr_sn) - 1, bs < SN_LENGTH+1 ? bs : SN_LENGTH+1);
+		char* end = Base::get_menu_label(buffer, buffer_size);
+		int8_t size = buffer + buffer_size - end;
+		return strncpy_P(end, sn, size < SN_LENGTH ? size : SN_LENGTH);
 	}
+
+
+	// UI:Live_value
+	template<class T>
+	Live_value<T>::Live_value(const char* label, T& value) :
+		Text(label), value(value), end(nullptr), size(0)
+	{}
+
+	template<class T>
+	char* Live_value<T>::get_menu_label(char* buffer, uint8_t buffer_size) {
+		end = Base::get_menu_label(buffer, buffer_size);
+		size = buffer + buffer_size - end;
+		if (size < 0) {
+			size = 0;
+		}
+		print(value);
+		return end;
+	}
+
+	template<class T>
+	void Live_value<T>::write(uint8_t c) {
+		if (size) {
+			*end = c;
+			++end;
+			--size;
+		}
+	}
+
+	template class Live_value<uint16_t>;
 
 
 	// UI::Menu
@@ -191,6 +219,26 @@ namespace UI {
 	}
 
 
+	// UI::Menu_self_redraw
+	Menu_self_redraw::Menu_self_redraw(const char* label, Base* const* items, uint8_t items_count, uint16_t redraw_us) :
+		Menu(label, items, items_count), redraw_us(redraw_us), us_last(0)
+	{}
+
+	void Menu_self_redraw::show() {
+		us_last = millis();
+		Menu::show();
+	}
+
+	void Menu_self_redraw::loop() {
+		unsigned long us_now = millis();
+		if (us_now - us_last > redraw_us) {
+			us_last = us_now;
+			show();
+		}
+		Menu::loop();
+	}
+
+
 	// UI::Value
 	Value::Value(const char* label, uint8_t& value, const char* units, uint8_t max, uint8_t min) :
 		Base(label), units(units), value(value), max_value(max), min_value(min)
@@ -261,19 +309,19 @@ namespace UI {
 	}
 
 
-	// UI::LcdBrightness
-	LcdBrightness::LcdBrightness(const char* label, uint8_t& value) :
-		Percent(label, value, 5)
+	// UI::Percent_with_action
+	Percent_with_action::Percent_with_action(const char* label, uint8_t& value, uint8_t min, void (*value_setter)(uint8_t)) :
+		Percent(label, value, min), value_setter(value_setter)
 	{}
 
-	void LcdBrightness::event_control_up() {
+	void Percent_with_action::event_control_up() {
 		Percent::event_control_up();
-		lcd.setBrightness(value);
+		value_setter(value);
 	}
 
-	void LcdBrightness::event_control_down() {
+	void Percent_with_action::event_control_down() {
 		Percent::event_control_down();
-		lcd.setBrightness(value);
+		value_setter(value);
 	}
 
 
@@ -462,6 +510,14 @@ namespace UI {
 		if (States::active_state->is_menu_available()) {
 			return state_menu;
 		}
+		if (States::active_state->short_press_cancel()) {
+			States::active_state->cancel();
+		}
+		return nullptr;
+	}
+
+	Base* State::event_button_long_press() {
+		States::active_state->cancel();
 		return nullptr;
 	}
 
