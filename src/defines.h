@@ -3,9 +3,13 @@
 #ifdef SERIAL_COM_DEBUG
 #define USB_PRINT(x)		SerialUSB.print(x)
 #define USB_PRINTLN(x)		SerialUSB.println(x)
+#define USB_PRINTP(x)		SerialUSB.print_P(PSTR(x))
+#define USB_PRINTLNP(x)		SerialUSB.println_P(PSTR(x))
 #else
 #define USB_PRINT(x)
 #define USB_PRINTLN(x)
+#define USB_PRINTP(x)
+#define USB_PRINTLNP(x)
 #endif
 
 #define COUNT_ITEMS(x)		(sizeof(x)/sizeof(x[0]))

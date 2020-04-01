@@ -1,6 +1,7 @@
-#include "simple_print.h"
 #include <stdlib.h>
-#include "Arduino.h"
+#include <avr/pgmspace.h>
+
+#include "simple_print.h"
 
 SimplePrint::SimplePrint()
 {}

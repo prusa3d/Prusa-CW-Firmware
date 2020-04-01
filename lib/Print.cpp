@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <avr/pgmspace.h>
 
 #include "Print.h"
 
@@ -43,6 +44,17 @@ size_t Print::write(const uint8_t *buffer, size_t size)
 size_t Print::print(const char str[])
 {
   return write(str);
+}
+
+size_t Print::print_P(const char str[])
+{
+  size_t n = 0;
+  uint8_t c;
+  while ((c = pgm_read_byte(str++))) {
+	  write(c);
+	  ++n;
+  }
+  return n;
 }
 
 size_t Print::print(char c)
@@ -103,6 +115,14 @@ size_t Print::println(const char c[])
   n += println();
   return n;
 }
+
+size_t Print::println_P(const char c[])
+{
+  size_t n = print_P(c);
+  n += println();
+  return n;
+}
+
 
 size_t Print::println(char c)
 {

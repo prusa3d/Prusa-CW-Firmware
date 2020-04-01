@@ -175,14 +175,14 @@ namespace UI {
 	// UI::Option
 	class Option : public Base {
 	public:
-		Option(const char* label, uint8_t& value, const char** options, uint8_t options_count);
+		Option(const char* label, uint8_t& value, const char* const* options, uint8_t options_count);
 		void show();
 		Base* event_button_short_press();
 		void event_control_up();
 		void event_control_down();
 	private:
 		uint8_t& value;
-		const char** const options;
+		const char* const* options;
 		uint8_t const options_count;
 	};
 

@@ -271,15 +271,15 @@ void Hardware::fans_duty() {
 }
 
 void Hardware::fans_duty(uint8_t fan, uint8_t duty) {
-//	USB_PRINT("fan ");
-//	USB_PRINT(fan);
-//	USB_PRINT("->");
+	USB_PRINTP("fan ");
+	USB_PRINT(fan);
+	USB_PRINTP("->");
 	if (duty) {
-//		USB_PRINTLN(duty);
+		USB_PRINTLN(duty);
 		analogWrite(fan_pwm_pins[fan], map(duty, 0, 100, 255, 0));
 		outputchip.digitalWrite(fan_enable_pins[fan], HIGH);
 	} else {
-//		USB_PRINTLN("OFF");
+		USB_PRINTLNP("OFF");
 		outputchip.digitalWrite(fan_enable_pins[fan], LOW);
 		digitalWrite(fan_pwm_pins[fan], LOW);
 	}
@@ -287,15 +287,15 @@ void Hardware::fans_duty(uint8_t fan, uint8_t duty) {
 
 void Hardware::fans_PI_regulator() {
 	// FIXME this is not working as expected :(
-//	USB_PRINT("actual: ");
+//	USB_PRINTP("actual: ");
 //	USB_PRINTLN(chamber_temp);
-//	USB_PRINT("target: ");
+//	USB_PRINTP("target: ");
 //	USB_PRINTLN(fans_target_temp);
 	double err_value = chamber_temp - fans_target_temp;
-//	USB_PRINT("err: ");
+//	USB_PRINTP("err: ");
 //	USB_PRINTLN(err_value);
 	PI_summ_err += err_value;
-//	USB_PRINT("sum: ");
+//	USB_PRINTP("sum: ");
 //	USB_PRINTLN(PI_summ_err);
 
 	if ((PI_summ_err > 10000) || (PI_summ_err < -10000)) {
@@ -303,7 +303,7 @@ void Hardware::fans_PI_regulator() {
 	}
 
 	double new_speed = P * err_value + I * PI_summ_err;		// TODO uint8_t?
-//	USB_PRINT("PI new value: ");
+//	USB_PRINTP("PI new value: ");
 //	USB_PRINTLN(new_speed);
 	if (new_speed > 100) {
 		new_speed = 100;
@@ -326,13 +326,13 @@ void Hardware::fans_check() {
 			fan_rpm[i] = 60000 / FAN_CHECK_PERIOD * fan_tacho_count[i];
 			fan_tacho_count[i] = 0;
 //			USB_PRINT(i);
-//			USB_PRINT(": ");
+//			USB_PRINTP(": ");
 //			USB_PRINTLN(fan_rpm[i]);
 		} else {
 			fan_rpm[i] = 0;
 		}
 	}
-//	USB_PRINT("fan_errors: ");
+//	USB_PRINTP("fan_errors: ");
 //	USB_PRINTLN(fan_errors);
 }
 

@@ -163,7 +163,8 @@ namespace UI {
 				lcd.write('>');
 			else
 				lcd.write(' ');
-			items[i + menu_offset]->get_menu_label(buffer, sizeof(buffer));
+			Base* item = (Base*)pgm_read_word(&(items[i + menu_offset]));
+			item->get_menu_label(buffer, sizeof(buffer));
 			lcd.print(buffer);
 		}
 	}
@@ -177,16 +178,17 @@ namespace UI {
 	}
 
 	Base* Menu::event_button_short_press() {
-		Base* menu_action = items[menu_offset + cursor_position]->in_menu_action();
+		Base* item = (Base*)pgm_read_word(&(items[menu_offset + cursor_position]));
+		Base* menu_action = item->in_menu_action();
 		if (menu_action) {
-			if (menu_action == items[menu_offset + cursor_position]) {
+			if (menu_action == item) {
 				show();
 				return nullptr;
 			} else {
 				return menu_action;
 			}
 		} else {
-			return items[menu_offset + cursor_position];
+			return item;
 		}
 	}
 
@@ -363,7 +365,7 @@ namespace UI {
 
 
 	// UI::Option
-	Option::Option(const char* label, uint8_t& value, const char** options, uint8_t options_count) :
+	Option::Option(const char* label, uint8_t& value, const char* const* options, uint8_t options_count) :
 		Base(label), value(value), options(options), options_count(options_count)
 	{
 		if (value > options_count)
@@ -373,7 +375,8 @@ namespace UI {
 	void Option::show() {
 		lcd.print_P(label, 1, 0);
 		lcd.clearLine(2);
-		uint8_t len = strlen_P(options[value]);
+		const char* option = (const char *)pgm_read_word(&(options[value]));
+		uint8_t len = strlen_P(option);
 		if (value)
 			len += 2;
 		if (value < options_count - 1)
@@ -381,7 +384,7 @@ namespace UI {
 		lcd.setCursor((20 - len) / 2, 2);
 		if (value)
 			lcd.print_P(pgmstr_lt);
-		lcd.print_P(options[value]);
+		lcd.print_P(option);
 		if (value < options_count - 1)
 			lcd.print_P(pgmstr_gt);
 	}

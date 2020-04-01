@@ -52,6 +52,7 @@ class Print
     virtual int availableForWrite() { return 0; }
 
     size_t print(const char[]);
+    size_t print_P(const char[]);
     size_t print(char);
     size_t print(unsigned char, int = DEC);
     size_t print(int, int = DEC);
@@ -61,6 +62,7 @@ class Print
     size_t print(double, int = 2);
 
     size_t println(const char[]);
+    size_t println_P(const char[]);
     size_t println(char);
     size_t println(unsigned char, int = DEC);
     size_t println(int, int = DEC);
