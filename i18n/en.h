@@ -95,6 +95,8 @@ static const char pgmstr_resin_preheat[] PROGMEM = _("Resin preheat");
 static const char pgmstr_fan1_rpm[] PROGMEM = _("Fan1 RPM: ");
 static const char pgmstr_fan2_rpm[] PROGMEM = _("Fan2 RPM: ");
 static const char pgmstr_fan3_rpm[] PROGMEM = _("Fan3 RPM: ");
+static const char pgmstr_chamber_temp[] PROGMEM = _("Cham. temp.:");
+static const char pgmstr_uvled_temp[] PROGMEM = _("UVLED temp.:");
 
 // self test menu
 static const char pgmstr_selftest[] PROGMEM = _("Selftest");

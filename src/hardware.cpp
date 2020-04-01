@@ -1,6 +1,7 @@
 #include <avr/wdt.h>
 
 #include "hardware.h"
+#include "intpol.h"
 #include "config.h"
 
 float celsius2fahrenheit(float celsius) {
@@ -11,12 +12,22 @@ float fahrenheit2celsius(float fahrenheit) {
 	return (fahrenheit - 32) / 1.8;
 }
 
+const int16_t chamber_temp_table_raw[34] PROGMEM = {
+	25, 29, 34, 40, 46, 54, 64, 75, 88, 105, 124, 146, 173, 204, 241, 282, 330, 382, 439, 500,
+	563, 625, 687, 744, 796, 842, 882, 915, 941, 963, 979, 992, 1001, 1008
+};
+
+const int16_t uvled_temp_table_raw[34] PROGMEM = {
+	73, 83, 95, 109, 125, 144, 165, 189, 217, 248, 284, 323, 366, 412, 462, 514, 567, 620, 673, 723,
+	770, 813, 851, 885, 913, 937, 957, 973, 986, 995, 1003, 1009, 1013, 1016
+};
+
 
 uint16_t Hardware::fan_rpm[3] = {0, 0, 0};
 volatile uint8_t Hardware::fan_tacho_count[3] = {0, 0, 0};
 volatile uint8_t Hardware::microstep_control(WASHING_ROTATION_START);
-float Hardware::chamber_temp = 0;
-thermistor Hardware::therm1(THERM_READ_PIN, 5);
+float Hardware::chamber_temp(0.0);
+float Hardware::uvled_temp(0.0);
 MCP Hardware::outputchip(0, 8);
 Trinamic_TMC2130 Hardware::myStepper(CS_PIN);
 uint8_t Hardware::lcd_encoder_bits(0);
@@ -27,11 +38,12 @@ uint8_t Hardware::fan_pwm_pins[2] = {FAN1_PWM_PIN, FAN2_PWM_PIN};
 uint8_t Hardware::fan_enable_pins[2] = {FAN1_PIN, FAN2_PIN};
 uint8_t Hardware::fans_target_temp(0);
 uint8_t Hardware::fan_errors(0);
+uint8_t Hardware::adc_channel(0);
 unsigned long Hardware::accel_us_last(0);
 unsigned long Hardware::fans_us_last(0);
-unsigned long Hardware::therm_us_last(0);
+unsigned long Hardware::adc_us_last(0);
 unsigned long Hardware::button_timer(0);
-double Hardware::PI_summ_err(0);
+double Hardware::PI_summ_err(0.0);
 bool Hardware::do_acceleration(false);
 bool Hardware::cover_closed(false);
 bool Hardware::tank_inserted(false);
@@ -45,6 +57,8 @@ Hardware::Hardware() {
 	outputchip.begin();
 	outputchip.pinMode(0B0000000010010111);
 	outputchip.pullupMode(0B0000000010000011);
+	outputchip.digitalWrite(ANALOG_SWITCH_A, LOW);
+	outputchip.digitalWrite(ANALOG_SWITCH_B, LOW);
 
 	// controls
 	pinMode(BTN_EN1, INPUT_PULLUP);
@@ -78,10 +92,39 @@ Hardware::Hardware() {
 	tank_inserted = is_tank_inserted();
 }
 
-float Hardware::therm1_read() {
-	outputchip.digitalWrite(ANALOG_SWITCH_A, LOW);
-	outputchip.digitalWrite(ANALOG_SWITCH_B, LOW);
-	return therm1.analog2temp();
+void Hardware::read_adc() {
+	float value;
+	switch (adc_channel) {
+		case 0:
+			value = interpolate_i16_ylin_P(read_adc_raw(THERM_READ_PIN) >> 2, 34, chamber_temp_table_raw, 1250, -50) / 10.0;
+			chamber_temp = config.SI_unit_system ? value : celsius2fahrenheit(value);
+			// TODO UV LED VOLTAGE channel 2
+			break;
+		case 1:
+			value = interpolate_i16_ylin_P(read_adc_raw(THERM_READ_PIN) >> 2, 34, uvled_temp_table_raw, 1250, -50) / 10.0;
+			uvled_temp = config.SI_unit_system ? value : celsius2fahrenheit(value);
+			// TODO UV LED VOLTAGE channel 3
+			break;
+		case 2:
+			// TODO UV LED VOLTAGE channel 4
+			break;
+		case 3:
+			// TODO UV LED VOLTAGE channel 1
+			break;
+		default:
+			break;
+	}
+	adc_channel = (adc_channel + 1) & 0x03;
+	outputchip.digitalWrite(ANALOG_SWITCH_A, adc_channel & 0x1);
+	outputchip.digitalWrite(ANALOG_SWITCH_B, adc_channel >> 1);
+}
+
+int16_t Hardware::read_adc_raw(uint8_t pin) {
+	int16_t raw = 0;
+	for (uint8_t i = 0; i < ADC_OVRSAMPL; ++i) {
+		raw += analogRead(pin);
+	}
+	return raw;
 }
 
 void Hardware::encoder_read() {
@@ -355,9 +398,9 @@ Events Hardware::loop() {
 		fans_us_last = us_now;
 		fans_check();
 	}
-	if (us_now - therm_us_last >= 2000) {
-		therm_us_last = us_now;
-		chamber_temp = config.SI_unit_system ? hw.therm1_read() : celsius2fahrenheit(hw.therm1_read());
+	if (us_now - adc_us_last >= 500) {
+		adc_us_last = us_now;
+		read_adc();
 		if (fans_target_temp) {
 			fans_PI_regulator();
 		}

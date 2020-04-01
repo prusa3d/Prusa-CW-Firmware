@@ -104,7 +104,9 @@ namespace UI {
 	Live_value<uint16_t> fan1_rpm(pgmstr_fan1_rpm, hw.fan_rpm[0]);
 	Live_value<uint16_t> fan2_rpm(pgmstr_fan2_rpm, hw.fan_rpm[1]);
 	Live_value<uint16_t> fan3_rpm(pgmstr_fan3_rpm, hw.fan_rpm[2]);
-	Base* const hw_items[] PROGMEM = {&back, &fan1_rpm, &fan2_rpm, &fan3_rpm};
+	Live_value<float> chamber_temp(pgmstr_chamber_temp, hw.chamber_temp);
+	Live_value<float> uvled_temp(pgmstr_uvled_temp, hw.uvled_temp);
+	Base* const hw_items[] PROGMEM = {&back, &fan1_rpm, &fan2_rpm, &fan3_rpm, &chamber_temp, &uvled_temp};
 	Menu_self_redraw hw_menu(pgmstr_emptystr, hw_items, COUNT_ITEMS(hw_items), MENU_REDRAW_US);
 
 	// selftest menu

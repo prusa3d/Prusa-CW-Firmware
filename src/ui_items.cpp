@@ -140,6 +140,7 @@ namespace UI {
 	}
 
 	template class Live_value<uint16_t>;
+	template class Live_value<float>;
 
 
 	// UI::Menu

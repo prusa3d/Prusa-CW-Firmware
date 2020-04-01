@@ -1,6 +1,5 @@
 #pragma once
 
-#include "thermistor.h"
 #include "MCP23S17.h"
 #include "Trinamic_TMC2130.h"
 #include "defines.h"
@@ -59,13 +58,14 @@ public:
 	static volatile uint8_t fan_tacho_count[3];
 	static volatile uint8_t microstep_control;
 	static float chamber_temp;
+	static float uvled_temp;
 
 private:
-	static thermistor therm1;
 	static MCP outputchip;
 	static Trinamic_TMC2130 myStepper;
 
-	static float therm1_read();
+	static void read_adc();
+	static int16_t read_adc_raw(uint8_t pin);
 	static void fans_duty();
 	static void fans_duty(uint8_t fan, uint8_t duty);
 	static void fans_PI_regulator();
@@ -81,10 +81,11 @@ private:
 	static uint8_t fans_target_temp;
 
 	static uint8_t fan_errors;
+	static uint8_t adc_channel;
 
 	static unsigned long accel_us_last;
 	static unsigned long fans_us_last;
-	static unsigned long therm_us_last;
+	static unsigned long adc_us_last;
 	static unsigned long button_timer;
 	static double PI_summ_err;
 	static bool do_acceleration;

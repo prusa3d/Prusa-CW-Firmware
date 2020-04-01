@@ -53,6 +53,7 @@
 #define SN_LENGTH			15
 #define MAX_MENU_DEPTH		5
 #define MENU_REDRAW_US		1000
+#define ADC_OVRSAMPL		4
 // motor speeds (smaller is faster)
 #define WASHING_ROTATION_START	200
 #define MIN_WASHING_SPEED		70
