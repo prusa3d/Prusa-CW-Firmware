@@ -81,7 +81,6 @@ private:
 	static uint8_t fans_target_temp;
 
 	static uint8_t fan_errors;
-	static uint8_t adc_channel;
 
 	static unsigned long accel_us_last;
 	static unsigned long fans_us_last;
@@ -94,6 +93,7 @@ private:
 	static bool button_active;
 	static bool long_press_active;
 	static bool heater_error;
+	static bool adc_channel;
 };
 
 extern Hardware hw;

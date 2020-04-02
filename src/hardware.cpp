@@ -38,7 +38,6 @@ uint8_t Hardware::fan_pwm_pins[2] = {FAN1_PWM_PIN, FAN2_PWM_PIN};
 uint8_t Hardware::fan_enable_pins[2] = {FAN1_PIN, FAN2_PIN};
 uint8_t Hardware::fans_target_temp(0);
 uint8_t Hardware::fan_errors(0);
-uint8_t Hardware::adc_channel(0);
 unsigned long Hardware::accel_us_last(0);
 unsigned long Hardware::fans_us_last(0);
 unsigned long Hardware::adc_us_last(0);
@@ -50,6 +49,7 @@ bool Hardware::tank_inserted(false);
 bool Hardware::button_active(false);
 bool Hardware::long_press_active(false);
 bool Hardware::heater_error(false);
+bool Hardware::adc_channel(false);
 
 
 Hardware::Hardware() {
@@ -75,6 +75,9 @@ Hardware::Hardware() {
 	pinMode(FAN1_PWM_PIN, OUTPUT);
 	pinMode(FAN2_PWM_PIN, OUTPUT);
 
+	// temperature ADC
+	pinMode(THERM_READ_PIN, INPUT);
+
 	stop_led();
 	stop_motor();
 	stop_heater();
@@ -94,29 +97,15 @@ Hardware::Hardware() {
 
 void Hardware::read_adc() {
 	float value;
-	switch (adc_channel) {
-		case 0:
-			value = interpolate_i16_ylin_P(read_adc_raw(THERM_READ_PIN) >> 2, 34, chamber_temp_table_raw, 1250, -50) / 10.0;
-			chamber_temp = config.SI_unit_system ? value : celsius2fahrenheit(value);
-			// TODO UV LED VOLTAGE channel 2
-			break;
-		case 1:
-			value = interpolate_i16_ylin_P(read_adc_raw(THERM_READ_PIN) >> 2, 34, uvled_temp_table_raw, 1250, -50) / 10.0;
-			uvled_temp = config.SI_unit_system ? value : celsius2fahrenheit(value);
-			// TODO UV LED VOLTAGE channel 3
-			break;
-		case 2:
-			// TODO UV LED VOLTAGE channel 4
-			break;
-		case 3:
-			// TODO UV LED VOLTAGE channel 1
-			break;
-		default:
-			break;
+	if (adc_channel) {
+		value = interpolate_i16_ylin_P(read_adc_raw(THERM_READ_PIN) >> 2, 34, uvled_temp_table_raw, 1250, -50) / 10.0;
+		uvled_temp = config.SI_unit_system ? value : celsius2fahrenheit(value);
+	} else {
+		value = interpolate_i16_ylin_P(read_adc_raw(THERM_READ_PIN) >> 2, 34, chamber_temp_table_raw, 1250, -50) / 10.0;
+		chamber_temp = config.SI_unit_system ? value : celsius2fahrenheit(value);
 	}
-	adc_channel = (adc_channel + 1) & 0x03;
-	outputchip.digitalWrite(ANALOG_SWITCH_A, adc_channel & 0x1);
-	outputchip.digitalWrite(ANALOG_SWITCH_B, adc_channel >> 1);
+	adc_channel ^= 1;
+	outputchip.digitalWrite(ANALOG_SWITCH_A, adc_channel);
 }
 
 int16_t Hardware::read_adc_raw(uint8_t pin) {
@@ -314,15 +303,15 @@ void Hardware::fans_duty() {
 }
 
 void Hardware::fans_duty(uint8_t fan, uint8_t duty) {
-	USB_PRINTP("fan ");
-	USB_PRINT(fan);
-	USB_PRINTP("->");
+//	USB_PRINTP("fan ");
+//	USB_PRINT(fan);
+//	USB_PRINTP("->");
 	if (duty) {
-		USB_PRINTLN(duty);
+//		USB_PRINTLN(duty);
 		analogWrite(fan_pwm_pins[fan], map(duty, 0, 100, 255, 0));
 		outputchip.digitalWrite(fan_enable_pins[fan], HIGH);
 	} else {
-		USB_PRINTLNP("OFF");
+//		USB_PRINTLNP("OFF");
 		outputchip.digitalWrite(fan_enable_pins[fan], LOW);
 		digitalWrite(fan_pwm_pins[fan], LOW);
 	}
