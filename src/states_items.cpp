@@ -99,35 +99,39 @@ namespace States {
 	Countimer timer;
 
 
-	// States::Timer
-	Timer::Timer(
+	// States::Timer_no_controls
+	Timer_no_controls::Timer_no_controls(
 		const char* title,
 		uint8_t* fans_duties,
 		uint8_t* after,
 		Base* to,
+		uint8_t& speed,
+		bool slow_mode,
 		Countimer::CountType timer_type)
 	:
 		Base(title, fans_duties),
 		continue_to(to),
+		speed(speed),
+		slow_mode(slow_mode),
 		continue_after(after),
 		timer_type(timer_type)
 	{}
 
-	void Timer::start() {
+	void Timer_no_controls::start() {
 		Base::start();
-		hw.speed_configuration(get_curing_mode());
+		hw.speed_configuration(speed, slow_mode);
 		hw.run_motor();
 		timer.setCounter(0, *continue_after, 0, timer_type);
 		timer.start();
 	}
 
-	void Timer::stop() {
+	void Timer_no_controls::stop() {
 		timer.stop();
 		hw.stop_motor();
 		Base::stop();
 	}
 
-	Base* Timer::loop() {
+	Base* Timer_no_controls::loop() {
 		if (hw.get_heater_error()) {
 			return &heater_error;
 		}
@@ -138,9 +142,27 @@ namespace States {
 		return nullptr;
 	}
 
-	void Timer::event_tank_removed() {
-		do_pause();
+	uint16_t Timer_no_controls::get_time() {
+		return timer.getCurrentTimeInSeconds();
 	}
+
+	void Timer_no_controls::set_continue_to(Base* to) {
+		continue_to = to;
+	}
+
+
+	// States::Timer
+	Timer::Timer(
+		const char* title,
+		uint8_t* fans_duties,
+		uint8_t* after,
+		Base* to,
+		uint8_t& speed,
+		bool slow_mode,
+		Countimer::CountType timer_type)
+	:
+		Timer_no_controls(title, fans_duties, after, to, speed, slow_mode, timer_type)
+	{}
 
 	bool Timer::is_menu_available() {
 		return true;
@@ -149,10 +171,6 @@ namespace States {
 	const char* Timer::get_title() {
 		const char* pause_reason = get_hw_pause_reason();
 		return timer.isStopped() ? (pause_reason ? pause_reason : pgmstr_paused) : title;
-	}
-
-	uint16_t Timer::get_time() {
-		return timer.getCurrentTimeInSeconds();
 	}
 
 	const char* Timer::decrease_time() {
@@ -196,23 +214,30 @@ namespace States {
 
 	void Timer::do_continue() {
 		timer.start();
-		hw.speed_configuration(get_curing_mode());
+		hw.speed_configuration(speed, slow_mode);
 		hw.run_motor();
 	}
 
-	bool Timer::get_curing_mode() {
-		return false;
+
+	// States::Washing
+	Washing::Washing(
+		const char* title,
+		uint8_t* fans_duties,
+		uint8_t* after,
+		Base* to)
+	:
+		Timer(title, fans_duties, after, to, config.washing_speed, false)
+	{}
+
+	void Washing::event_tank_removed() {
+		do_pause();
 	}
 
-	const char* Timer::get_hw_pause_reason() {
+	const char* Washing::get_hw_pause_reason() {
 		if (!hw.is_tank_inserted()) {
 			return pgmstr_insert_tank;
 		}
 		return nullptr;
-	}
-
-	void Timer::set_continue_to(Base* to) {
-		continue_to = to;
 	}
 
 
@@ -223,7 +248,7 @@ namespace States {
 		uint8_t* after,
 		Base* to)
 	:
-		Timer(title, fans_duties, after, to),
+		Timer(title, fans_duties, after, to, config.curing_speed, true),
 		led_us_last(0)
 	{}
 
@@ -249,9 +274,6 @@ namespace States {
 		return Timer::loop();
 	}
 
-	void Curing::event_tank_removed() {
-	}
-
 	void Curing::event_tank_inserted() {
 		do_pause();
 	}
@@ -274,10 +296,6 @@ namespace States {
 		Timer::do_continue();
 	}
 
-	bool Curing::get_curing_mode() {
-		return true;
-	}
-
 	const char* Curing::get_hw_pause_reason() {
 		if (hw.is_tank_inserted()) {
 			return pgmstr_remove_tank;
@@ -289,8 +307,8 @@ namespace States {
 	}
 
 
-	// States::TimerHeater
-	TimerHeater::TimerHeater(
+	// States::Timer_heater
+	Timer_heater::Timer_heater(
 		const char* title,
 		uint8_t* fans_duties,
 		uint8_t* after,
@@ -298,11 +316,11 @@ namespace States {
 		uint8_t* target_temp,
 		Countimer::CountType timer_type)
 	:
-		Timer(title, fans_duties, after, to, timer_type),
+		Timer(title, fans_duties, after, to, config.curing_speed, true, timer_type),
 		target_temp(target_temp)
 	{}
 
-	void TimerHeater::start() {
+	void Timer_heater::start() {
 		Timer::start();
 		if (target_temp) {
 			hw.set_target_temp(*target_temp);
@@ -314,41 +332,34 @@ namespace States {
 		}
 	}
 
-	void TimerHeater::stop() {
+	void Timer_heater::stop() {
 		hw.stop_heater();
 		Timer::stop();
 	}
 
-	void TimerHeater::event_tank_removed() {
-	}
-
-	void TimerHeater::event_tank_inserted() {
+	void Timer_heater::event_tank_inserted() {
 		do_pause();
 	}
 
-	void TimerHeater::event_cover_opened() {
+	void Timer_heater::event_cover_opened() {
 		do_pause();
 	}
 
-	float TimerHeater::get_temperature() {
+	float Timer_heater::get_temperature() {
 		return hw.chamber_temp;
 	}
 
-	void TimerHeater::do_pause() {
+	void Timer_heater::do_pause() {
 		hw.stop_heater();
 		Timer::do_pause();
 	}
 
-	void TimerHeater::do_continue() {
+	void Timer_heater::do_continue() {
 		hw.run_heater();
 		Timer::do_continue();
 	}
 
-	bool TimerHeater::get_curing_mode() {
-		return true;
-	}
-
-	const char* TimerHeater::get_hw_pause_reason() {
+	const char* Timer_heater::get_hw_pause_reason() {
 		if (hw.is_tank_inserted()) {
 			return pgmstr_remove_tank;
 		}
@@ -366,14 +377,14 @@ namespace States {
 		Base* to,
 		uint8_t* target_temp)
 	:
-		TimerHeater(title, config.fans_menu_speed, after, to, target_temp, Countimer::COUNT_UP)
+		Timer_heater(title, config.fans_menu_speed, after, to, target_temp, Countimer::COUNT_UP)
 	{}
 
 	Base* Warmup::loop() {
 		if (!config.heat_to_target_temp || hw.chamber_temp >= *target_temp) {
 			return continue_to;
 		}
-		return TimerHeater::loop();
+		return Timer_heater::loop();
 	}
 
 	const char* Warmup::decrease_time() {
@@ -426,8 +437,8 @@ namespace States {
 	}
 
 
-	// States::TestSwitch
-	TestSwitch::TestSwitch(
+	// States::Test_switch
+	Test_switch::Test_switch(
 		const char* title,
 		const char* message_on,
 		const char* message_off,
@@ -443,20 +454,21 @@ namespace States {
 		old_state(false)
 	{}
 
-	void TestSwitch::start() {
+	void Test_switch::start() {
 		Base::start();
 		old_state = value_getter();
 		test_count = SWITCH_TEST_COUNT;
 	}
 
-	Base* TestSwitch::loop() {
+	Base* Test_switch::loop() {
 		if (canceled || !test_count) {
+			hw.beep();
 			return continue_to;
 		}
 		return Base::loop();
 	}
 
-	const char* TestSwitch::get_message() {
+	const char* Test_switch::get_message() {
 		bool state = value_getter();
 		if (old_state != state && test_count) {
 			old_state = state;

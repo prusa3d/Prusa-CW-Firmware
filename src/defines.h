@@ -55,11 +55,11 @@
 #define MENU_REDRAW_US		1000
 #define ADC_OVRSAMPL		4
 // motor speeds (smaller is faster)
-#define WASHING_ROTATION_START	200
-#define MIN_WASHING_SPEED		70
-#define MAX_WASHING_SPEED		16
-#define MIN_CURING_SPEED		220
-#define MAX_CURING_SPEED		25
+#define FAST_SPEED_START	200
+#define MIN_FAST_SPEED		70
+#define MAX_FAST_SPEED		16
+#define MIN_SLOW_SPEED		220
+#define MAX_SLOW_SPEED		25
 
 #define MCP_A0	1	// pin 21
 #define MCP_A1	2	// pin 22

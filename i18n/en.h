@@ -79,7 +79,7 @@ static const char pgmstr_run_mode[] PROGMEM = _("Run mode");
 static const char pgmstr_drying_curing[] PROGMEM = _("Drying/curing");
 static const char pgmstr_curing[] PROGMEM = _("Curing");
 static const char pgmstr_drying[] PROGMEM = _("Drying");
-static const char pgmstr_led_intensity[] PROGMEM = _("LED intensity");
+static const char pgmstr_led_intensity[] PROGMEM = _("UVLED intensity");
 static const char pgmstr_lcd_brightness[] PROGMEM = _("LCD brightness");
 
 // run menu
@@ -98,7 +98,7 @@ static const char pgmstr_fan3_rpm[] PROGMEM = _("Fan3 RPM: ");
 static const char pgmstr_chamber_temp[] PROGMEM = _("Cham. temp.:");
 static const char pgmstr_uvled_temp[] PROGMEM = _("UVLED temp.:");
 
-// self test menu
+// advanced menu
 static const char pgmstr_selftest[] PROGMEM = _("Selftest");
 
 // state menu
@@ -128,7 +128,7 @@ static const char pgmstr_insert_tank[] PROGMEM = _("Insert IPA tank");
 
 // selftest states
 static const char pgmstr_heater_test[] PROGMEM = _("Heater test");
-static const char pgmstr_led_test[] PROGMEM = _("LED test");
+static const char pgmstr_led_test[] PROGMEM = _("UVLED test");
 static const char pgmstr_rotation_test[] PROGMEM = _("Rotation test");
 static const char pgmstr_fans_test[] PROGMEM = _("Fans test");
 static const char pgmstr_ipatank_test[] PROGMEM = _("IPA tank test");

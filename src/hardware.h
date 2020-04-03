@@ -26,7 +26,7 @@ public:
 
 	static void run_motor();
 	static void stop_motor();
-	static void speed_configuration(bool curing_mode);
+	static void speed_configuration(uint8_t speed, bool slow_mode, bool gear_shifting = false);
 	static void acceleration();
 
 	static void run_heater();

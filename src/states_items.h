@@ -40,36 +40,68 @@ namespace States {
 	};
 
 
+	// States::Timer_no_controls
+	class Timer_no_controls : public Base {
+	public:
+		Timer_no_controls(
+			const char* title,
+			uint8_t* fans_duties,
+			uint8_t* after,
+			Base* to,
+			uint8_t& speed,
+			bool slow_mode,
+			Countimer::CountType timer_type = Countimer::COUNT_DOWN);
+		void start();
+		void stop();
+		Base* loop();
+		uint16_t get_time();
+		void set_continue_to(Base* to);
+	protected:
+		Base* continue_to;
+		uint8_t& speed;
+		bool slow_mode;
+	private:
+		uint8_t* const continue_after;
+		Countimer::CountType timer_type;
+	};
+
+
 	// States::Timer
-	class Timer : public Base {
+	class Timer : public Timer_no_controls {
 	public:
 		Timer(
 			const char* title,
 			uint8_t* fans_duties,
 			uint8_t* after,
 			Base* to,
+			uint8_t& speed,
+			bool slow_mode,
 			Countimer::CountType timer_type = Countimer::COUNT_DOWN);
-		void start();
-		void stop();
-		Base* loop();
-		void event_tank_removed();
 		bool is_menu_available();
 		const char* get_title();
-		uint16_t get_time();
 		const char* decrease_time();
 		const char* increase_time();
 		bool is_paused();
 		void pause_continue();
-		void set_continue_to(Base* to);
 	protected:
-		Base* continue_to;
 		virtual void do_pause();
 		virtual void do_continue();
 	private:
-		virtual bool get_curing_mode();
-		virtual const char* get_hw_pause_reason();
-		uint8_t* const continue_after;
-		Countimer::CountType timer_type;
+		virtual const char* get_hw_pause_reason() = 0;
+	};
+
+
+	// States::Washing
+	class Washing : public Timer {
+	public:
+		Washing(
+			const char* title,
+			uint8_t* fans_duties,
+			uint8_t* after,
+			Base* to);
+		void event_tank_removed();
+	private:
+		const char* get_hw_pause_reason();
 	};
 
 
@@ -84,7 +116,6 @@ namespace States {
 		void start();
 		void stop();
 		Base* loop();
-		void event_tank_removed();
 		void event_tank_inserted();
 		void event_cover_opened();
 		float get_temperature();
@@ -92,16 +123,15 @@ namespace States {
 		void do_pause();
 		void do_continue();
 	private:
-		bool get_curing_mode();
 		const char* get_hw_pause_reason();
 		unsigned long led_us_last;
 	};
 
 
-	// States::TimerHeater
-	class TimerHeater : public Timer {
+	// States::Timer_heater
+	class Timer_heater : public Timer {
 	public:
-		TimerHeater(
+		Timer_heater(
 			const char* title,
 			uint8_t* fans_duties,
 			uint8_t* after,
@@ -110,7 +140,6 @@ namespace States {
 			Countimer::CountType timer_type = Countimer::COUNT_DOWN);
 		void start();
 		void stop();
-		void event_tank_removed();
 		void event_tank_inserted();
 		void event_cover_opened();
 		float get_temperature();
@@ -119,13 +148,12 @@ namespace States {
 		void do_pause();
 		void do_continue();
 	private:
-		bool get_curing_mode();
 		const char* get_hw_pause_reason();
 	};
 
 
 	// States::Warmup
-	class Warmup : public TimerHeater {
+	class Warmup : public Timer_heater {
 	public:
 		Warmup(
 			const char* title,
@@ -155,10 +183,10 @@ namespace States {
 	};
 
 
-	// States::TestSwitch
-	class TestSwitch : public Base {
+	// States::Test_switch
+	class Test_switch : public Base {
 	public:
-		TestSwitch(
+		Test_switch(
 			const char* title,
 			const char* message_on,
 			const char* message_off,
@@ -175,5 +203,7 @@ namespace States {
 		uint8_t test_count;
 		bool old_state;
 	};
+
+	// States::Test_rotation
 
 }

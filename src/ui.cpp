@@ -86,7 +86,7 @@ namespace UI {
 	Option curing_machine_mode(pgmstr_run_mode, config.curing_machine_mode, curing_machine_mode_options, COUNT_ITEMS(curing_machine_mode_options));
 	Percent led_intensity(pgmstr_led_intensity, config.led_intensity, MIN_LED_INTENSITY);
 	Percent_with_action lcd_brightness(pgmstr_lcd_brightness, config.lcd_brightness, MIN_LCD_BRIGHTNESS, lcd.setBrightness);
-	Base* const config_items[] PROGMEM = {&back, &speed_menu, &curing_machine_mode, &temperature_menu, &sound_menu, &fans_menu, &led_intensity, &lcd_brightness, &info_menu};
+	Base* const config_items[] PROGMEM = {&back, &speed_menu, &curing_machine_mode, &temperature_menu, &sound_menu, &lcd_brightness, &info_menu};
 	Menu config_menu(pgmstr_settings, config_items, COUNT_ITEMS(config_items));
 
 	// run menu
@@ -109,10 +109,10 @@ namespace UI {
 	Base* const hw_items[] PROGMEM = {&back, &fan1_rpm, &fan2_rpm, &fan3_rpm, &chamber_temp, &uvled_temp};
 	Menu_self_redraw hw_menu(pgmstr_emptystr, hw_items, COUNT_ITEMS(hw_items), MENU_REDRAW_US);
 
-	// selftest menu
+	// advanced menu
 	State selftest(pgmstr_selftest, &States::selftest_cover, nullptr);
-	Base* const selftest_items[] PROGMEM = {&back, &selftest};
-	Menu selftest_menu(pgmstr_emptystr, selftest_items, COUNT_ITEMS(selftest_items));
+	Base* const advanced_items[] PROGMEM = {&back, &fans_menu, &led_intensity, &selftest};
+	Menu advanced_menu(pgmstr_emptystr, advanced_items, COUNT_ITEMS(advanced_items));
 
 
 	/*** menu data ***/
@@ -127,7 +127,7 @@ namespace UI {
 		home_menu.set_long_press_ui_item(&curing_machine_mode);
 		info_menu.set_long_press_ui_item(&hw_menu);
 		run_menu.set_long_press_ui_item(&hw_menu);
-		config_menu.set_long_press_ui_item(&selftest_menu);
+		config_menu.set_long_press_ui_item(&advanced_menu);
 		active_menu->invoke();
 		active_menu->show();
 	}

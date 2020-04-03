@@ -25,14 +25,14 @@ const int16_t uvled_temp_table_raw[34] PROGMEM = {
 
 uint16_t Hardware::fan_rpm[3] = {0, 0, 0};
 volatile uint8_t Hardware::fan_tacho_count[3] = {0, 0, 0};
-volatile uint8_t Hardware::microstep_control(WASHING_ROTATION_START);
+volatile uint8_t Hardware::microstep_control(FAST_SPEED_START);
 float Hardware::chamber_temp(0.0);
 float Hardware::uvled_temp(0.0);
 MCP Hardware::outputchip(0, 8);
 Trinamic_TMC2130 Hardware::myStepper(CS_PIN);
 uint8_t Hardware::lcd_encoder_bits(0);
 volatile int8_t Hardware::rotary_diff(0);
-uint8_t Hardware::target_accel_period(WASHING_ROTATION_START);
+uint8_t Hardware::target_accel_period(FAST_SPEED_START);
 uint8_t Hardware::fan_duty[3] = {0, 0, 0};
 uint8_t Hardware::fan_pwm_pins[2] = {FAN1_PWM_PIN, FAN2_PWM_PIN};
 uint8_t Hardware::fan_enable_pins[2] = {FAN1_PIN, FAN2_PIN};
@@ -177,25 +177,29 @@ void Hardware::stop_motor() {
 	outputchip.digitalWrite(EN_PIN, HIGH);
 }
 
-void Hardware::speed_configuration(bool curing_mode) {
-	if (curing_mode) {
+void Hardware::speed_configuration(uint8_t speed, bool slow_mode, bool gear_shifting) {
+	if (slow_mode) {
 		myStepper.set_IHOLD_IRUN(10, 10, 0);
 		myStepper.set_mres(256);
-		microstep_control = map(config.curing_speed, 1, 10, MIN_CURING_SPEED, MAX_CURING_SPEED);
+		microstep_control = map(speed, 1, 10, MIN_SLOW_SPEED, MAX_SLOW_SPEED);
 	} else {
 		myStepper.set_IHOLD_IRUN(31, 31, 5);
 		myStepper.set_mres(16);
-		target_accel_period = map(config.washing_speed, 1, 10, MIN_WASHING_SPEED, MAX_WASHING_SPEED);
-		microstep_control = WASHING_ROTATION_START;
-		accel_us_last = millis();
+		if (gear_shifting) {
+			microstep_control = map(speed, 1, 10, MIN_FAST_SPEED, MAX_FAST_SPEED);
+		} else {
+			target_accel_period = map(speed, 1, 10, MIN_FAST_SPEED, MAX_FAST_SPEED);
+			microstep_control = FAST_SPEED_START;
+			accel_us_last = millis();
+		}
 	}
-	do_acceleration = !curing_mode;
+	do_acceleration = !slow_mode;
 }
 
 void Hardware::acceleration() {
 	if (microstep_control > target_accel_period) {
-		// step is 5 to MIN_WASHING_SPEED+5, then step is 1
-		if (microstep_control > MIN_WASHING_SPEED + 5)
+		// step is 5 to MIN_FAST_SPEED+5, then step is 1
+		if (microstep_control > MIN_FAST_SPEED + 5)
 			microstep_control -= 4;
 		microstep_control--;
 #ifdef SERIAL_COM_DEBUG

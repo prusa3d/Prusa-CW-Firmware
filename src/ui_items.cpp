@@ -583,13 +583,15 @@ namespace UI {
 		} else {
 			switch (curing_machine_mode) {
 				case 2:
+					States::drying.set_continue_to(&States::confirm);
 					States::warmup_print.set_continue_to(&States::drying);
 					break;
 				case 1:
 					States::warmup_print.set_continue_to(&States::curing);
 					break;
 				default:
-					States::warmup_print.set_continue_to(&States::drying_curing);
+					States::drying.set_continue_to(&States::curing);
+					States::warmup_print.set_continue_to(&States::drying);
 					break;
 			}
 			state = &States::warmup_print;
