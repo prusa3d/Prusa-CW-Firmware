@@ -193,7 +193,7 @@ void Hardware::speed_configuration(uint8_t speed, bool slow_mode, bool gear_shif
 			accel_us_last = millis();
 		}
 	}
-	do_acceleration = !slow_mode;
+	do_acceleration = !slow_mode && !gear_shifting;
 }
 
 void Hardware::acceleration() {

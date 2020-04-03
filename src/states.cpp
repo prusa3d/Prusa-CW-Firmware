@@ -22,7 +22,7 @@ namespace States {
 	Curing selftest_led(pgmstr_led_test, config.fans_menu_speed, &led_selftest_time, &selftest_heater);
 
 	Base selftest_fans(pgmstr_fans_test);
-	Base selftest_rotation(pgmstr_rotation_test);
+	Test_rotation selftest_rotation(pgmstr_rotation_test, &confirm);
 	Test_switch selftest_tank(pgmstr_ipatank_test, pgmstr_remove_tank, pgmstr_insert_tank, hw.is_tank_inserted, &selftest_rotation);
 	Test_switch selftest_cover(pgmstr_cover_test, pgmstr_open_cover, pgmstr_close_cover, hw.is_cover_closed, &selftest_tank);
 

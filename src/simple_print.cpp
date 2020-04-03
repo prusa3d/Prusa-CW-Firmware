@@ -17,7 +17,7 @@ void SimplePrint::print(uint16_t number, uint16_t denom, unsigned char filler) {
 		if (division.quot || denom == 1) {
 			write(division.quot + '0');
 			filler = '0';
-		} else {
+		} else if (filler) {
 			write(filler);
 		}
 		number = division.rem;

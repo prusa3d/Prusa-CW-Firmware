@@ -67,6 +67,10 @@ namespace States {
 		return UINT16_MAX;
 	}
 
+	char* Base::get_text() {
+		return nullptr;
+	}
+
 	float Base::get_temperature() {
 		return -1.0;
 	}
@@ -105,7 +109,7 @@ namespace States {
 		uint8_t* fans_duties,
 		uint8_t* after,
 		Base* to,
-		uint8_t& speed,
+		uint8_t* speed,
 		bool slow_mode,
 		Countimer::CountType timer_type)
 	:
@@ -119,7 +123,7 @@ namespace States {
 
 	void Timer_no_controls::start() {
 		Base::start();
-		hw.speed_configuration(speed, slow_mode);
+		hw.speed_configuration(*speed, slow_mode);
 		hw.run_motor();
 		timer.setCounter(0, *continue_after, 0, timer_type);
 		timer.start();
@@ -157,7 +161,7 @@ namespace States {
 		uint8_t* fans_duties,
 		uint8_t* after,
 		Base* to,
-		uint8_t& speed,
+		uint8_t* speed,
 		bool slow_mode,
 		Countimer::CountType timer_type)
 	:
@@ -214,7 +218,7 @@ namespace States {
 
 	void Timer::do_continue() {
 		timer.start();
-		hw.speed_configuration(speed, slow_mode);
+		hw.speed_configuration(*speed, slow_mode);
 		hw.run_motor();
 	}
 
@@ -226,7 +230,7 @@ namespace States {
 		uint8_t* after,
 		Base* to)
 	:
-		Timer(title, fans_duties, after, to, config.washing_speed, false)
+		Timer(title, fans_duties, after, to, &config.washing_speed, false)
 	{}
 
 	void Washing::event_tank_removed() {
@@ -248,7 +252,7 @@ namespace States {
 		uint8_t* after,
 		Base* to)
 	:
-		Timer(title, fans_duties, after, to, config.curing_speed, true),
+		Timer(title, fans_duties, after, to, &config.curing_speed, true),
 		led_us_last(0)
 	{}
 
@@ -316,7 +320,7 @@ namespace States {
 		uint8_t* target_temp,
 		Countimer::CountType timer_type)
 	:
-		Timer(title, fans_duties, after, to, config.curing_speed, true, timer_type),
+		Timer(title, fans_duties, after, to, &config.curing_speed, true, timer_type),
 		target_temp(target_temp)
 	{}
 
@@ -475,6 +479,57 @@ namespace States {
 			--test_count;
 		}
 		return state ? message_on : message_off;
+	}
+
+
+	// States::Test_rotation
+	Test_rotation::Test_rotation(
+		const char* title,
+		Base* to)
+	:
+		Timer_no_controls(title, config.fans_menu_speed, nullptr, to, nullptr, false),
+		test_time(ROTATION_TEST_TIME)
+	{}
+
+	void Test_rotation::start() {
+		test_speed = 10;
+		speed = &test_speed;
+		slow_mode = false;
+		continue_after = &test_time;
+		old_seconds = 60 * ROTATION_TEST_TIME;
+		Timer_no_controls::start();
+	}
+
+	Base* Test_rotation::loop() {
+		uint16_t seconds = timer.getCurrentTimeInSeconds();
+		if (seconds != old_seconds) {
+			old_seconds = seconds;
+			if (seconds && !(seconds % (60 * ROTATION_TEST_TIME / 20))) {
+				if (!(--test_speed)) {
+					test_speed = 10;
+					slow_mode = true;
+				}
+				hw.speed_configuration(test_speed, slow_mode, true);
+			}
+		}
+		return Timer_no_controls::loop();
+	}
+
+	char* Test_rotation::get_text() {
+		memset(buffer, ' ', sizeof(buffer));
+		buffer[sizeof(buffer)-1] = char(0);	// end of text
+		buffer[0] = slow_mode ? 'C' : 'W';
+		position = 1;
+		print(test_speed, 10, 0);
+		USB_PRINTLN(buffer);
+		return buffer;
+	}
+
+	void Test_rotation::write(uint8_t c) {
+		if (position < sizeof(buffer)) {
+			buffer[position] = c;
+			++position;
+		}
 	}
 
 }

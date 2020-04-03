@@ -469,12 +469,15 @@ namespace UI {
 			uint16_t time = States::active_state->get_time();
 			if (time != UINT16_MAX && time != old_time) {
 				old_time = time;
-				lcd.printTime(time, LAYOUT_TIME_X, LAYOUT_TIME_Y);
+				char* text = States::active_state->get_text();
+				lcd.printTime(time, text ? LAYOUT_TIME_TXT_X : LAYOUT_TIME_X, LAYOUT_TIME_Y);
 				// temperature
 				float temp = States::active_state->get_temperature();
 				if (temp > 0) {
 					lcd.print(temp, LAYOUT_TEMP_X, LAYOUT_TEMP_Y);
 					lcd.print_P(config.SI_unit_system ? pgmstr_celsius : pgmstr_fahrenheit);
+				} else if (text) {
+					lcd.print(text, LAYOUT_TEXT_X, LAYOUT_TEXT_Y);
 				}
 			}
 		}

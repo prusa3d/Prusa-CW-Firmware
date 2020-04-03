@@ -4,6 +4,7 @@
 #include "hardware.h"
 #include "i18n.h"
 #include "config.h"
+#include "simple_print.h"
 
 namespace States {
 
@@ -26,6 +27,7 @@ namespace States {
 		virtual const char* get_title();
 		virtual const char* get_message();
 		virtual uint16_t get_time();
+		virtual char* get_text();
 		virtual float get_temperature();
 		virtual const char* decrease_time();
 		virtual const char* increase_time();
@@ -48,7 +50,7 @@ namespace States {
 			uint8_t* fans_duties,
 			uint8_t* after,
 			Base* to,
-			uint8_t& speed,
+			uint8_t* speed,
 			bool slow_mode,
 			Countimer::CountType timer_type = Countimer::COUNT_DOWN);
 		void start();
@@ -58,10 +60,10 @@ namespace States {
 		void set_continue_to(Base* to);
 	protected:
 		Base* continue_to;
-		uint8_t& speed;
+		uint8_t* speed;
 		bool slow_mode;
+		uint8_t* continue_after;
 	private:
-		uint8_t* const continue_after;
 		Countimer::CountType timer_type;
 	};
 
@@ -74,7 +76,7 @@ namespace States {
 			uint8_t* fans_duties,
 			uint8_t* after,
 			Base* to,
-			uint8_t& speed,
+			uint8_t* speed,
 			bool slow_mode,
 			Countimer::CountType timer_type = Countimer::COUNT_DOWN);
 		bool is_menu_available();
@@ -204,6 +206,23 @@ namespace States {
 		bool old_state;
 	};
 
+
 	// States::Test_rotation
+	class Test_rotation : public Timer_no_controls, public SimplePrint {
+	public:
+		Test_rotation(
+			const char* title,
+			Base* to);
+		void start();
+		Base* loop();
+		char* get_text();
+	private:
+		void write(uint8_t c);
+		uint8_t test_time;
+		uint8_t test_speed;
+		uint16_t old_seconds;
+		char buffer[4];
+		uint8_t position;
+	};
 
 }

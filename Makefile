@@ -33,7 +33,7 @@ VERSION = ${BUILD_DIR}/version.h
 
 default: ${HEXS}
 
-.PHONY: clean lang_extract default ${VERSION}.tmp
+.PHONY: clean lang_extract default ${VERSION}.tmp doc
 
 .SECONDARY:
 
@@ -88,6 +88,9 @@ xxx:
 
 tags: ${CSRCS} ${CPPSRCS} $(wildcard ${I18N}/*.h)
 	arduino-ctags $^
+
+doc:
+	doxygen
 
 
 $(BUILD_DIR)/%.d: %.c ${VERSION} Makefile | $${@D}/.
