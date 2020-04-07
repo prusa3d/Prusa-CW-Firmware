@@ -9,7 +9,7 @@ namespace States {
 
 	extern Base menu;
 	extern Confirm confirm;
-	extern Confirm heater_error;
+	extern Confirm error;
 	extern Washing washing;
 	extern Timer_heater drying;
 	extern Curing curing;

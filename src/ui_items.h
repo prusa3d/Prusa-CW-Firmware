@@ -57,10 +57,7 @@ namespace UI {
 		Live_value(const char* label, T& value);
 		char* get_menu_label(char* buffer, uint8_t buffer_size);
 	private:
-		void write(uint8_t c);
 		T& value;
-		char* end;
-		int8_t size;
 	};
 
 

@@ -129,23 +129,14 @@ static const char pgmstr_insert_tank[] PROGMEM = _("Insert IPA tank");
 // selftest states
 static const char pgmstr_heater_test[] PROGMEM = _("Heater test");
 static const char pgmstr_led_test[] PROGMEM = _("UVLED test");
-static const char pgmstr_rotation_test[] PROGMEM = _("Rotation test");
 static const char pgmstr_fans_test[] PROGMEM = _("Fans test");
+static const char pgmstr_fan1[] PROGMEM = _("F1:");
+static const char pgmstr_fan2[] PROGMEM = _("  F2:");
+static const char pgmstr_fan1_failure[] PROGMEM = _("Fan1 failure:");
+static const char pgmstr_fan2_failure[] PROGMEM = _("Fan2 failure:");
+static const char pgmstr_spinning[] PROGMEM = _("Spinning turned off");
+static const char pgmstr_not_spinning[] PROGMEM = _("Not/bad spinning");
+static const char pgmstr_rotation_test[] PROGMEM = _("Rotation test");
 static const char pgmstr_ipatank_test[] PROGMEM = _("IPA tank test");
 static const char pgmstr_cover_test[] PROGMEM = _("Cover test");
 static const char pgmstr_open_cover[] PROGMEM = _("Open the cover");
-
-
-// TODO
-static const char pgmstr_fan1_failure[] PROGMEM = _("Fan1 failure");
-static const char pgmstr_fan2_failure[] PROGMEM = _("Fan2 failure");
-static const char pgmstr_heater_failure[] PROGMEM = _("HEATER failure");
-static const char pgmstr_test_failed[] PROGMEM = _("Test failed");
-static const char pgmstr_test_success[] PROGMEM = _("Test successful");
-static const char pgmstr_fan1_test[] PROGMEM = _("Fan1:   x/100ms");
-static const char pgmstr_fan2_test[] PROGMEM = _("Fan2:   x/100ms");
-static const char pgmstr_mode_gear[] PROGMEM = _("Mode/Gear:");
-// untranslated constants
-static const char pgmstr_slash[] PROGMEM = "/";
-
-

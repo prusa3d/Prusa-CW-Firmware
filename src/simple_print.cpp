@@ -3,7 +3,9 @@
 
 #include "simple_print.h"
 
-SimplePrint::SimplePrint()
+SimplePrint::SimplePrint() :
+	_buffer_position(nullptr),
+	_buffer_size(0)
 {}
 
 void SimplePrint::print(uint8_t number, uint8_t denom, unsigned char filler) {
@@ -54,4 +56,21 @@ void SimplePrint::print_P(const char *str) {
 	while ((c = pgm_read_byte(str++))) {
 		write(c);
 	}
+}
+
+void SimplePrint::buffer_init(char* buffer_start, uint8_t buffer_size) {
+	_buffer_position = buffer_start;
+	_buffer_size = buffer_size;
+}
+
+void SimplePrint::write(uint8_t c) {
+	if (_buffer_size) {
+		*_buffer_position = c;
+		_buffer_position++;
+		_buffer_size--;
+	}
+}
+
+char* SimplePrint::get_position() {
+	return _buffer_position;
 }

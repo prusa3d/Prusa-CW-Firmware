@@ -11,5 +11,11 @@ public:
 	void printTime(uint16_t time);
 	void print(const char*);
 	void print_P(const char*);
-	virtual void write(uint8_t c) = 0;
+	void buffer_init(char* buffer_start, uint8_t buffer_size);
+	virtual void write(uint8_t c);
+	char* get_position();
+private:
+	char* _buffer_position;
+	uint8_t _buffer_size;
+
 };

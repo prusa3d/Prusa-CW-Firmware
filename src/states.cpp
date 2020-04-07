@@ -6,7 +6,7 @@ namespace States {
 	/*** states definitions ***/
 	Base menu(pgmstr_emptystr);
 	Confirm confirm(pgmstr_finished, pgmstr_press2continue);
-	Confirm heater_error(pgmstr_heater_error, pgmstr_please_restart);
+	Confirm error(pgmstr_emptystr, pgmstr_emptystr);
 	Washing washing(pgmstr_washing, config.fans_washing_speed, &config.washing_run_time, &confirm);
 	// FIXME - would be better to set PI regulator and manage heater for drying/curing?
 	Timer_heater drying(pgmstr_drying, config.fans_drying_speed, &config.drying_run_time, &confirm);
@@ -21,8 +21,8 @@ namespace States {
 	uint8_t led_selftest_time = 10;
 	Curing selftest_led(pgmstr_led_test, config.fans_menu_speed, &led_selftest_time, &selftest_heater);
 
-	Base selftest_fans(pgmstr_fans_test);
-	Test_rotation selftest_rotation(pgmstr_rotation_test, &confirm);
+	Test_fans selftest_fans(pgmstr_fans_test, &confirm);
+	Test_rotation selftest_rotation(pgmstr_rotation_test, &selftest_fans);
 	Test_switch selftest_tank(pgmstr_ipatank_test, pgmstr_remove_tank, pgmstr_insert_tank, hw.is_tank_inserted, &selftest_rotation);
 	Test_switch selftest_cover(pgmstr_cover_test, pgmstr_open_cover, pgmstr_close_cover, hw.is_cover_closed, &selftest_tank);
 

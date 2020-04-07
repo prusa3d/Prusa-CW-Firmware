@@ -202,13 +202,6 @@ void Hardware::acceleration() {
 		if (microstep_control > MIN_FAST_SPEED + 5)
 			microstep_control -= 4;
 		microstep_control--;
-#ifdef SERIAL_COM_DEBUG
-		SerialUSB.print("acceleration: ");
-		SerialUSB.print(microstep_control);
-		SerialUSB.print("->");
-		SerialUSB.print(target_accel_period);
-		SerialUSB.print("\r\n");
-#endif
 	} else {
 		do_acceleration = false;
 		myStepper.set_IHOLD_IRUN(10, 10, 5);
@@ -307,15 +300,15 @@ void Hardware::fans_duty() {
 }
 
 void Hardware::fans_duty(uint8_t fan, uint8_t duty) {
-//	USB_PRINTP("fan ");
-//	USB_PRINT(fan);
-//	USB_PRINTP("->");
+	USB_PRINTP("fan ");
+	USB_PRINT(fan);
+	USB_PRINTP("->");
 	if (duty) {
-//		USB_PRINTLN(duty);
+		USB_PRINTLN(duty);
 		analogWrite(fan_pwm_pins[fan], map(duty, 0, 100, 255, 0));
 		outputchip.digitalWrite(fan_enable_pins[fan], HIGH);
 	} else {
-//		USB_PRINTLNP("OFF");
+		USB_PRINTLNP("OFF");
 		outputchip.digitalWrite(fan_enable_pins[fan], LOW);
 		digitalWrite(fan_pwm_pins[fan], LOW);
 	}

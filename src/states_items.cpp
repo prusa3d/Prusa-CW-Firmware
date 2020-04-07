@@ -67,8 +67,12 @@ namespace States {
 		return UINT16_MAX;
 	}
 
-	char* Base::get_text() {
-		return nullptr;
+	bool Base::get_info1(__attribute__((unused)) char* buffer, __attribute__((unused)) uint8_t size) {
+		return false;
+	}
+
+	bool Base::get_info2(__attribute__((unused)) char* buffer, __attribute__((unused)) uint8_t size) {
+		return false;
 	}
 
 	float Base::get_temperature() {
@@ -102,42 +106,35 @@ namespace States {
 	// shared counter for all Timer states (RAM saver)
 	Countimer timer;
 
-
-	// States::Timer_no_controls
-	Timer_no_controls::Timer_no_controls(
+	// States::Timer_only
+	Timer_only::Timer_only(
 		const char* title,
 		uint8_t* fans_duties,
 		uint8_t* after,
 		Base* to,
-		uint8_t* speed,
-		bool slow_mode,
 		Countimer::CountType timer_type)
 	:
 		Base(title, fans_duties),
 		continue_to(to),
-		speed(speed),
-		slow_mode(slow_mode),
 		continue_after(after),
 		timer_type(timer_type)
 	{}
 
-	void Timer_no_controls::start() {
+	void Timer_only::start() {
 		Base::start();
-		hw.speed_configuration(*speed, slow_mode);
-		hw.run_motor();
 		timer.setCounter(0, *continue_after, 0, timer_type);
 		timer.start();
 	}
 
-	void Timer_no_controls::stop() {
+	void Timer_only::stop() {
 		timer.stop();
-		hw.stop_motor();
 		Base::stop();
 	}
 
-	Base* Timer_no_controls::loop() {
+	Base* Timer_only::loop() {
 		if (hw.get_heater_error()) {
-			return &heater_error;
+			error.fill(pgmstr_heater_error, pgmstr_please_restart);
+			return &error;
 		}
 		timer.run();
 		if (canceled || timer.isCounterCompleted()) {
@@ -146,17 +143,17 @@ namespace States {
 		return nullptr;
 	}
 
-	uint16_t Timer_no_controls::get_time() {
+	uint16_t Timer_only::get_time() {
 		return timer.getCurrentTimeInSeconds();
 	}
 
-	void Timer_no_controls::set_continue_to(Base* to) {
+	void Timer_only::set_continue_to(Base* to) {
 		continue_to = to;
 	}
 
 
-	// States::Timer
-	Timer::Timer(
+	// States::Timer_motor
+	Timer_motor::Timer_motor(
 		const char* title,
 		uint8_t* fans_duties,
 		uint8_t* after,
@@ -165,19 +162,46 @@ namespace States {
 		bool slow_mode,
 		Countimer::CountType timer_type)
 	:
-		Timer_no_controls(title, fans_duties, after, to, speed, slow_mode, timer_type)
+		Timer_only(title, fans_duties, after, to, timer_type),
+		speed(speed),
+		slow_mode(slow_mode)
 	{}
 
-	bool Timer::is_menu_available() {
+	void Timer_motor::start() {
+		Timer_only::start();
+		hw.speed_configuration(*speed, slow_mode);
+		hw.run_motor();
+	}
+
+	void Timer_motor::stop() {
+		hw.stop_motor();
+		Timer_only::stop();
+	}
+
+
+	// States::Timer_controls
+	Timer_controls::Timer_controls(
+		const char* title,
+		uint8_t* fans_duties,
+		uint8_t* after,
+		Base* to,
+		uint8_t* speed,
+		bool slow_mode,
+		Countimer::CountType timer_type)
+	:
+		Timer_motor(title, fans_duties, after, to, speed, slow_mode, timer_type)
+	{}
+
+	bool Timer_controls::is_menu_available() {
 		return true;
 	}
 
-	const char* Timer::get_title() {
+	const char* Timer_controls::get_title() {
 		const char* pause_reason = get_hw_pause_reason();
 		return timer.isStopped() ? (pause_reason ? pause_reason : pgmstr_paused) : title;
 	}
 
-	const char* Timer::decrease_time() {
+	const char* Timer_controls::decrease_time() {
 		uint16_t secs = timer.getCurrentTimeInSeconds();
 		if (secs < INC_DEC_TIME_STEP) {
 			return pgmstr_min_symb;
@@ -187,7 +211,7 @@ namespace States {
 		}
 	}
 
-	const char* Timer::increase_time() {
+	const char* Timer_controls::increase_time() {
 		uint16_t secs = timer.getCurrentTimeInSeconds();
 		if (secs > 10 * 60 - INC_DEC_TIME_STEP) {
 			return pgmstr_max_symb;
@@ -197,11 +221,11 @@ namespace States {
 		}
 	}
 
-	bool Timer::is_paused() {
+	bool Timer_controls::is_paused() {
 		return timer.isStopped();
 	}
 
-	void Timer::pause_continue() {
+	void Timer_controls::pause_continue() {
 		if (timer.isStopped()) {
 			if (!get_hw_pause_reason()) {
 				do_continue();
@@ -211,12 +235,12 @@ namespace States {
 		}
 	}
 
-	void Timer::do_pause() {
+	void Timer_controls::do_pause() {
 		timer.pause();
 		hw.stop_motor();
 	}
 
-	void Timer::do_continue() {
+	void Timer_controls::do_continue() {
 		timer.start();
 		hw.speed_configuration(*speed, slow_mode);
 		hw.run_motor();
@@ -230,7 +254,7 @@ namespace States {
 		uint8_t* after,
 		Base* to)
 	:
-		Timer(title, fans_duties, after, to, &config.washing_speed, false)
+		Timer_controls(title, fans_duties, after, to, &config.washing_speed, false)
 	{}
 
 	void Washing::event_tank_removed() {
@@ -252,12 +276,12 @@ namespace States {
 		uint8_t* after,
 		Base* to)
 	:
-		Timer(title, fans_duties, after, to, &config.curing_speed, true),
+		Timer_controls(title, fans_duties, after, to, &config.curing_speed, true),
 		led_us_last(0)
 	{}
 
 	void Curing::start() {
-		Timer::start();
+		Timer_controls::start();
 		if (!hw.is_cover_closed()) {
 			do_pause();
 		} else {
@@ -267,7 +291,7 @@ namespace States {
 
 	void Curing::stop() {
 		hw.stop_led();
-		Timer::stop();
+		Timer_controls::stop();
 	}
 
 	Base* Curing::loop() {
@@ -275,7 +299,7 @@ namespace States {
 			hw.run_led();
 			led_us_last = 0;
 		}
-		return Timer::loop();
+		return Timer_controls::loop();
 	}
 
 	void Curing::event_tank_inserted() {
@@ -292,12 +316,12 @@ namespace States {
 
 	void Curing::do_pause() {
 		hw.stop_led();
-		Timer::do_pause();
+		Timer_controls::do_pause();
 	}
 
 	void Curing::do_continue() {
 		led_us_last = millis();
-		Timer::do_continue();
+		Timer_controls::do_continue();
 	}
 
 	const char* Curing::get_hw_pause_reason() {
@@ -320,12 +344,12 @@ namespace States {
 		uint8_t* target_temp,
 		Countimer::CountType timer_type)
 	:
-		Timer(title, fans_duties, after, to, &config.curing_speed, true, timer_type),
+		Timer_controls(title, fans_duties, after, to, &config.curing_speed, true, timer_type),
 		target_temp(target_temp)
 	{}
 
 	void Timer_heater::start() {
-		Timer::start();
+		Timer_controls::start();
 		if (target_temp) {
 			hw.set_target_temp(*target_temp);
 		}
@@ -338,7 +362,7 @@ namespace States {
 
 	void Timer_heater::stop() {
 		hw.stop_heater();
-		Timer::stop();
+		Timer_controls::stop();
 	}
 
 	void Timer_heater::event_tank_inserted() {
@@ -355,12 +379,12 @@ namespace States {
 
 	void Timer_heater::do_pause() {
 		hw.stop_heater();
-		Timer::do_pause();
+		Timer_controls::do_pause();
 	}
 
 	void Timer_heater::do_continue() {
 		hw.run_heater();
-		Timer::do_continue();
+		Timer_controls::do_continue();
 	}
 
 	const char* Timer_heater::get_hw_pause_reason() {
@@ -440,6 +464,11 @@ namespace States {
 		return canceled;
 	}
 
+	void Confirm::fill(const char* new_title, const char* new_message) {
+		title = new_title;
+		message = new_message;
+	}
+
 
 	// States::Test_switch
 	Test_switch::Test_switch(
@@ -487,7 +516,7 @@ namespace States {
 		const char* title,
 		Base* to)
 	:
-		Timer_no_controls(title, config.fans_menu_speed, nullptr, to, nullptr, false),
+		Timer_motor(title, config.fans_menu_speed, &test_time, to, nullptr, false),
 		test_time(ROTATION_TEST_TIME)
 	{}
 
@@ -495,9 +524,9 @@ namespace States {
 		test_speed = 10;
 		speed = &test_speed;
 		slow_mode = false;
-		continue_after = &test_time;
 		old_seconds = 60 * ROTATION_TEST_TIME;
-		Timer_no_controls::start();
+		draw = true;
+		Timer_motor::start();
 	}
 
 	Base* Test_rotation::loop() {
@@ -510,26 +539,105 @@ namespace States {
 					slow_mode = true;
 				}
 				hw.speed_configuration(test_speed, slow_mode, true);
+				draw = true;
 			}
 		}
-		return Timer_no_controls::loop();
+		return Timer_motor::loop();
 	}
 
-	char* Test_rotation::get_text() {
-		memset(buffer, ' ', sizeof(buffer));
-		buffer[sizeof(buffer)-1] = char(0);	// end of text
-		buffer[0] = slow_mode ? 'C' : 'W';
-		position = 1;
-		print(test_speed, 10, 0);
-		USB_PRINTLN(buffer);
-		return buffer;
-	}
-
-	void Test_rotation::write(uint8_t c) {
-		if (position < sizeof(buffer)) {
-			buffer[position] = c;
-			++position;
+	bool Test_rotation::get_info1(char* buffer, uint8_t size) {
+		if (draw) {
+			buffer[0] = slow_mode ? 'C' : 'W';
+			buffer_init(++buffer, --size);
+			print(test_speed, 10, '0');
+			get_position()[0] = char(0);
+			draw = false;
+			return true;
 		}
+		return false;
+	}
+
+
+	// States::Test_fans
+	Test_fans::Test_fans(
+		const char* title,
+		Base* to)
+	:
+		Timer_only(title, fans_speed, &test_time, to),
+		test_time(FANS_TEST_TIME)
+	{}
+
+	void Test_fans::start() {
+		fans_speed[0] = 0;
+		fans_speed[1] = 100;
+		old_fan_rpm[0] = 0;
+		old_fan_rpm[1] = UINT16_MAX;
+		old_seconds = 60 * FANS_TEST_TIME;
+		draw1 = true;
+		draw2 = true;
+		Timer_only::start();
+	}
+
+	Base* Test_fans::loop() {
+		uint16_t seconds = timer.getCurrentTimeInSeconds();
+		if (seconds != old_seconds) {
+			old_seconds = seconds;
+			draw2 = true;
+			if (seconds && !((seconds - 1) % (60 * FANS_TEST_TIME / 6))) {
+				if (!fans_speed[0] && hw.fan_rpm[0]) {
+					error.fill(pgmstr_fan1_failure, pgmstr_spinning);
+					return &error;
+				}
+				if (fans_speed[0] && hw.fan_rpm[0] <= old_fan_rpm[0]) {
+					error.fill(pgmstr_fan1_failure, pgmstr_not_spinning);
+					return &error;
+				}
+				if (!fans_speed[1] && hw.fan_rpm[1]) {
+					error.fill(pgmstr_fan2_failure, pgmstr_spinning);
+					return &error;
+				}
+				if (fans_speed[1] && hw.fan_rpm[1] >= old_fan_rpm[1]) {
+					error.fill(pgmstr_fan2_failure, pgmstr_not_spinning);
+					return &error;
+				}
+				if (fans_speed[0] < 100) {
+					fans_speed[0] += 20;
+					fans_speed[1] = 100 - fans_speed[0];
+					hw.set_fans(fans_speed);
+					draw1 = true;
+					old_fan_rpm[0] = hw.fan_rpm[0];
+					old_fan_rpm[1] = hw.fan_rpm[1];
+				}
+			}
+		}
+		return Timer_only::loop();
+	}
+
+	bool Test_fans::get_info1(char* buffer, uint8_t size) {
+		if (draw1) {
+			buffer_init(buffer, size);
+			print(fans_speed[0]);
+			print_P(pgmstr_double_space+1);
+			print(fans_speed[1]);
+			get_position()[0] = char(0);
+			draw1 = false;
+			return true;
+		}
+		return false;
+	}
+
+	bool Test_fans::get_info2(char* buffer, uint8_t size) {
+		if (draw2) {
+			buffer_init(buffer, size);
+			print_P(pgmstr_fan1);
+			print(hw.fan_rpm[0]);
+			print_P(pgmstr_fan2);
+			print(hw.fan_rpm[1]);
+			get_position()[0] = char(0);
+			draw2 = false;
+			return true;
+		}
+		return false;
 	}
 
 }

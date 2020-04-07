@@ -116,27 +116,19 @@ namespace UI {
 	// UI:Live_value
 	template<class T>
 	Live_value<T>::Live_value(const char* label, T& value) :
-		Text(label), value(value), end(nullptr), size(0)
+		Text(label), value(value)
 	{}
 
 	template<class T>
 	char* Live_value<T>::get_menu_label(char* buffer, uint8_t buffer_size) {
-		end = Base::get_menu_label(buffer, buffer_size);
-		size = buffer + buffer_size - end;
+		char* end = Base::get_menu_label(buffer, buffer_size);
+		uint8_t size = buffer + buffer_size - end;
 		if (size < 0) {
 			size = 0;
 		}
+		buffer_init(end, size);
 		print(value);
-		return end;
-	}
-
-	template<class T>
-	void Live_value<T>::write(uint8_t c) {
-		if (size) {
-			*end = c;
-			++end;
-			--size;
-		}
+		return get_position();
 	}
 
 	template class Live_value<uint16_t>;
@@ -469,16 +461,22 @@ namespace UI {
 			uint16_t time = States::active_state->get_time();
 			if (time != UINT16_MAX && time != old_time) {
 				old_time = time;
-				char* text = States::active_state->get_text();
-				lcd.printTime(time, text ? LAYOUT_TIME_TXT_X : LAYOUT_TIME_X, LAYOUT_TIME_Y);
+				lcd.printTime(time, LAYOUT_TIME_X, LAYOUT_TIME_Y);
 				// temperature
 				float temp = States::active_state->get_temperature();
 				if (temp > 0) {
-					lcd.print(temp, LAYOUT_TEMP_X, LAYOUT_TEMP_Y);
+					lcd.print(temp, LAYOUT_INFO1_X, LAYOUT_INFO1_Y);
 					lcd.print_P(config.SI_unit_system ? pgmstr_celsius : pgmstr_fahrenheit);
-				} else if (text) {
-					lcd.print(text, LAYOUT_TEXT_X, LAYOUT_TEXT_Y);
 				}
+			}
+			// buffer is one byte shorter (we are printing from position 1, not 0)
+			char buffer[DISPLAY_CHARS];
+			// info texts
+			if (States::active_state->get_info1(buffer, sizeof(buffer))) {
+				lcd.print(buffer, LAYOUT_INFO1_X, LAYOUT_INFO1_Y);
+			}
+			if (States::active_state->get_info2(buffer, sizeof(buffer))) {
+				lcd.print(buffer, LAYOUT_INFO2_X, LAYOUT_INFO2_Y);
 			}
 		}
 	}

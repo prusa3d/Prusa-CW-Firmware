@@ -21,11 +21,10 @@
 #define LAYOUT_TIME_Y		2
 #define LAYOUT_TIME_LT		1
 #define LAYOUT_TIME_GT		8
-#define LAYOUT_TIME_TXT_X	1
-#define LAYOUT_TEMP_X		12
-#define LAYOUT_TEMP_Y		2
-#define LAYOUT_TEXT_X		8
-#define LAYOUT_TEXT_Y		2
+#define LAYOUT_INFO1_X		12
+#define LAYOUT_INFO1_Y		2
+#define LAYOUT_INFO2_X		1
+#define LAYOUT_INFO2_Y		3
 
 #define BACKSLASH_CHAR		0
 #define BACK_CHAR			1
@@ -54,6 +53,7 @@
 #define FAN_CHECK_PERIOD	500		// us
 #define SWITCH_TEST_COUNT	10
 #define ROTATION_TEST_TIME	3		// minutes
+#define FANS_TEST_TIME		2		// minutes
 #define SN_LENGTH			15
 #define MAX_MENU_DEPTH		5
 #define MENU_REDRAW_US		1000
