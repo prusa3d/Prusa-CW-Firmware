@@ -38,50 +38,8 @@ namespace UI {
 	void Base::leave() {
 	}
 
-	Base* Base::process_events(Events& events) {
-		if (events.cover_opened)
-			event_cover_opened();
-		if (events.cover_closed)
-			event_cover_closed();
-		if (events.tank_inserted)
-			event_tank_inserted();
-		if (events.tank_removed)
-			event_tank_removed();
-		if (events.control_up)
-			event_control_up();
-		if (events.control_down)
-			event_control_down();
-		if (events.button_short_press)
-			return event_button_short_press();
-		if (events.button_long_press)
-			return event_button_long_press();
+	Base* Base::process_events(__attribute__((unused)) Events& events) {
 		return nullptr;
-	}
-
-	void Base::event_cover_opened() {
-	}
-
-	void Base::event_cover_closed() {
-	}
-
-	void Base::event_tank_inserted() {
-	}
-
-	void Base::event_tank_removed() {
-	}
-
-	Base* Base::event_button_short_press() {
-		return nullptr;
-	}
-
-	Base* Base::event_button_long_press() {
-		return nullptr;
-	}
-
-	void Base::event_control_up() {
-	}
-
-	void Base::event_control_down() {
 	}
 
 	Base* Base::in_menu_action() {
@@ -162,12 +120,20 @@ namespace UI {
 		}
 	}
 
-	void Menu::event_tank_inserted() {
-		show();
-	}
-
-	void Menu::event_tank_removed() {
-		show();
+	Base* Menu::process_events(Events& events) {
+		if (events.tank_inserted)
+			show();
+		if (events.tank_removed)
+			show();
+		if (events.control_up)
+			event_control_up();
+		if (events.control_down)
+			event_control_down();
+		if (events.button_short_press)
+			return event_button_short_press();
+		if (events.button_long_press)
+			return long_press_ui_item;
+		return nullptr;
 	}
 
 	Base* Menu::event_button_short_press() {
@@ -183,10 +149,6 @@ namespace UI {
 		} else {
 			return item;
 		}
-	}
-
-	Base* Menu::event_button_long_press() {
-		return long_press_ui_item;
 	}
 
 	void Menu::event_control_up() {
@@ -245,10 +207,16 @@ namespace UI {
 		lcd.print_P(units);
 	}
 
-
-	Base* Value::event_button_short_press() {
-		write_config();
-		return this;
+	Base* Value::process_events(Events& events) {
+		if (events.control_up)
+			event_control_up();
+		if (events.control_down)
+			event_control_down();
+		if (events.button_short_press) {
+			write_config();
+			return this;
+		}
+		return nullptr;
 	}
 
 	void Value::event_control_up() {
@@ -350,7 +318,8 @@ namespace UI {
 
 	Base* SI_switch::in_menu_action() {
 		for (uint8_t i = 0; i < to_change_count; ++i) {
-			to_change[i]->units_change(value^1);
+			Temperature* item = (Temperature*)pgm_read_word(&(to_change[i]));
+			item->units_change(value^1);
 		}
 		Bool::in_menu_action();
 		return this;
@@ -368,7 +337,7 @@ namespace UI {
 	void Option::show() {
 		lcd.print_P(label, 1, 0);
 		lcd.clearLine(2);
-		const char* option = (const char *)pgm_read_word(&(options[value]));
+		const char* option = (const char*)pgm_read_word(&(options[value]));
 		uint8_t len = strlen_P(option);
 		if (value)
 			len += 2;
@@ -382,9 +351,16 @@ namespace UI {
 			lcd.print_P(pgmstr_gt);
 	}
 
-	Base* Option::event_button_short_press() {
-		write_config();
-		return this;
+	Base* Option::process_events(Events& events) {
+		if (events.control_up)
+			event_control_up();
+		if (events.control_down)
+			event_control_down();
+		if (events.button_short_press) {
+			write_config();
+			return this;
+		}
+		return nullptr;
 	}
 
 	void Option::event_control_up() {
@@ -491,24 +467,24 @@ namespace UI {
 		Base::invoke();
 	}
 
-	void State::event_cover_opened() {
-		old_time = UINT16_MAX;
-		Base::event_cover_opened();
-	}
-
-	void State::event_cover_closed() {
-		old_time = UINT16_MAX;
-		Base::event_cover_closed();
-	}
-
-	void State::event_tank_inserted() {
-		old_time = UINT16_MAX;
-		Base::event_tank_inserted();
-	}
-
-	void State::event_tank_removed() {
-		old_time = UINT16_MAX;
-		Base::event_tank_removed();
+	Base* State::process_events(Events& events) {
+		if (events.cover_opened)
+			old_time = UINT16_MAX;
+		if (events.cover_closed)
+			old_time = UINT16_MAX;
+		if (events.tank_inserted)
+			old_time = UINT16_MAX;
+		if (events.tank_removed)
+			old_time = UINT16_MAX;
+		if (events.control_up)
+			event_control_up();
+		if (events.control_down)
+			event_control_down();
+		if (events.button_short_press)
+			return event_button_short_press();
+		if (events.button_long_press)
+			States::active_state->cancel();
+		return nullptr;
 	}
 
 	Base* State::event_button_short_press() {
@@ -518,11 +494,6 @@ namespace UI {
 		if (States::active_state->short_press_cancel()) {
 			States::active_state->cancel();
 		}
-		return nullptr;
-	}
-
-	Base* State::event_button_long_press() {
-		States::active_state->cancel();
 		return nullptr;
 	}
 

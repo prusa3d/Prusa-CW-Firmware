@@ -16,15 +16,7 @@ namespace UI {
 		virtual void loop();
 		virtual void invoke();
 		virtual void leave();
-		Base* process_events(Events& events);
-		virtual void event_cover_opened();
-		virtual void event_cover_closed();
-		virtual void event_tank_inserted();
-		virtual void event_tank_removed();
-		virtual Base* event_button_short_press();
-		virtual Base* event_button_long_press();
-		virtual void event_control_up();
-		virtual void event_control_down();
+		virtual Base* process_events(Events& events);
 		virtual Base* in_menu_action();
 	protected:
 		const char* label;
@@ -67,14 +59,12 @@ namespace UI {
 		Menu(const char* label, Base* const* items, uint8_t items_count);
 		void show();
 		void invoke();
-		void event_tank_inserted();
-		void event_tank_removed();
-		Base* event_button_short_press();
-		Base* event_button_long_press();
-		void event_control_up();
-		void event_control_down();
+		Base* process_events(Events& events);
 		void set_long_press_ui_item(Base *ui_item);
 	private:
+		Base* event_button_short_press();
+		void event_control_up();
+		void event_control_down();
 		Base* const* const items;
 		Base* long_press_ui_item;
 		uint8_t const items_count;
@@ -101,10 +91,10 @@ namespace UI {
 	public:
 		Value(const char* label, uint8_t& value, const char* units, uint8_t max, uint8_t min = 1);
 		void show();
-		Base* event_button_short_press();
-		void event_control_up();
-		void event_control_down();
+		Base* process_events(Events& events);
 	protected:
+		virtual void event_control_up();
+		virtual void event_control_down();
 		const char* units;
 		uint8_t& value;
 		uint8_t max_value;
@@ -138,6 +128,7 @@ namespace UI {
 	class Percent_with_action : public Percent {
 	public:
 		Percent_with_action(const char* label, uint8_t& value, uint8_t min, void (*value_setter)(uint8_t));
+	protected:
 		void event_control_up();
 		void event_control_down();
 	private:
@@ -174,10 +165,10 @@ namespace UI {
 	public:
 		Option(const char* label, uint8_t& value, const char* const* options, uint8_t options_count);
 		void show();
-		Base* event_button_short_press();
+		Base* process_events(Events& events);
+	private:
 		void event_control_up();
 		void event_control_down();
-	private:
 		uint8_t& value;
 		const char* const* options;
 		uint8_t const options_count;
@@ -192,18 +183,14 @@ namespace UI {
 		void loop();
 		void invoke();
 		void leave();
-		Base* event_button_short_press();
-		Base* event_button_long_press();
-		void event_cover_opened();
-		void event_cover_closed();
-		void event_tank_inserted();
-		void event_tank_removed();
-		void event_control_up();
-		void event_control_down();
+		Base* process_events(Events& events);
 	protected:
 		States::Base* state;
 		Base* const state_menu;
 	private:
+		Base* event_button_short_press();
+		void event_control_up();
+		void event_control_down();
 		void clear_time_boundaries();
 		const char* old_title;
 		const char* old_message;
