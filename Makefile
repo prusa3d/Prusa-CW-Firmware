@@ -75,7 +75,7 @@ $(VERSION).tmp: | $${@D}/.
 	@echo "\"`git describe --abbrev=0 --tags`\"" >> $@
 
 clean:
-	rm -rf ${OBJS} ${DEPS} ${VERSION} ${VERSION}.tmp ${HEXS} ${HEXS:%.hex=%.elf} ${HEXS:%.hex=%.map} ${LANG_TEMPLATE}
+	rm -rf ${OBJS} ${DEPS} ${VERSION} ${VERSION}.tmp ${HEXS} ${HEXS:%.hex=%.elf} ${HEXS:%.hex=%.map} ${LANG_TEMPLATE} doc
 
 lang_extract: ${LANG_TEMPLATE}
 

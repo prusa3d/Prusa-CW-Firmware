@@ -129,6 +129,10 @@ static const char pgmstr_insert_tank[] PROGMEM = _("Insert IPA tank");
 // selftest states
 static const char pgmstr_heater_test[] PROGMEM = _("Heater test");
 static const char pgmstr_led_test[] PROGMEM = _("UVLED test");
+static const char pgmstr_led_failure[] PROGMEM = _("UVLED failure:");
+static const char pgmstr_led_readerror[] PROGMEM = _("Read temper. error");
+static const char pgmstr_led_overheat[] PROGMEM = _("Overheat");
+static const char pgmstr_led_nopower[] PROGMEM = _("No/low power");
 static const char pgmstr_fans_test[] PROGMEM = _("Fans test");
 static const char pgmstr_fan1[] PROGMEM = _("F1:");
 static const char pgmstr_fan2[] PROGMEM = _("  F2:");

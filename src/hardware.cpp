@@ -26,8 +26,9 @@ const int16_t uvled_temp_table_raw[34] PROGMEM = {
 uint16_t Hardware::fan_rpm[3] = {0, 0, 0};
 volatile uint8_t Hardware::fan_tacho_count[3] = {0, 0, 0};
 volatile uint8_t Hardware::microstep_control(FAST_SPEED_START);
-float Hardware::chamber_temp(0.0);
-float Hardware::uvled_temp(0.0);
+float Hardware::chamber_temp(-40.0);
+float Hardware::uvled_temp_celsius(-40.0);
+float Hardware::uvled_temp(-40.0);
 MCP Hardware::outputchip(0, 8);
 Trinamic_TMC2130 Hardware::myStepper(CS_PIN);
 uint8_t Hardware::lcd_encoder_bits(0);
@@ -96,12 +97,11 @@ Hardware::Hardware() {
 }
 
 void Hardware::read_adc() {
-	float value;
 	if (adc_channel) {
-		value = interpolate_i16_ylin_P(read_adc_raw(THERM_READ_PIN) >> 2, 34, uvled_temp_table_raw, 1250, -50) / 10.0;
-		uvled_temp = config.SI_unit_system ? value : celsius2fahrenheit(value);
+		uvled_temp_celsius = interpolate_i16_ylin_P(read_adc_raw(THERM_READ_PIN) >> 2, 34, uvled_temp_table_raw, 1250, -50) / 10.0;
+		uvled_temp = config.SI_unit_system ? uvled_temp_celsius : celsius2fahrenheit(uvled_temp_celsius);
 	} else {
-		value = interpolate_i16_ylin_P(read_adc_raw(THERM_READ_PIN) >> 2, 34, chamber_temp_table_raw, 1250, -50) / 10.0;
+		float value = interpolate_i16_ylin_P(read_adc_raw(THERM_READ_PIN) >> 2, 34, chamber_temp_table_raw, 1250, -50) / 10.0;
 		chamber_temp = config.SI_unit_system ? value : celsius2fahrenheit(value);
 	}
 	adc_channel ^= 1;

@@ -3,7 +3,6 @@
 
 #include "version.h"
 #include "defines.h"
-#include "main.h"
 #include "hardware.h"
 #include "Countimer.h"
 #include "USBCore.h"
@@ -11,6 +10,7 @@
 #include "config.h"
 #include "ui.h"
 #include "states.h"
+#include "LiquidCrystal_Prusa.h"
 
 const char* pgmstr_serial_number = reinterpret_cast<const char*>(0x7fe0); // see SN_LENGTH!!!
 volatile uint16_t* const bootKeyPtr = (volatile uint16_t *)(RAMEND - 1);
@@ -146,34 +146,6 @@ void setup() {
 	UI::init();
 
 }
-/*
-void redraw_selftest_vals() {
-	if (selftest.phase == 3 && selftest.vent_test != true) {
-		lcd.print(selftest.fan_tacho[0], 7, 1);
-		lcd.print(selftest.fan_tacho[1], 7, 2);
-	}
-	if (selftest.phase == 5 && selftest.heater_test != true) {
-		lcd.print(hw.chamber_temp, 5, 1);
-		lcd.print_P(config.SI_unit_system ? pgmstr_celsius : pgmstr_fahrenheit);
-	}
-	if (selftest.phase == 6 && selftest.rotation_test != true) {
-		lcd.print((uint8_t)mode_flag, 12, 1);
-		lcd.setCursor(14,1);
-		if (mode_flag) {
-			if (speed_control.curing_speed <= 11)
-				lcd.print((uint8_t)(speed_control.curing_speed - 1));
-		} else {
-			if (speed_control.washing_speed <= 11)
-				lcd.print(uint8_t(speed_control.washing_speed - 1));
-		}
-	}
-	if (selftest.phase == 3 || selftest.phase == 4 || selftest.phase == 5) {
-		uint8_t lcd_min = selftest.tCountDown.getCurrentMinutes();
-		uint8_t lcd_sec = selftest.tCountDown.getCurrentSeconds();
-		lcd.printTime(lcd_min, lcd_sec, 7, 3);
-	}
-}
-*/
 
 void loop() {
 	if (*bootKeyPtr != MAGIC_KEY) {
@@ -314,10 +286,6 @@ void loop() {
 	// FIXME is this needed to fix ESD shock? Any better solution?
 	TODO
 	if (millis() > time_now + 5500) {
-		if (state == HOME || state == TEMPERATURES || state == SOUND_SETTINGS || state == SPEED_STATE) {
-			last_menu_position = menu_position;
-		}
-
 		time_now = millis();
 		lcd.reinit();
 		lcd.createChar(BACKSLASH_CHAR, Backslash);
@@ -325,12 +293,7 @@ void loop() {
 		lcd.createChar(RIGHT_CHAR, Right);
 		lcd.createChar(PLAY_CHAR, Play);
 		lcd.createChar(STOP_CHAR, Stop);
-		menu_move(false);
-
-		if (state == HOME || state == TEMPERATURES || state == SOUND_SETTINGS || state == SPEED_STATE) {
-			menu_position = last_menu_position;
-			print_menu_cursor(menu_position);
-		}
+		// REDRAW!
 	}
 */
 /*

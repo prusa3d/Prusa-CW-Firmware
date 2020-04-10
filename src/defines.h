@@ -54,6 +54,9 @@
 #define SWITCH_TEST_COUNT	10
 #define ROTATION_TEST_TIME	3		// minutes
 #define FANS_TEST_TIME		2		// minutes
+#define UVLED_TEST_TIME		10		// minutes
+#define UVLED_TEST_GAIN		10.0	// celsius
+#define UVLED_MAX_TEMP		60.0	// celsius
 #define SN_LENGTH			15
 #define MAX_MENU_DEPTH		5
 #define MENU_REDRAW_US		1000

@@ -17,11 +17,7 @@ namespace States {
 		virtual void start();
 		virtual void stop();
 		virtual Base* loop();
-		void process_events(Events& events);
-		virtual void event_cover_opened();
-		virtual void event_cover_closed();
-		virtual void event_tank_inserted();
-		virtual void event_tank_removed();
+		virtual void process_events(Events& events);
 		virtual bool is_menu_available();
 		virtual bool short_press_cancel();
 		virtual const char* get_title();
@@ -55,11 +51,17 @@ namespace States {
 		void start();
 		void stop();
 		Base* loop();
+		const char* get_title();
 		uint16_t get_time();
 		void set_continue_to(Base* to);
+		bool is_paused();
+		void pause_continue();
 	protected:
+		virtual void do_pause();
+		virtual void do_continue();
 		Base* continue_to;
 	private:
+		virtual const char* get_hw_pause_reason();
 		uint8_t* continue_after;
 		Countimer::CountType timer_type;
 	};
@@ -96,16 +98,11 @@ namespace States {
 			bool slow_mode,
 			Countimer::CountType timer_type = Countimer::COUNT_DOWN);
 		bool is_menu_available();
-		const char* get_title();
 		const char* decrease_time();
 		const char* increase_time();
-		bool is_paused();
-		void pause_continue();
 	protected:
-		virtual void do_pause();
-		virtual void do_continue();
-	private:
-		virtual const char* get_hw_pause_reason() = 0;
+		void do_pause();
+		void do_continue();
 	};
 
 
@@ -117,7 +114,7 @@ namespace States {
 			uint8_t* fans_duties,
 			uint8_t* after,
 			Base* to);
-		void event_tank_removed();
+		void process_events(Events& events);
 	private:
 		const char* get_hw_pause_reason();
 	};
@@ -134,14 +131,12 @@ namespace States {
 		void start();
 		void stop();
 		Base* loop();
-		void event_tank_inserted();
-		void event_cover_opened();
+		void process_events(Events& events);
 		float get_temperature();
 	protected:
 		void do_pause();
 		void do_continue();
 	private:
-		const char* get_hw_pause_reason();
 		unsigned long led_us_last;
 	};
 
@@ -158,15 +153,12 @@ namespace States {
 			Countimer::CountType timer_type = Countimer::COUNT_DOWN);
 		void start();
 		void stop();
-		void event_tank_inserted();
-		void event_cover_opened();
+		void process_events(Events& events);
 		float get_temperature();
 	protected:
-		uint8_t* const target_temp;
 		void do_pause();
 		void do_continue();
-	private:
-		const char* get_hw_pause_reason();
+		uint8_t* const target_temp;
 	};
 
 
@@ -258,6 +250,28 @@ namespace States {
 		uint16_t old_seconds;
 		bool draw1;
 		bool draw2;
+	};
+
+
+	// States::Test_uvled
+	class Test_uvled : public Timer_only {
+	public:
+		Test_uvled(
+			const char* title,
+			uint8_t* fans_duties,
+			Base* to);
+		void start();
+		void stop();
+		Base* loop();
+		void process_events(Events& events);
+		float get_temperature();
+	protected:
+		void do_pause();
+		void do_continue();
+	private:
+		uint8_t test_time;
+		float old_uvled_temp;
+		unsigned long led_us_last;
 	};
 
 }

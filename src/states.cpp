@@ -18,10 +18,9 @@ namespace States {
 
 	uint8_t heater_selftest_time = 10;
 	Timer_heater selftest_heater(pgmstr_heater_test, config.fans_menu_speed, &heater_selftest_time, &confirm);
-	uint8_t led_selftest_time = 10;
-	Curing selftest_led(pgmstr_led_test, config.fans_menu_speed, &led_selftest_time, &selftest_heater);
 
-	Test_fans selftest_fans(pgmstr_fans_test, &confirm);
+	Test_uvled selftest_uvled(pgmstr_led_test, config.fans_curing_speed, &confirm);
+	Test_fans selftest_fans(pgmstr_fans_test, &selftest_uvled);
 	Test_rotation selftest_rotation(pgmstr_rotation_test, &selftest_fans);
 	Test_switch selftest_tank(pgmstr_ipatank_test, pgmstr_remove_tank, pgmstr_insert_tank, hw.is_tank_inserted, &selftest_rotation);
 	Test_switch selftest_cover(pgmstr_cover_test, pgmstr_open_cover, pgmstr_close_cover, hw.is_cover_closed, &selftest_tank);

@@ -24,27 +24,7 @@ namespace States {
 		return nullptr;
 	}
 
-	void Base::process_events(Events& events) {
-		if (events.cover_opened)
-			event_cover_opened();
-		if (events.cover_closed)
-			event_cover_closed();
-		if (events.tank_inserted)
-			event_tank_inserted();
-		if (events.tank_removed)
-			event_tank_removed();
-	}
-
-	void Base::event_cover_opened() {
-	}
-
-	void Base::event_cover_closed() {
-	}
-
-	void Base::event_tank_inserted() {
-	}
-
-	void Base::event_tank_removed() {
+	void Base::process_events(__attribute__((unused)) Events& events) {
 	}
 
 	bool Base::is_menu_available() {
@@ -76,7 +56,7 @@ namespace States {
 	}
 
 	float Base::get_temperature() {
-		return -1.0;
+		return -40.0;
 	}
 
 	const char* Base::decrease_time() {
@@ -143,12 +123,49 @@ namespace States {
 		return nullptr;
 	}
 
+	const char* Timer_only::get_title() {
+		const char* pause_reason = get_hw_pause_reason();
+		return timer.isStopped() ? (pause_reason ? pause_reason : pgmstr_paused) : title;
+	}
+
 	uint16_t Timer_only::get_time() {
 		return timer.getCurrentTimeInSeconds();
 	}
 
 	void Timer_only::set_continue_to(Base* to) {
 		continue_to = to;
+	}
+
+	bool Timer_only::is_paused() {
+		return timer.isStopped();
+	}
+
+	void Timer_only::pause_continue() {
+		if (timer.isStopped()) {
+			if (!get_hw_pause_reason()) {
+				do_continue();
+			}
+		} else {
+			do_pause();
+		}
+	}
+
+	void Timer_only::do_pause() {
+		timer.pause();
+	}
+
+	void Timer_only::do_continue() {
+		timer.start();
+	}
+
+	const char* Timer_only::get_hw_pause_reason() {
+		if (hw.is_tank_inserted()) {
+			return pgmstr_remove_tank;
+		}
+		if (!hw.is_cover_closed()) {
+			return pgmstr_close_cover;
+		}
+		return nullptr;
 	}
 
 
@@ -168,9 +185,9 @@ namespace States {
 	{}
 
 	void Timer_motor::start() {
-		Timer_only::start();
 		hw.speed_configuration(*speed, slow_mode);
 		hw.run_motor();
+		Timer_only::start();
 	}
 
 	void Timer_motor::stop() {
@@ -196,11 +213,6 @@ namespace States {
 		return true;
 	}
 
-	const char* Timer_controls::get_title() {
-		const char* pause_reason = get_hw_pause_reason();
-		return timer.isStopped() ? (pause_reason ? pause_reason : pgmstr_paused) : title;
-	}
-
 	const char* Timer_controls::decrease_time() {
 		uint16_t secs = timer.getCurrentTimeInSeconds();
 		if (secs < INC_DEC_TIME_STEP) {
@@ -221,29 +233,15 @@ namespace States {
 		}
 	}
 
-	bool Timer_controls::is_paused() {
-		return timer.isStopped();
-	}
-
-	void Timer_controls::pause_continue() {
-		if (timer.isStopped()) {
-			if (!get_hw_pause_reason()) {
-				do_continue();
-			}
-		} else {
-			do_pause();
-		}
-	}
-
 	void Timer_controls::do_pause() {
-		timer.pause();
 		hw.stop_motor();
+		Timer_motor::do_pause();
 	}
 
 	void Timer_controls::do_continue() {
-		timer.start();
 		hw.speed_configuration(*speed, slow_mode);
 		hw.run_motor();
+		Timer_motor::do_continue();
 	}
 
 
@@ -257,8 +255,9 @@ namespace States {
 		Timer_controls(title, fans_duties, after, to, &config.washing_speed, false)
 	{}
 
-	void Washing::event_tank_removed() {
-		do_pause();
+	void Washing::process_events(Events& events) {
+		if (events.tank_removed)
+			do_pause();
 	}
 
 	const char* Washing::get_hw_pause_reason() {
@@ -282,7 +281,7 @@ namespace States {
 
 	void Curing::start() {
 		Timer_controls::start();
-		if (!hw.is_cover_closed()) {
+		if (!hw.is_cover_closed() || hw.is_tank_inserted()) {
 			do_pause();
 		} else {
 			hw.run_led();
@@ -295,6 +294,14 @@ namespace States {
 	}
 
 	Base* Curing::loop() {
+		if (hw.uvled_temp_celsius < 0.0) {
+			error.fill(pgmstr_led_failure, pgmstr_led_readerror);
+			return &error;
+		}
+		if (hw.uvled_temp_celsius > UVLED_MAX_TEMP) {
+			error.fill(pgmstr_led_failure, pgmstr_led_overheat);
+			return &error;
+		}
 		if (led_us_last && millis() - led_us_last > LED_DELAY) {
 			hw.run_led();
 			led_us_last = 0;
@@ -302,12 +309,9 @@ namespace States {
 		return Timer_controls::loop();
 	}
 
-	void Curing::event_tank_inserted() {
-		do_pause();
-	}
-
-	void Curing::event_cover_opened() {
-		do_pause();
+	void Curing::process_events(Events& events) {
+		if (events.cover_opened)
+			do_pause();
 	}
 
 	float Curing::get_temperature() {
@@ -322,16 +326,6 @@ namespace States {
 	void Curing::do_continue() {
 		led_us_last = millis();
 		Timer_controls::do_continue();
-	}
-
-	const char* Curing::get_hw_pause_reason() {
-		if (hw.is_tank_inserted()) {
-			return pgmstr_remove_tank;
-		}
-		if (!hw.is_cover_closed()) {
-			return pgmstr_close_cover;
-		}
-		return nullptr;
 	}
 
 
@@ -353,7 +347,7 @@ namespace States {
 		if (target_temp) {
 			hw.set_target_temp(*target_temp);
 		}
-		if (!hw.is_cover_closed()) {
+		if (!hw.is_cover_closed() || hw.is_tank_inserted()) {
 			do_pause();
 		} else {
 			hw.run_heater();
@@ -365,12 +359,9 @@ namespace States {
 		Timer_controls::stop();
 	}
 
-	void Timer_heater::event_tank_inserted() {
-		do_pause();
-	}
-
-	void Timer_heater::event_cover_opened() {
-		do_pause();
+	void Timer_heater::process_events(Events& events) {
+		if (events.cover_opened)
+			do_pause();
 	}
 
 	float Timer_heater::get_temperature() {
@@ -385,16 +376,6 @@ namespace States {
 	void Timer_heater::do_continue() {
 		hw.run_heater();
 		Timer_controls::do_continue();
-	}
-
-	const char* Timer_heater::get_hw_pause_reason() {
-		if (hw.is_tank_inserted()) {
-			return pgmstr_remove_tank;
-		}
-		if (!hw.is_cover_closed()) {
-			return pgmstr_close_cover;
-		}
-		return nullptr;
 	}
 
 
@@ -638,6 +619,75 @@ namespace States {
 			return true;
 		}
 		return false;
+	}
+
+
+	// States::Test_uvled
+	Test_uvled::Test_uvled(
+		const char* title,
+		uint8_t* fans_duties,
+		Base* to)
+	:
+		Timer_only(title, fans_duties, &test_time, to),
+		test_time(UVLED_TEST_TIME),
+		led_us_last(0)
+	{}
+
+	void Test_uvled::start() {
+		old_uvled_temp = hw.uvled_temp_celsius;
+		Timer_only::start();
+		if (!hw.is_cover_closed() || hw.is_tank_inserted()) {
+			do_pause();
+		} else {
+			hw.run_led();
+		}
+	}
+
+	void Test_uvled::stop() {
+		hw.stop_led();
+		Timer_only::stop();
+	}
+
+	Base* Test_uvled::loop() {
+		if (led_us_last && millis() - led_us_last > LED_DELAY) {
+			hw.run_led();
+			led_us_last = 0;
+		}
+		if (old_uvled_temp < 0.0 || hw.uvled_temp_celsius < 0.0) {
+			error.fill(pgmstr_led_failure, pgmstr_led_readerror);
+			return &error;
+		}
+		if (hw.uvled_temp_celsius > UVLED_MAX_TEMP) {
+			error.fill(pgmstr_led_failure, pgmstr_led_overheat);
+			return &error;
+		}
+		uint16_t seconds = timer.getCurrentTimeInSeconds() - 1;
+		if (!seconds && old_uvled_temp + UVLED_TEST_GAIN > hw.uvled_temp_celsius) {
+			error.fill(pgmstr_led_failure, pgmstr_led_nopower);
+			return &error;
+		}
+		return Timer_only::loop();
+	}
+
+	void Test_uvled::process_events(Events& events) {
+		if (events.cover_opened)
+			do_pause();
+		if (events.cover_closed && !hw.is_tank_inserted())
+			do_continue();
+	}
+
+	float Test_uvled::get_temperature() {
+		return hw.uvled_temp;
+	}
+
+	void Test_uvled::do_pause() {
+		hw.stop_led();
+		Timer_only::do_pause();
+	}
+
+	void Test_uvled::do_continue() {
+		led_us_last = millis();
+		Timer_only::do_continue();
 	}
 
 }
