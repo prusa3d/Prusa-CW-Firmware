@@ -15,11 +15,10 @@ namespace States {
 	uint8_t max_warmup_run_time = MAX_WARMUP_RUN_TIME;
 	Warmup warmup_print(pgmstr_warmup, &max_warmup_run_time, nullptr, &config.target_temp);
 	Warmup warmup_resin(pgmstr_warmup, &max_warmup_run_time, &resin, &config.resin_target_temp);
+	Cooldown cooldown(pgmstr_cooldown, &confirm);
 
-	uint8_t heater_selftest_time = 10;
-	Timer_heater selftest_heater(pgmstr_heater_test, config.fans_menu_speed, &heater_selftest_time, &confirm);
-
-	Test_uvled selftest_uvled(pgmstr_led_test, config.fans_curing_speed, &confirm);
+	Test_heater selftest_heater(pgmstr_heater_test, config.fans_drying_speed, &confirm);
+	Test_uvled selftest_uvled(pgmstr_led_test, config.fans_curing_speed, &selftest_heater);
 	Test_fans selftest_fans(pgmstr_fans_test, &selftest_uvled);
 	Test_rotation selftest_rotation(pgmstr_rotation_test, &selftest_fans);
 	Test_switch selftest_tank(pgmstr_ipatank_test, pgmstr_remove_tank, pgmstr_insert_tank, hw.is_tank_inserted, &selftest_rotation);

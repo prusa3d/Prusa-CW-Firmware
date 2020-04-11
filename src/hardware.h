@@ -57,6 +57,7 @@ public:
 	static uint16_t fan_rpm[3];
 	static volatile uint8_t fan_tacho_count[3];
 	static volatile uint8_t microstep_control;
+	static float chamber_temp_celsius;
 	static float chamber_temp;
 	static float uvled_temp_celsius;
 	static float uvled_temp;

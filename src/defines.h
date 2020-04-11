@@ -46,6 +46,7 @@
 #define MIN_TARGET_TEMP_F	MIN_TARGET_TEMP_C * 1.8 + 32
 #define MAX_TARGET_TEMP_F	MAX_TARGET_TEMP_C * 1.8 + 32
 #define MAX_WARMUP_RUN_TIME	30		// minutes
+#define COOLDOWN_RUNTIME	15		// minutes
 #define INC_DEC_TIME_STEP	30		// seconds
 #define MIN_LED_INTENSITY	1		// 0-100 %
 #define MIN_LCD_BRIGHTNESS	5		// 0-100 %
@@ -57,6 +58,8 @@
 #define UVLED_TEST_TIME		10		// minutes
 #define UVLED_TEST_GAIN		10.0	// celsius
 #define UVLED_MAX_TEMP		60.0	// celsius
+#define HEATER_TEST_TIME	10		// minutes
+#define HEATER_TEST_GAIN	5.0		// celsius
 #define SN_LENGTH			15
 #define MAX_MENU_DEPTH		5
 #define MENU_REDRAW_US		1000

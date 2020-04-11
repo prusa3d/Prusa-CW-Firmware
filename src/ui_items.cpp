@@ -121,9 +121,7 @@ namespace UI {
 	}
 
 	Base* Menu::process_events(Events& events) {
-		if (events.tank_inserted)
-			show();
-		if (events.tank_removed)
+		if (events.tank_inserted || events.tank_removed)
 			show();
 		if (events.control_up)
 			event_control_up();
@@ -468,13 +466,7 @@ namespace UI {
 	}
 
 	Base* State::process_events(Events& events) {
-		if (events.cover_opened)
-			old_time = UINT16_MAX;
-		if (events.cover_closed)
-			old_time = UINT16_MAX;
-		if (events.tank_inserted)
-			old_time = UINT16_MAX;
-		if (events.tank_removed)
+		if (events.cover_opened || events.cover_closed || events.tank_inserted || events.tank_removed)
 			old_time = UINT16_MAX;
 		if (events.control_up)
 			event_control_up();
@@ -488,13 +480,11 @@ namespace UI {
 	}
 
 	Base* State::event_button_short_press() {
-		if (States::active_state->is_menu_available()) {
-			return state_menu;
-		}
 		if (States::active_state->short_press_cancel()) {
 			States::active_state->cancel();
+			return nullptr;
 		}
-		return nullptr;
+		return state_menu;
 	}
 
 	void State::event_control_up() {

@@ -99,6 +99,7 @@ static const char pgmstr_chamber_temp[] PROGMEM = _("Cham. temp.:");
 static const char pgmstr_uvled_temp[] PROGMEM = _("UVLED temp.:");
 
 // advanced menu
+static const char pgmstr_cooldown[] PROGMEM = _("Cooldown");
 static const char pgmstr_selftest[] PROGMEM = _("Selftest");
 
 // state menu
@@ -123,21 +124,25 @@ static const char pgmstr_press2continue[] PROGMEM = _("Press to continue");
 // resin state
 static const char pgmstr_heating[] PROGMEM = _("Heating");
 
+// curing state
+static const char pgmstr_led_failure[] PROGMEM = _("UVLED failure");
+static const char pgmstr_read_temp_error[] PROGMEM = _("Read temper. error");
+static const char pgmstr_overheat_error[] PROGMEM = _("Overheat");
+
 // washing state
 static const char pgmstr_insert_tank[] PROGMEM = _("Insert IPA tank");
 
 // selftest states
 static const char pgmstr_heater_test[] PROGMEM = _("Heater test");
+static const char pgmstr_heater_failure[] PROGMEM = _("Heater failure");
 static const char pgmstr_led_test[] PROGMEM = _("UVLED test");
-static const char pgmstr_led_failure[] PROGMEM = _("UVLED failure:");
-static const char pgmstr_led_readerror[] PROGMEM = _("Read temper. error");
-static const char pgmstr_led_overheat[] PROGMEM = _("Overheat");
-static const char pgmstr_led_nopower[] PROGMEM = _("No/low power");
+static const char pgmstr_nopower_error[] PROGMEM = _("No/low power");
 static const char pgmstr_fans_test[] PROGMEM = _("Fans test");
 static const char pgmstr_fan1[] PROGMEM = _("F1:");
 static const char pgmstr_fan2[] PROGMEM = _("  F2:");
-static const char pgmstr_fan1_failure[] PROGMEM = _("Fan1 failure:");
-static const char pgmstr_fan2_failure[] PROGMEM = _("Fan2 failure:");
+static const char pgmstr_fan3[] PROGMEM = _("F3:");
+static const char pgmstr_fan1_failure[] PROGMEM = _("Fan1 failure");
+static const char pgmstr_fan2_failure[] PROGMEM = _("Fan2 failure");
 static const char pgmstr_spinning[] PROGMEM = _("Spinning turned off");
 static const char pgmstr_not_spinning[] PROGMEM = _("Not/bad spinning");
 static const char pgmstr_rotation_test[] PROGMEM = _("Rotation test");

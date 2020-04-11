@@ -7,7 +7,7 @@ Countimer::Countimer() :
 	_currentCountTime(0),
 	_startCountTime(0),
 	_countTime(0),
-	_isCounterCompleted(false),
+	_isCounterCompleted(true),
 	_isStopped(true),
 	_countType(CountType::COUNT_NONE)
 { }

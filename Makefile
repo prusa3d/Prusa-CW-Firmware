@@ -70,12 +70,12 @@ $(VERSION).tmp: | $${@D}/.
 	@echo -n "#define FW_BUILDNR " >> $@
 	@echo "\"`git rev-list --count HEAD`\"" >> $@
 	@echo -n "#define FW_HASH " >> $@
-	@echo "\"`git rev-parse HEAD`\"" >> $@
+	@echo "\"`git rev-parse --short=18 HEAD`\"" >> $@
 	@echo -n "#define FW_VERSION " >> $@
 	@echo "\"`git describe --abbrev=0 --tags`\"" >> $@
 
 clean:
-	rm -rf ${OBJS} ${DEPS} ${VERSION} ${VERSION}.tmp ${HEXS} ${HEXS:%.hex=%.elf} ${HEXS:%.hex=%.map} ${LANG_TEMPLATE} doc
+	rm -rf ${OBJS} ${DEPS} ${VERSION} ${VERSION}.tmp ${HEXS} ${HEXS:%.hex=%.elf} ${HEXS:%.hex=%.map} ${LANG_TEMPLATE} tags doc
 
 lang_extract: ${LANG_TEMPLATE}
 

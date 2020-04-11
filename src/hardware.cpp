@@ -26,6 +26,7 @@ const int16_t uvled_temp_table_raw[34] PROGMEM = {
 uint16_t Hardware::fan_rpm[3] = {0, 0, 0};
 volatile uint8_t Hardware::fan_tacho_count[3] = {0, 0, 0};
 volatile uint8_t Hardware::microstep_control(FAST_SPEED_START);
+float Hardware::chamber_temp_celsius(-40.0);
 float Hardware::chamber_temp(-40.0);
 float Hardware::uvled_temp_celsius(-40.0);
 float Hardware::uvled_temp(-40.0);
@@ -101,8 +102,8 @@ void Hardware::read_adc() {
 		uvled_temp_celsius = interpolate_i16_ylin_P(read_adc_raw(THERM_READ_PIN) >> 2, 34, uvled_temp_table_raw, 1250, -50) / 10.0;
 		uvled_temp = config.SI_unit_system ? uvled_temp_celsius : celsius2fahrenheit(uvled_temp_celsius);
 	} else {
-		float value = interpolate_i16_ylin_P(read_adc_raw(THERM_READ_PIN) >> 2, 34, chamber_temp_table_raw, 1250, -50) / 10.0;
-		chamber_temp = config.SI_unit_system ? value : celsius2fahrenheit(value);
+		chamber_temp_celsius = interpolate_i16_ylin_P(read_adc_raw(THERM_READ_PIN) >> 2, 34, chamber_temp_table_raw, 1250, -50) / 10.0;
+		chamber_temp = config.SI_unit_system ? chamber_temp_celsius : celsius2fahrenheit(chamber_temp_celsius);
 	}
 	adc_channel ^= 1;
 	outputchip.digitalWrite(ANALOG_SWITCH_A, adc_channel);
@@ -232,11 +233,6 @@ void Hardware::run_led() {
 void Hardware::stop_led() {
 	outputchip.digitalWrite(LED_RELE_PIN, LOW);
 	digitalWrite(LED_PWM_PIN, LOW);
-}
-
-bool Hardware::is_led_on() {
-	// FIXME? this is not check if LED works or not
-	return outputchip.digitalRead(LED_RELE_PIN) == HIGH;
 }
 
 bool Hardware::is_cover_closed() {

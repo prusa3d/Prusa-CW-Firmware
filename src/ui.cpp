@@ -110,8 +110,9 @@ namespace UI {
 	Menu_self_redraw hw_menu(pgmstr_emptystr, hw_items, COUNT_ITEMS(hw_items), MENU_REDRAW_US);
 
 	// advanced menu
+	State cooldown(pgmstr_cooldown, &States::cooldown, &hw_menu);
 	State selftest(pgmstr_selftest, &States::selftest_cover, nullptr);
-	Base* const advanced_items[] PROGMEM = {&back, &fans_menu, &led_intensity, &selftest};
+	Base* const advanced_items[] PROGMEM = {&back, &fans_menu, &led_intensity, &cooldown, &selftest};
 	Menu advanced_menu(pgmstr_emptystr, advanced_items, COUNT_ITEMS(advanced_items));
 
 
