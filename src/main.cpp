@@ -146,7 +146,7 @@ void loop() {
 		wdt_reset();
 	}
 
-	Events events = hw.loop();
+	uint8_t events = hw.loop();
 	States::loop(events);
 	UI::loop(events);
 

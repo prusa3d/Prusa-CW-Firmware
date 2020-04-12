@@ -17,7 +17,7 @@ namespace States {
 		virtual void start();
 		virtual void stop();
 		virtual Base* loop();
-		virtual void process_events(Events& events);
+		virtual void process_events(uint8_t events);
 		virtual bool short_press_cancel();
 		virtual const char* get_title();
 		virtual const char* get_message();
@@ -111,7 +111,7 @@ namespace States {
 			uint8_t* fans_duties,
 			uint8_t* after,
 			Base* to);
-		void process_events(Events& events);
+		void process_events(uint8_t events);
 	private:
 		const char* get_hw_pause_reason();
 	};
@@ -128,7 +128,7 @@ namespace States {
 		void start();
 		void stop();
 		Base* loop();
-		void process_events(Events& events);
+		void process_events(uint8_t events);
 		float get_temperature();
 	protected:
 		void do_pause();
@@ -150,7 +150,7 @@ namespace States {
 			Countimer::CountType timer_type = Countimer::COUNT_DOWN);
 		void start();
 		void stop();
-		void process_events(Events& events);
+		void process_events(uint8_t events);
 		float get_temperature();
 	protected:
 		void do_pause();
@@ -273,7 +273,7 @@ namespace States {
 		void start();
 		void stop();
 		Base* loop();
-		void process_events(Events& events);
+		void process_events(uint8_t events);
 		float get_temperature();
 	protected:
 		void do_pause();
@@ -295,7 +295,7 @@ namespace States {
 		void start();
 		void stop();
 		Base* loop();
-		void process_events(Events& events);
+		void process_events(uint8_t events);
 		float get_temperature();
 		bool get_info2(char* buffer, uint8_t size);
 	protected:

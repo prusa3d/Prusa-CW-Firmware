@@ -5,6 +5,6 @@
 namespace UI {
 
 	void init();
-	void loop(Events& Events);
+	void loop(uint8_t events);
 
 }

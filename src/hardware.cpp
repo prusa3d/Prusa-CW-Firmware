@@ -370,7 +370,7 @@ uint8_t Hardware::get_fans_error() {
 }
 
 
-Events Hardware::loop() {
+uint8_t Hardware::loop() {
 	unsigned long us_now = millis();
 	if (do_acceleration && us_now - accel_us_last >= 50) {
 		accel_us_last = us_now;
@@ -389,7 +389,7 @@ Events Hardware::loop() {
 	}
 
 
-	Events events = {false, false, false, false, false, false, false, false};
+	uint8_t events = 0;
 
 	if (heater_error)
 		return events;
@@ -401,9 +401,9 @@ Events Hardware::loop() {
 	bool cover_closed_now = is_cover_closed();
 	if (cover_closed_now != cover_closed) {
 		if (cover_closed_now)
-			events.cover_closed = true;
+			events |= EVENT_COVER_CLOSED;
 		else
-			events.cover_opened = true;
+			events |= EVENT_COVER_OPENED;
 		cover_closed = cover_closed_now;
 	}
 
@@ -411,9 +411,9 @@ Events Hardware::loop() {
 	bool tank_inserted_now = is_tank_inserted();
 	if (tank_inserted_now != tank_inserted) {
 		if (tank_inserted_now)
-			events.tank_inserted = true;
+			events |= EVENT_TANK_INSERTED;
 		else
-			events.tank_removed = true;
+			events |= EVENT_TANK_REMOVED;
 		tank_inserted = tank_inserted_now;
 	}
 
@@ -424,13 +424,13 @@ Events Hardware::loop() {
 			button_timer = millis();
 		} else if (!long_press_active && millis() - button_timer > LONG_PRESS_TIME) {
 			long_press_active = true;
-			events.button_long_press = true;
+			events |= EVENT_BUTTON_LONG_PRESS;
 		}
 	} else if (button_active) {
 		if (long_press_active) {
 			long_press_active = false;
 		} else {
-			events.button_short_press = true;
+			events |= EVENT_BUTTON_SHORT_PRESS;
 		}
 		button_active = false;
 	}
@@ -438,13 +438,13 @@ Events Hardware::loop() {
 	// rotary "click" is 4 "micro steps"
 	if (rotary_diff > 3) {
 		rotary_diff -= 4;
-		events.control_up = true;
+		events |= EVENT_CONTROL_UP;
 	} else if (rotary_diff < -3) {
 		rotary_diff += 4;
-		events.control_down = true;
+		events |= EVENT_CONTROL_DOWN;
 	}
 
-	if (config.sound_response && (events.button_long_press || events.button_short_press || events.control_down || events.control_up)) {
+	if (config.sound_response && events & (EVENT_BUTTON_LONG_PRESS | EVENT_BUTTON_SHORT_PRESS | EVENT_CONTROL_DOWN | EVENT_CONTROL_UP)) {
 		echo();
 	}
 

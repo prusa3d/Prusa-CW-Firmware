@@ -69,7 +69,7 @@ namespace UI {
 	Menu fans_menu(pgmstr_fans, fans_items, COUNT_ITEMS(fans_items));
 
 	// info menu
-	SN serial_number(pgmstr_sn, pgmstr_serial_number);
+	SN serial_number(pgmstr_sn);
 	Text fw_version(pgmstr_fw_version);
 	Text build_nr(pgmstr_build_nr);
 	Text fw_hash(pgmstr_fw_hash);
@@ -133,7 +133,7 @@ namespace UI {
 		active_menu->show();
 	}
 
-	void loop(Events& events) {
+	void loop(uint8_t events) {
 		active_menu->loop();
 		Base* new_menu = active_menu->process_events(events);
 		if (new_menu == &stop || new_menu == &back || new_menu == active_menu || States::active_state->is_finished()) {

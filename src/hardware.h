@@ -4,19 +4,17 @@
 #include "Trinamic_TMC2130.h"
 #include "defines.h"
 
+#define EVENT_COVER_OPENED			1
+#define EVENT_COVER_CLOSED			2
+#define EVENT_TANK_INSERTED			4
+#define EVENT_TANK_REMOVED			8
+#define EVENT_BUTTON_SHORT_PRESS	16
+#define EVENT_BUTTON_LONG_PRESS		32
+#define EVENT_CONTROL_UP			64
+#define EVENT_CONTROL_DOWN			128
+
 float celsius2fahrenheit(float);
 float fahrenheit2celsius(float);
-
-struct __attribute__((__packed__)) Events {
-	bool cover_opened;
-	bool cover_closed;
-	bool tank_inserted;
-	bool tank_removed;
-	bool button_short_press;
-	bool button_long_press;
-	bool control_up;
-	bool control_down;
-};
 
 class Hardware {
 public:
@@ -52,7 +50,7 @@ public:
 	static bool get_heater_error();
 	static uint8_t get_fans_error();
 
-	static Events loop();
+	static uint8_t loop();
 
 	static uint16_t fan_rpm[3];
 	static volatile uint8_t fan_tacho_count[3];

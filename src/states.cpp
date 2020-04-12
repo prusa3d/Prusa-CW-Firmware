@@ -32,7 +32,7 @@ namespace States {
 		active_state->start();
 	}
 
-	void loop(Events& events) {
+	void loop(uint8_t events) {
 		active_state->process_events(events);
 		Base* new_state = active_state->loop();
 		if (new_state) {

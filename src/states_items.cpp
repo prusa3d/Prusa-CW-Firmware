@@ -24,7 +24,7 @@ namespace States {
 		return nullptr;
 	}
 
-	void Base::process_events(__attribute__((unused)) Events& events) {
+	void Base::process_events(__attribute__((unused)) uint8_t events) {
 	}
 
 	bool Base::short_press_cancel() {
@@ -247,8 +247,8 @@ namespace States {
 		Timer_controls(title, fans_duties, after, to, &config.washing_speed, false)
 	{}
 
-	void Washing::process_events(Events& events) {
-		if (events.tank_removed)
+	void Washing::process_events(uint8_t events) {
+		if (events & EVENT_TANK_REMOVED)
 			do_pause();
 	}
 
@@ -301,8 +301,8 @@ namespace States {
 		return Timer_controls::loop();
 	}
 
-	void Curing::process_events(Events& events) {
-		if (events.cover_opened)
+	void Curing::process_events(uint8_t events) {
+		if (events & EVENT_COVER_OPENED)
 			do_pause();
 	}
 
@@ -351,8 +351,8 @@ namespace States {
 		Timer_controls::stop();
 	}
 
-	void Timer_heater::process_events(Events& events) {
-		if (events.cover_opened)
+	void Timer_heater::process_events(uint8_t events) {
+		if (events & EVENT_COVER_OPENED)
 			do_pause();
 	}
 
@@ -676,10 +676,10 @@ namespace States {
 		return Timer_only::loop();
 	}
 
-	void Test_uvled::process_events(Events& events) {
-		if (events.cover_opened)
+	void Test_uvled::process_events(uint8_t events) {
+		if (events & EVENT_COVER_OPENED)
 			do_pause();
-		if (events.cover_closed && !hw.is_tank_inserted())
+		if (!hw.is_tank_inserted() && events & EVENT_COVER_CLOSED)
 			do_continue();
 	}
 
@@ -745,10 +745,10 @@ namespace States {
 		return Timer_only::loop();
 	}
 
-	void Test_heater::process_events(Events& events) {
-		if (events.cover_opened)
+	void Test_heater::process_events(uint8_t events) {
+		if (events & EVENT_COVER_OPENED)
 			do_pause();
-		if (events.cover_closed && !hw.is_tank_inserted())
+		if (!hw.is_tank_inserted() && events & EVENT_COVER_CLOSED)
 			do_continue();
 	}
 

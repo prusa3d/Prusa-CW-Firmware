@@ -20,7 +20,7 @@ namespace States {
 	extern Test_switch selftest_cover;
 
 	void init();
-	void loop(Events& events);
+	void loop(uint8_t events);
 	void change(Base* new_state);
 
 }

@@ -16,7 +16,7 @@ namespace UI {
 		virtual void loop();
 		virtual void invoke();
 		virtual void leave();
-		virtual Base* process_events(Events& events);
+		virtual Base* process_events(uint8_t events);
 		virtual Base* in_menu_action();
 	protected:
 		const char* label;
@@ -35,10 +35,8 @@ namespace UI {
 	// UI:SN
 	class SN : public Text {
 	public:
-		SN(const char* label, const char* sn);
+		SN(const char* label);
 		char* get_menu_label(char* buffer, uint8_t buffer_size);
-	private:
-		const char* const sn;
 	};
 
 
@@ -59,7 +57,7 @@ namespace UI {
 		Menu(const char* label, Base* const* items, uint8_t items_count);
 		void show();
 		void invoke();
-		Base* process_events(Events& events);
+		Base* process_events(uint8_t events);
 		void set_long_press_ui_item(Base *ui_item);
 	private:
 		Base* event_button_short_press();
@@ -91,7 +89,7 @@ namespace UI {
 	public:
 		Value(const char* label, uint8_t& value, const char* units, uint8_t max, uint8_t min = 1);
 		void show();
-		Base* process_events(Events& events);
+		Base* process_events(uint8_t events);
 	protected:
 		virtual void event_control_up();
 		virtual void event_control_down();
@@ -165,7 +163,7 @@ namespace UI {
 	public:
 		Option(const char* label, uint8_t& value, const char* const* options, uint8_t options_count);
 		void show();
-		Base* process_events(Events& events);
+		Base* process_events(uint8_t events);
 	private:
 		void event_control_up();
 		void event_control_down();
@@ -183,7 +181,7 @@ namespace UI {
 		void loop();
 		void invoke();
 		void leave();
-		Base* process_events(Events& events);
+		Base* process_events(uint8_t events);
 	protected:
 		States::Base* state;
 		Base* const state_menu;
