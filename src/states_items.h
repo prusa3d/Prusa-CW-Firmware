@@ -6,201 +6,86 @@
 #include "config.h"
 #include "simple_print.h"
 
+#define STATE_OPTION_TIMER_UP		1
+#define STATE_OPTION_UVLED			2
+#define STATE_OPTION_HEATER			4
+#define STATE_OPTION_CONTROLS		8
+#define STATE_OPTION_WASHING		16
+#define STATE_OPTION_SHORT_CANCEL	32
+#define STATE_OPTION_CHAMB_TEMP		64
+#define STATE_OPTION_UVLED_TEMP		128
+
 namespace States {
 
 	// States::Base
 	class Base {
+
 	public:
 		Base(
-			const char* title,
-			uint8_t* fans_duties = config.fans_menu_speed);
+			const char* title = pgmstr_emptystr,
+			uint8_t options = 0,
+			uint8_t* fans_duties = config.fans_menu_speed,
+			Base* continue_to = nullptr,
+			uint8_t* continue_after = nullptr,
+			uint8_t* motor_speed = nullptr,
+			uint8_t* target_temp = nullptr);
+
 		virtual void start();
-		virtual void stop();
 		virtual Base* loop();
-		virtual void process_events(uint8_t events);
-		virtual bool short_press_cancel();
-		virtual const char* get_title();
-		virtual const char* get_message();
-		virtual uint16_t get_time();
 		virtual bool get_info1(char* buffer, uint8_t size);
 		virtual bool get_info2(char* buffer, uint8_t size);
-		virtual float get_temperature();
-		virtual const char* decrease_time();
-		virtual const char* increase_time();
-		virtual bool is_paused();
-		virtual void pause_continue();
-		virtual bool is_finished();
-		void cancel();
-	protected:
-		const char* title;
-		uint8_t* const fans_duties;
-		bool canceled;
-	};
 
-
-	// States::Timer_only
-	class Timer_only : public Base {
-	public:
-		Timer_only(
-			const char* title,
-			uint8_t* fans_duties,
-			uint8_t* after,
-			Base* to,
-			Countimer::CountType timer_type = Countimer::COUNT_DOWN);
-		void start();
-		void stop();
-		Base* loop();
-		const char* get_title();
-		uint16_t get_time();
-		void set_continue_to(Base* to);
-		bool is_paused();
-		void pause_continue();
-	protected:
-		virtual void do_pause();
-		virtual void do_continue();
-		Base* continue_to;
-	private:
-		virtual const char* get_hw_pause_reason();
-		uint8_t* continue_after;
-		Countimer::CountType timer_type;
-	};
-
-
-	// States::Timer_motor
-	class Timer_motor : public Timer_only {
-	public:
-		Timer_motor(
-			const char* title,
-			uint8_t* fans_duties,
-			uint8_t* after,
-			Base* to,
-			uint8_t* speed,
-			bool slow_mode,
-			Countimer::CountType timer_type = Countimer::COUNT_DOWN);
-		void start();
-		void stop();
-	protected:
 		void do_pause();
 		void do_continue();
-		uint8_t* speed;
-		bool slow_mode;
-	};
-
-
-	// States::Timer_controls
-	class Timer_controls : public Timer_motor {
-	public:
-		Timer_controls(
-	        const char* title,
-	        uint8_t* fans_duties,
-	        uint8_t* after,
-	        Base* to,
-	        uint8_t* speed,
-	        bool slow_mode,
-	        Countimer::CountType timer_type = Countimer::COUNT_DOWN);
+		void pause_continue();
+		void cancel();
+		void process_events(uint8_t events);
+		bool short_press_cancel();
+		const char* get_title();
+		const char* get_message();
+		uint16_t get_time();
+		float get_temperature();
 		const char* decrease_time();
 		const char* increase_time();
-	};
-
-
-	// States::Washing
-	class Washing : public Timer_controls {
-	public:
-		Washing(
-			const char* title,
-			uint8_t* fans_duties,
-			uint8_t* after,
-			Base* to);
-		void process_events(uint8_t events);
+		bool is_paused();
+		bool is_finished();
+		void set_continue_to(Base* to);
+		void new_text(const char* new_title, const char* new_message);
+	protected:
+		Base* continue_to;
+		const char* message;
+		uint8_t* const target_temp;
+		uint8_t* const fans_duties;
+		unsigned long us_last;
+		bool canceled;
 	private:
 		const char* get_hw_pause_reason();
-	};
-
-
-	// States::Curing
-	class Curing : public Timer_controls {
-	public:
-		Curing(
-			const char* title,
-			uint8_t* fans_duties,
-			uint8_t* after,
-			Base* to);
-		void start();
-		void stop();
-		Base* loop();
-		void process_events(uint8_t events);
-		float get_temperature();
-	protected:
-		void do_pause();
-		void do_continue();
-	private:
-		unsigned long led_us_last;
-	};
-
-
-	// States::Timer_heater
-	class Timer_heater : public Timer_controls {
-	public:
-		Timer_heater(
-			const char* title,
-			uint8_t* fans_duties,
-			uint8_t* after,
-			Base* to,
-			uint8_t* target_temp = nullptr,
-			Countimer::CountType timer_type = Countimer::COUNT_DOWN);
-		void start();
-		void stop();
-		void process_events(uint8_t events);
-		float get_temperature();
-	protected:
-		void do_pause();
-		void do_continue();
-		uint8_t* const target_temp;
+		const char* title;
+		uint8_t* const continue_after;
+		uint8_t* const motor_speed;
+		uint8_t const options;
 	};
 
 
 	// States::Warmup
-	class Warmup : public Timer_heater {
+	class Warmup : public Base {
 	public:
 		Warmup(
 			const char* title,
-			uint8_t* after,
-			Base* to,
+			Base* continue_to,
+			uint8_t* continue_after,
+			uint8_t* motor_speed,
 			uint8_t* target_temp);
 		Base* loop();
-		const char* decrease_time();
-		const char* increase_time();
-	};
-
-
-	// States::Cooldown
-	class Cooldown : public Timer_only {
-	public:
-		Cooldown(
-			const char* title,
-			Base* to);
-		float get_temperature();
-	private:
-		uint8_t test_time;
-		uint8_t fans_speed[2];
 	};
 
 
 	// States::Confirm
 	class Confirm : public Base {
 	public:
-		Confirm(
-			const char* title,
-			const char* message);
+		Confirm();
 		void start();
 		Base* loop();
-		const char* get_message();
-		bool short_press_cancel();
-		bool is_finished();
-		void fill(const char* new_title, const char* new_message);
-	private:
-		const char* message;
-		unsigned long beep_us_last;
 	};
 
 
@@ -209,29 +94,27 @@ namespace States {
 	public:
 		Test_switch(
 			const char* title,
+			Base* continue_to,
 			const char* message_on,
 			const char* message_off,
-			bool (*value_getter)(),
-			Base* to);
+			bool (*value_getter)());
 		void start();
 		Base* loop();
-		const char* get_message();
 	private:
 		const char* const message_on;
 		const char* const message_off;
 		bool (*value_getter)();
-		Base* continue_to;
 		uint8_t test_count;
 		bool old_state;
 	};
 
 
 	// States::Test_rotation
-	class Test_rotation : public Timer_motor, public SimplePrint {
+	class Test_rotation : public Base, public SimplePrint {
 	public:
 		Test_rotation(
 			const char* title,
-			Base* to);
+			Base* continue_to);
 		void start();
 		Base* loop();
 		bool get_info1(char* buffer, uint8_t size);
@@ -239,16 +122,17 @@ namespace States {
 		uint8_t test_time;
 		uint8_t test_speed;
 		uint16_t old_seconds;
+		bool fast_mode;
 		bool draw;
 	};
 
 
 	// States::Test_fans
-	class Test_fans : public Timer_only, public SimplePrint {
+	class Test_fans : public Base, public SimplePrint {
 	public:
 		Test_fans(
 			const char* title,
-			Base* to);
+			Base* continue_to);
 		void start();
 		Base* loop();
 		bool get_info1(char* buffer, uint8_t size);
@@ -264,43 +148,30 @@ namespace States {
 
 
 	// States::Test_uvled
-	class Test_uvled : public Timer_only {
+	class Test_uvled : public Base {
 	public:
 		Test_uvled(
 			const char* title,
 			uint8_t* fans_duties,
 			Base* to);
 		void start();
-		void stop();
 		Base* loop();
-		void process_events(uint8_t events);
-		float get_temperature();
-	protected:
-		void do_pause();
-		void do_continue();
 	private:
 		uint8_t test_time;
 		float old_uvled_temp;
-		unsigned long led_us_last;
 	};
 
 
 	// States::Test_heater
-	class Test_heater : public Timer_only, public SimplePrint {
+	class Test_heater : public Base, public SimplePrint {
 	public:
 		Test_heater(
 			const char* title,
 			uint8_t* fans_duties,
 			Base* to);
 		void start();
-		void stop();
 		Base* loop();
-		void process_events(uint8_t events);
-		float get_temperature();
 		bool get_info2(char* buffer, uint8_t size);
-	protected:
-		void do_pause();
-		void do_continue();
 	private:
 		uint8_t test_time;
 		float old_chamb_temp;

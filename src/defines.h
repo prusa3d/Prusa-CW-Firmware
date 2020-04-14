@@ -37,7 +37,7 @@
 #define FAN3_ERROR_MASK		B100
 
 // various constants
-#define LED_DELAY			1000
+#define LED_DELAY			2000
 #define LONG_PRESS_TIME		1000
 #define	P					10	// 0.5
 #define I					0.001
@@ -45,13 +45,13 @@
 #define MAX_TARGET_TEMP_C	40
 #define MIN_TARGET_TEMP_F	MIN_TARGET_TEMP_C * 1.8 + 32
 #define MAX_TARGET_TEMP_F	MAX_TARGET_TEMP_C * 1.8 + 32
-#define MAX_WARMUP_RUN_TIME	30		// minutes
-#define COOLDOWN_RUNTIME	15		// minutes
+#define MAX_WARMUP_RUN_TIME	15		// minutes
+#define COOLDOWN_RUNTIME	10		// minutes
 #define INC_DEC_TIME_STEP	30		// seconds
 #define MIN_LED_INTENSITY	1		// 0-100 %
 #define MIN_LCD_BRIGHTNESS	5		// 0-100 %
 #define MIN_FAN_SPEED		30		// 0-100 %
-#define FAN_CHECK_PERIOD	500		// us
+#define FAN_CHECK_PERIOD	500		// microseconds
 #define SWITCH_TEST_COUNT	10
 #define ROTATION_TEST_TIME	3		// minutes
 #define FANS_TEST_TIME		2		// minutes
@@ -60,6 +60,7 @@
 #define UVLED_MAX_TEMP		60.0	// celsius
 #define HEATER_TEST_TIME	10		// minutes
 #define HEATER_TEST_GAIN	5.0		// celsius
+#define HEATER_CHECK_DELAY	2000	// microseconds
 #define SN_LENGTH			15
 #define MAX_MENU_DEPTH		5
 #define MENU_REDRAW_US		1000

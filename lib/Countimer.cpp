@@ -9,10 +9,10 @@ Countimer::Countimer() :
 	_countTime(0),
 	_isCounterCompleted(true),
 	_isStopped(true),
-	_countType(CountType::COUNT_NONE)
+	_countUp(false)
 { }
 
-void Countimer::setCounter(uint8_t hours, uint8_t minutes, uint8_t seconds, CountType countType) {
+void Countimer::setCounter(uint8_t hours, uint8_t minutes, uint8_t seconds, bool countUp) {
 	if (minutes > COUNTIMER_MAX_MINUTES_SECONDS) {
 		minutes = COUNTIMER_MAX_MINUTES_SECONDS;
 	}
@@ -20,7 +20,7 @@ void Countimer::setCounter(uint8_t hours, uint8_t minutes, uint8_t seconds, Coun
 	if (seconds > COUNTIMER_MAX_MINUTES_SECONDS) {
 		seconds = COUNTIMER_MAX_MINUTES_SECONDS;
 	}
-	_countType = countType;
+	_countUp = countUp;
 	setCounterInSeconds((hours * 3600L) + (minutes * 60L) + seconds);
 }
 
@@ -28,7 +28,7 @@ void Countimer::setCounterInSeconds(uint16_t seconds) {
 	_currentCountTime = seconds * 1000L;
 	_countTime = _currentCountTime;
 
-	if (_countType == COUNT_UP) {
+	if (_countUp) {
 		// if is count up mode, we have to start from 00:00:00;
 		_currentCountTime = 0;
 	}
@@ -76,7 +76,7 @@ void Countimer::stop() {
 	_isCounterCompleted = true;
 	_currentCountTime = _countTime;
 
-	if (_countType == COUNT_UP) {
+	if (_countUp) {
 		_currentCountTime = 0;		
 	}
 }
@@ -97,10 +97,10 @@ void Countimer::run() {
 
 	if (millis() - _previousMillis >= _interval) {
 
-		if (_countType == COUNT_DOWN) {
-			countDown();
-		} else if (_countType == COUNT_UP) {
+		if (_countUp) {
 			countUp();
+		} else {
+			countDown();
 		}
 		_previousMillis = millis();
 	}

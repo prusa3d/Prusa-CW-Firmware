@@ -6,16 +6,10 @@
 
 class Countimer {
 public:
-	enum CountType {
-		COUNT_NONE = 0,
-		COUNT_UP = 1,
-		COUNT_DOWN = 2
-	};
-
 	Countimer();
 
 	// Set up counter time(hours, minutes, seconds and type) for existing timer.
-	void setCounter(uint8_t hours, uint8_t minutes, uint8_t seconds, CountType countType);
+	void setCounter(uint8_t hours, uint8_t minutes, uint8_t seconds, bool countUp);
 
 	// Set up counter time in seconds for existing timer.
 	void setCounterInSeconds(uint16_t seconds);
@@ -77,5 +71,5 @@ private:
 	// Function to execute when timer is complete.
 	bool _isCounterCompleted;
 	bool _isStopped;
-	CountType _countType;
+	bool _countUp;
 };

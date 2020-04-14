@@ -23,26 +23,27 @@ const int16_t uvled_temp_table_raw[34] PROGMEM = {
 };
 
 
-uint16_t Hardware::fan_rpm[3] = {0, 0, 0};
+uint16_t Hardware::fan_rpm[3] = {1, 1, 1};
 volatile uint8_t Hardware::fan_tacho_count[3] = {0, 0, 0};
 volatile uint8_t Hardware::microstep_control(FAST_SPEED_START);
 float Hardware::chamber_temp_celsius(-40.0);
 float Hardware::chamber_temp(-40.0);
 float Hardware::uvled_temp_celsius(-40.0);
 float Hardware::uvled_temp(-40.0);
+bool Hardware::heater_error(false);
 MCP Hardware::outputchip(0, 8);
 Trinamic_TMC2130 Hardware::myStepper(CS_PIN);
 uint8_t Hardware::lcd_encoder_bits(0);
 volatile int8_t Hardware::rotary_diff(0);
 uint8_t Hardware::target_accel_period(FAST_SPEED_START);
-uint8_t Hardware::fan_duty[3] = {0, 0, 0};
+uint8_t Hardware::fan_duty[2] = {0, 0};
 uint8_t Hardware::fan_pwm_pins[2] = {FAN1_PWM_PIN, FAN2_PWM_PIN};
 uint8_t Hardware::fan_enable_pins[2] = {FAN1_PIN, FAN2_PIN};
 uint8_t Hardware::fans_target_temp(0);
-uint8_t Hardware::fan_errors(0);
 unsigned long Hardware::accel_us_last(0);
 unsigned long Hardware::fans_us_last(0);
 unsigned long Hardware::adc_us_last(0);
+unsigned long Hardware::heater_us_last(0);
 unsigned long Hardware::button_timer(0);
 double Hardware::PI_summ_err(0.0);
 bool Hardware::do_acceleration(false);
@@ -50,7 +51,6 @@ bool Hardware::cover_closed(false);
 bool Hardware::tank_inserted(false);
 bool Hardware::button_active(false);
 bool Hardware::long_press_active(false);
-bool Hardware::heater_error(false);
 bool Hardware::adc_channel(false);
 
 
@@ -105,7 +105,7 @@ void Hardware::read_adc() {
 		chamber_temp_celsius = interpolate_i16_ylin_P(read_adc_raw(THERM_READ_PIN) >> 2, 34, chamber_temp_table_raw, 1250, -50) / 10.0;
 		chamber_temp = config.SI_unit_system ? chamber_temp_celsius : celsius2fahrenheit(chamber_temp_celsius);
 	}
-	adc_channel ^= 1;
+	adc_channel = !adc_channel;
 	outputchip.digitalWrite(ANALOG_SWITCH_A, adc_channel);
 }
 
@@ -178,12 +178,8 @@ void Hardware::stop_motor() {
 	outputchip.digitalWrite(EN_PIN, HIGH);
 }
 
-void Hardware::speed_configuration(uint8_t speed, bool slow_mode, bool gear_shifting) {
-	if (slow_mode) {
-		myStepper.set_IHOLD_IRUN(10, 10, 0);
-		myStepper.set_mres(256);
-		microstep_control = map(speed, 1, 10, MIN_SLOW_SPEED, MAX_SLOW_SPEED);
-	} else {
+void Hardware::speed_configuration(uint8_t speed, bool fast_mode, bool gear_shifting) {
+	if (fast_mode) {
 		myStepper.set_IHOLD_IRUN(31, 31, 5);
 		myStepper.set_mres(16);
 		if (gear_shifting) {
@@ -193,8 +189,12 @@ void Hardware::speed_configuration(uint8_t speed, bool slow_mode, bool gear_shif
 			microstep_control = FAST_SPEED_START;
 			accel_us_last = millis();
 		}
+	} else {
+		myStepper.set_IHOLD_IRUN(10, 10, 0);
+		myStepper.set_mres(256);
+		microstep_control = map(speed, 1, 10, MIN_SLOW_SPEED, MAX_SLOW_SPEED);
 	}
-	do_acceleration = !slow_mode && !gear_shifting;
+	do_acceleration = fast_mode && !gear_shifting;
 }
 
 void Hardware::acceleration() {
@@ -211,18 +211,14 @@ void Hardware::acceleration() {
 
 void Hardware::run_heater() {
 	outputchip.digitalWrite(FAN_HEAT_PIN, HIGH);
-	fan_duty[2] = 100;
+	heater_us_last = millis();
 	wdt_enable(WDTO_4S);
 }
 
 void Hardware::stop_heater() {
 	outputchip.digitalWrite(FAN_HEAT_PIN, LOW);
-	fan_duty[2] = 0;
+	heater_us_last = 0;
 	wdt_disable();
-}
-
-bool Hardware::is_heater_running() {
-	return (bool)fan_duty[2];
 }
 
 void Hardware::run_led() {
@@ -345,30 +341,13 @@ void Hardware::fans_PI_regulator() {
 
 void Hardware::fans_check() {
 	for (uint8_t i = 0; i < 3; ++i) {
-		if (fan_duty[i]) {
-			fan_errors &= ~(1 << i);
-			fan_errors |= !fan_tacho_count[i] << i;
-			fan_rpm[i] = 60000 / FAN_CHECK_PERIOD * fan_tacho_count[i];
-			fan_tacho_count[i] = 0;
-//			USB_PRINT(i);
-//			USB_PRINTP(": ");
-//			USB_PRINTLN(fan_rpm[i]);
-		} else {
-			fan_rpm[i] = 0;
-		}
+		fan_rpm[i] = 60000 / FAN_CHECK_PERIOD * fan_tacho_count[i];
+		fan_tacho_count[i] = 0;
+//		USB_PRINT(i);
+//		USB_PRINTP(": ");
+//		USB_PRINTLN(fan_rpm[i]);
 	}
-//	USB_PRINTP("fan_errors: ");
-//	USB_PRINTLN(fan_errors);
 }
-
-bool Hardware::get_heater_error() {
-	return heater_error;
-}
-
-uint8_t Hardware::get_fans_error() {
-	return fan_errors;
-}
-
 
 uint8_t Hardware::loop() {
 	unsigned long us_now = millis();
@@ -388,14 +367,12 @@ uint8_t Hardware::loop() {
 		}
 	}
 
-
 	uint8_t events = 0;
-
 	if (heater_error)
 		return events;
 
 	// failed once, failed every time
-	heater_error = (bool)(fan_errors & FAN3_ERROR_MASK);
+	heater_error = heater_us_last && !fan_rpm[2] && us_now - heater_us_last > HEATER_CHECK_DELAY;
 
 	// cover
 	bool cover_closed_now = is_cover_closed();

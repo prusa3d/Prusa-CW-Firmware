@@ -24,16 +24,14 @@ public:
 
 	static void run_motor();
 	static void stop_motor();
-	static void speed_configuration(uint8_t speed, bool slow_mode, bool gear_shifting = false);
+	static void speed_configuration(uint8_t speed, bool fast_mode, bool gear_shifting = false);
 	static void acceleration();
 
 	static void run_heater();
 	static void stop_heater();
-	static bool is_heater_running();
 
 	static void run_led();
 	static void stop_led();
-	static bool is_led_on();
 
 	static bool is_cover_closed();
 	static bool is_tank_inserted();
@@ -47,9 +45,6 @@ public:
 	static void set_fan1_duty(uint8_t duty);
 	static void set_fan2_duty(uint8_t duty);
 
-	static bool get_heater_error();
-	static uint8_t get_fans_error();
-
 	static uint8_t loop();
 
 	static uint16_t fan_rpm[3];
@@ -59,6 +54,7 @@ public:
 	static float chamber_temp;
 	static float uvled_temp_celsius;
 	static float uvled_temp;
+	static bool heater_error;
 
 private:
 	static MCP outputchip;
@@ -75,7 +71,7 @@ private:
 	static volatile int8_t rotary_diff;
 	static uint8_t target_accel_period;
 
-	static uint8_t fan_duty[3];
+	static uint8_t fan_duty[2];
 	static uint8_t fan_pwm_pins[2];
 	static uint8_t fan_enable_pins[2];
 	static uint8_t fans_target_temp;
@@ -85,6 +81,7 @@ private:
 	static unsigned long accel_us_last;
 	static unsigned long fans_us_last;
 	static unsigned long adc_us_last;
+	static unsigned long heater_us_last;
 	static unsigned long button_timer;
 	static double PI_summ_err;
 	static bool do_acceleration;
@@ -92,7 +89,6 @@ private:
 	static bool tank_inserted;
 	static bool button_active;
 	static bool long_press_active;
-	static bool heater_error;
 	static bool adc_channel;
 };
 

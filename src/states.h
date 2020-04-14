@@ -10,13 +10,13 @@ namespace States {
 	extern Base menu;
 	extern Confirm confirm;
 	extern Confirm error;
-	extern Washing washing;
-	extern Timer_heater drying;
-	extern Curing curing;
-	extern Timer_heater resin;
+	extern Base washing;
+	extern Base drying;
+	extern Base curing;
+	extern Base resin;
 	extern Warmup warmup_print;
 	extern Warmup warmup_resin;
-	extern Cooldown cooldown;
+	extern Base cooldown;
 	extern Test_switch selftest_cover;
 
 	void init();

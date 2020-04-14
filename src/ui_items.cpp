@@ -303,7 +303,7 @@ namespace UI {
 	}
 
 	Base* Bool::in_menu_action() {
-		value ^= 1;
+		value = !value;
 		write_config();
 		return this;
 	}
@@ -317,7 +317,7 @@ namespace UI {
 	Base* SI_switch::in_menu_action() {
 		for (uint8_t i = 0; i < to_change_count; ++i) {
 			Temperature* item = (Temperature*)pgm_read_word(&(to_change[i]));
-			item->units_change(value^1);
+			item->units_change(!value);
 		}
 		Bool::in_menu_action();
 		return this;
