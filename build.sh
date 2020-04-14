@@ -1,37 +1,15 @@
-#!/bin/bash 
+#!/bin/bash
+
 BUILD_ENV="1.0.1"
-BUILD_GENERATOR="Eclipse CDT4 - Ninja"
+ENV_DIR="build/env"
 SCRIPT_PATH="$( cd "$(dirname "$0")" ; pwd -P )"
 
-if [ ! -d "build-env" ]; then
-    mkdir build-env || exit 1
-fi
-cd build-env || exit 2
-
-if [ ! -f "MM-build-env-Linux64-$BUILD_ENV.zip" ]; then
-    wget https://github.com/prusa3d/MM-build-env/releases/download/$BUILD_ENV/MM-build-env-Linux64-$BUILD_ENV.zip || exit 3
+if [ ! -d "$ENV_DIR" ]; then
+	mkdir -p "$ENV_DIR" || exit 1
+    wget "https://github.com/prusa3d/MM-build-env/releases/download/$BUILD_ENV/MM-build-env-Linux64-$BUILD_ENV.zip" || exit 2
+    unzip -q "MM-build-env-Linux64-$BUILD_ENV.zip" -d "$ENV_DIR" || exit 3
 fi
 
-if [ ! -d "../../MM-build-env-$BUILD_ENV" ]; then
-    unzip -q MM-build-env-Linux64-$BUILD_ENV.zip -d ../../MM-build-env-$BUILD_ENV || exit 4
-fi
+export PATH=$SCRIPT_PATH/$ENV_DIR/avr/bin:$PATH
 
-cd ../../MM-build-env-$BUILD_ENV || exit 5
-BUILD_ENV_PATH="$( pwd -P )"
-export PATH=$BUILD_ENV_PATH/cmake/bin:$BUILD_ENV_PATH/ninja:$BUILD_ENV_PATH/avr/bin:$PATH
-
-cd ..
-
-if [ ! -d "Prusa-CW-Firmware-build" ]; then
-    mkdir Prusa-CW-Firmware-build  || exit 6
-fi
-
-cd Prusa-CW-Firmware-build || exit 7
-
-if [ ! -f "$BUILD_ENV.version" ]; then
-    rm -r *
-    cmake -G "$BUILD_GENERATOR" $SCRIPT_PATH || exit 8
-    touch $BUILD_ENV.version || exit 9
-fi
-
-cmake --build . || exit 10
+make dist || exit 4

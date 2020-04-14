@@ -31,9 +31,12 @@ DEPS = $(addprefix $(BUILD_DIR)/, $(patsubst %.c, %.d, $(CSRCS))) $(addprefix $(
 HEXS := $(foreach lang, ${LANGS}, $(addprefix $(BUILD_DIR)/, ${PROJECT}-${lang}.hex))
 VERSION = ${BUILD_DIR}/version.h
 
+default: DEFS += -DSERIAL_COM_DEBUG
 default: ${HEXS}
 
-.PHONY: clean lang_extract default ${VERSION}.tmp doc
+dist: ${HEXS}
+
+.PHONY: clean lang_extract default dist ${VERSION}.tmp doc
 
 .SECONDARY:
 

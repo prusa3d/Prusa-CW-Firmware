@@ -65,7 +65,7 @@ static const char pgmstr_fans[] PROGMEM = _("Fans");
 
 // info menu
 static const char pgmstr_information[] PROGMEM = _("Information");
-static const char pgmstr_fw_version[] PROGMEM = _("FW version: ")  FW_VERSION;
+static const char pgmstr_fw_version[] PROGMEM = _("FW: ")  FW_VERSION;
 static const char pgmstr_sn[] PROGMEM = "SN: ";
 static const char pgmstr_build_nr[] PROGMEM = _("Build: ") FW_BUILDNR;
 static const char pgmstr_fw_hash[] PROGMEM = FW_HASH;
