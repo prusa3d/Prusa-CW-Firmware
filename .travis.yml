@@ -10,6 +10,7 @@ deploy:
   token: $ACCESS_TOKEN
   file:
     - build/Prusa-CW1-Firmware-en.hex
+  skip_cleanup: true
   draft: true
   prerelease: true
   on:
