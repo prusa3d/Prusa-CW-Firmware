@@ -20,7 +20,7 @@ Create new github user, eg. your_user_name-your_repository_name-travis. This ste
 
 Login into https://travis-ci.org/ enable build of your repository, click on repository setting, add environment variable `ACCESS_TOKEN` and paste your token.
 
-Each commit is build, but only for tagged commits `Prusa-CW1-Firmware-en.hex` is attached to your release by travis.
+Each commit is build, but only for tagged commits `Prusa-CW1-Firmware-LANG-GIT_TAG.hex` files are attached to your release by travis.
 
 ### Automatic, local, using script and prepared tools package
 
@@ -34,11 +34,25 @@ It downloads neccessary tools, creates `build` subfolder, extracts tools to `bui
 
 You need make, avr-gcc and avr-libc installed.
 
-Invoke make build system:
+To build version with debug turned on use:
 ~~~
 make
 ~~~
-The file `build/Prusa-CW1-Firmware-en.hex` is generated.
+or with language code:
+~~~
+make LANG=xx
+~~~
+The file `build/Prusa-CW1-Firmware-LANG-devel.hex` will be generated.
+
+To build version without debug use:
+~~~
+make dist
+~~~
+or with language code:
+~~~
+make LANG=xx dist
+~~~
+The file `build/Prusa-CW1-Firmware-LANG-GIT_TAG.hex` will be generated.
 
 ## Flashing
 ### PrusaSlicer (previously Slic3er PE)
@@ -53,7 +67,7 @@ This can be accomplished manually by clicking reset button on CW1 (near microUSB
 
 Than flash it using following command, replace \<virtual serial port\> with CDC device created by CW1 usually `com<nr>` under Windows and `/dev/ttyACM<nr>` under Linux. `-b` baud rate is don't care value, probably doesn't have to be specified at all, as there is no physical uart.
 ~~~
-avrdude -v -p atmega32u4 -c avr109 -P <virtual serial port> -b 57600 -D -U flash:w:build/Prusa-CW1-Firmware-en.hex:i
+avrdude -v -p atmega32u4 -c avr109 -P <virtual serial port> -b 57600 -D -U flash:w:build/Prusa-CW1-Firmware-LANG-GIT_TAG.hex:i
 ~~~
 
 ### Linux with ModemManager installed
