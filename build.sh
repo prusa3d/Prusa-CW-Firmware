@@ -12,4 +12,7 @@ fi
 
 export PATH=$SCRIPT_PATH/$ENV_DIR/avr/bin:$PATH
 
-make dist || exit 4
+for LG in "en" "cs"; do
+	make clean || exit 4
+	make "LANG=$LG" dist || exit 5
+done
