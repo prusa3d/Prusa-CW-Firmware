@@ -8,6 +8,7 @@ script:
 deploy:
   provider: releases
   token: $ACCESS_TOKEN
+  file_glob: true
   file:
     - build/Prusa-CW1-Firmware-*.hex
   skip_cleanup: true
