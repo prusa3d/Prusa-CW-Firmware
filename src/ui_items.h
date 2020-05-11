@@ -202,7 +202,7 @@ namespace UI {
 	// UI::Do_it
 	class Do_it : public State {
 	public:
-		Do_it(const char* label, uint8_t& curing_machine_mode, Base* state_menu = nullptr);
+		Do_it(uint8_t& curing_machine_mode, Base* state_menu = nullptr);
 		char* get_menu_label(char* buffer, uint8_t buffer_size);
 		void invoke();
 	private:

@@ -462,7 +462,7 @@ namespace UI {
 
 	void State::leave() {
 		States::change(&States::menu);
-		Base::invoke();
+		Base::leave();
 	}
 
 	Base* State::process_events(uint8_t events) {
@@ -516,8 +516,8 @@ namespace UI {
 
 
 	// UI::Do_it
-	Do_it::Do_it(const char* label, uint8_t& curing_machine_mode, Base* state_menu) :
-		State(label, nullptr, state_menu), curing_machine_mode(curing_machine_mode)
+	Do_it::Do_it(uint8_t& curing_machine_mode, Base* state_menu) :
+		State(nullptr, nullptr, state_menu), curing_machine_mode(curing_machine_mode)
 	{}
 
 	char* Do_it::get_menu_label(char* buffer, uint8_t buffer_size) {
