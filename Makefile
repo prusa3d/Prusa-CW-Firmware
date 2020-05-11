@@ -55,13 +55,16 @@ $(BUILD_DIR)/%.hex: ${BUILD_DIR}/%.elf
 	rm $@.tmp
 
 $(BUILD_DIR)/%.elf: ${OBJS}
-	${CPP} ${CPPFLAGS} ${LINKFLAGS},-Map=${@:%.elf=%.map} $^ -o $@
+	@echo "LINK $@"
+	@${CPP} ${CPPFLAGS} ${LINKFLAGS},-Map=${@:%.elf=%.map} $^ -o $@
 
 $(BUILD_DIR)/%.o: %.c | $${@D}/.
-	${CC} ${CFLAGS} -c $< -o $@
+	@echo "CC $<"
+	@${CC} ${CFLAGS} -c $< -o $@
 
 $(BUILD_DIR)/%.o: %.cpp | $${@D}/.
-	${CPP} ${CPPFLAGS} -c $< -o $@
+	@echo "CPP $<"
+	@${CPP} ${CPPFLAGS} -c $< -o $@
 
 $(VERSION_FILE): ${VERSION_FILE}.tmp
 	@if ! cmp -s $< $@; then cp $< $@; fi
@@ -108,9 +111,11 @@ doc:
 
 
 $(BUILD_DIR)/%.d: %.c ${VERSION_FILE} Makefile | $${@D}/.
+	@echo "deps $<"
 	@${CC} ${CFLAGS} $< -MM -MT ${@:.d=.o} >$@
 
 $(BUILD_DIR)/%.dd: %.cpp ${VERSION_FILE} Makefile | $${@D}/.
+	@echo "deps $<"
 	@${CPP} ${CPPFLAGS} $< -MM -MT ${@:.dd=.o} >$@
 
 -include ${DEPS}

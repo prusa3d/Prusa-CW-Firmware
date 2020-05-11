@@ -10,6 +10,8 @@ namespace UI {
 	Base back(pgmstr_back, BACK_CHAR);
 	Base stop(pgmstr_stop, STOP_CHAR);
 
+	// move all following definitions to init() to save RAM instead of PROGMEM
+
 	// run time menu
 	Minutes curing_run_time(pgmstr_curing_run_time, config.curing_run_time);
 	Minutes drying_run_time(pgmstr_drying_run_time, config.drying_run_time);
