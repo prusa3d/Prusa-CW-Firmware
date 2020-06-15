@@ -80,7 +80,7 @@ namespace UI {
 	template<class T>
 	char* Live_value<T>::get_menu_label(char* buffer, uint8_t buffer_size) {
 		char* end = Base::get_menu_label(buffer, buffer_size);
-		uint8_t size = buffer + buffer_size - end;
+		int8_t size = buffer + buffer_size - end;
 		if (size < 0) {
 			size = 0;
 		}

@@ -50,7 +50,8 @@ $(BUILD_DIR)%/.:
 
 $(BUILD_DIR)/%.hex: ${BUILD_DIR}/%.elf
 	${OBJCOPY} -O ihex -R .eeprom $< $@.tmp
-	@echo -e "; device = cw1\n" > $@
+	@echo "; device = cw1" > $@
+	@echo >> $@
 	cat $@.tmp >> $@
 	rm $@.tmp
 
