@@ -35,7 +35,7 @@ eeprom_v2_t config = {
 	{MIN_FAN_SPEED, MIN_FAN_SPEED},	// fans_menu_speed
 	{60, 70},	// fans_washing_speed
 	{60, 70},	// fans_drying_speed
-	{60, 70},	// fans_curing_speed
+	{80, 80},	// fans_curing_speed
 	100,		// lcd_brightness
 };
 

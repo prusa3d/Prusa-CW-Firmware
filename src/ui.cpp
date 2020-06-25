@@ -13,10 +13,10 @@ namespace UI {
 	// move all following definitions to init() to save RAM instead of PROGMEM
 
 	// run time menu
-	Minutes curing_run_time(pgmstr_curing_run_time, config.curing_run_time);
-	Minutes drying_run_time(pgmstr_drying_run_time, config.drying_run_time);
-	Minutes washing_run_time(pgmstr_washing_run_time, config.washing_run_time);
-	Minutes resin_preheat_run_time(pgmstr_resin_preheat_time, config.resin_preheat_run_time, 30);
+	Minutes curing_run_time(pgmstr_curing_run_time, config.curing_run_time, MAX_CURING_RUNTIME);
+	Minutes drying_run_time(pgmstr_drying_run_time, config.drying_run_time, MAX_DRYING_RUNTIME);
+	Minutes washing_run_time(pgmstr_washing_run_time, config.washing_run_time, MAX_WASHING_RUNTIME);
+	Minutes resin_preheat_run_time(pgmstr_resin_preheat_time, config.resin_preheat_run_time, MAX_PREHEAT_RUNTIME);
 	Base* const run_time_items[] PROGMEM = {&back, &curing_run_time, &drying_run_time, &washing_run_time, &resin_preheat_run_time};
 	Menu run_time_menu(pgmstr_run_time, run_time_items, COUNT_ITEMS(run_time_items));
 

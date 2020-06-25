@@ -261,29 +261,41 @@ namespace States {
 
 	// States::Confirm
 	Confirm::Confirm() :
-		Base(pgmstr_emptystr, STATE_OPTION_SHORT_CANCEL)
+		Base(pgmstr_emptystr, STATE_OPTION_SHORT_CANCEL), quit(false)
 	{}
 
 	void Confirm::start() {
 		canceled = false;
-		us_last = config.finish_beep_mode;
+		quit = true;
+		us_last = 1;				// beep
+		const char* text2 = pgmstr_emptystr;
+		switch(config.finish_beep_mode) {
+			case 2:
+				quit = false;
+				text2 = pgmstr_press2continue;
+				break;
+			case 0:
+				us_last = 0;		// no beep
+				break;
+			default:
+				break;
+		}
+		confirm.new_text(pgmstr_finished, text2);
 		hw.set_fans(fans_duties);
 	}
 
 	Base* Confirm::loop() {
-		if (canceled) {
-			return continue_to;
-		}
+		canceled = quit;
 		unsigned long us_now = millis();
 		if (us_last && us_now - us_last > 1000) {
 			hw.beep();
-			if (config.finish_beep_mode == 2) {
-				us_last = us_now;
-			} else {
-				us_last = 0;
-			}
+			us_last = us_now;
 		}
-		return nullptr;
+		if (canceled) {
+			return continue_to;
+		} else {
+			return nullptr;
+		}
 	}
 
 

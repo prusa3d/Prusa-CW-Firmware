@@ -86,6 +86,8 @@ namespace States {
 		Confirm();
 		void start();
 		Base* loop();
+	private:
+		bool quit;
 	};
 
 

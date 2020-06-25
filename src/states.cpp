@@ -37,7 +37,7 @@ namespace States {
 		&config.resin_preheat_run_time,
 		&config.curing_speed,
 		&config.resin_target_temp);
-	uint8_t max_warmup_run_time = MAX_WARMUP_RUN_TIME;
+	uint8_t max_warmup_run_time = MAX_WARMUP_RUNTIME;
 	Warmup warmup_print(
 		pgmstr_warmup,
 		nullptr,
@@ -91,7 +91,6 @@ namespace States {
 	Base* active_state = &menu;
 
 	void init() {
-		confirm.new_text(pgmstr_finished, pgmstr_press2continue);
 		active_state->start();
 	}
 
