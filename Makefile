@@ -1,7 +1,6 @@
 PROJECT = Prusa-CW1-Firmware
 DIRS = lib src
 I18N = i18n
-LANG_TEMPLATE = ${I18N}/${PROJECT}.pot
 LANG = en
 BUILD_DIR = build
 
@@ -30,6 +29,7 @@ OBJS = $(addprefix $(BUILD_DIR)/, $(patsubst %.c, %.o, $(CSRCS))) $(addprefix $(
 DEPS = $(addprefix $(BUILD_DIR)/, $(patsubst %.c, %.d, $(CSRCS))) $(addprefix $(BUILD_DIR)/, $(patsubst %.cpp, %.dd, $(CPPSRCS)))
 VERSION = $(shell git describe --abbrev=0 --tags)
 VERSION_FILE = ${BUILD_DIR}/version.h
+LANG_TEMPLATE = ${I18N}/${PROJECT}-${VERSION}.pot
 
 default: DEFS += -DSERIAL_COM_DEBUG
 default: $(addprefix $(BUILD_DIR)/, ${PROJECT}-${LANG}-devel.hex)
@@ -87,7 +87,7 @@ clean:
 	rm -f $(foreach dir, ${DIRS}, $(wildcard ${BUILD_DIR}/${dir}/*.o)) $(foreach dir, ${DIRS}, $(wildcard ${BUILD_DIR}/${dir}/*.d*)) ${BUILD_DIR}/*.h $(VERSION_FILE).tmp ${BUILD_DIR}/*.sed
 
 distclean: clean
-	rm -rf ${BUILD_DIR}/*.hex ${BUILD_DIR}/*.elf ${BUILD_DIR}/*.map ${LANG_TEMPLATE} tags doc
+	rm -rf ${BUILD_DIR}/*.hex ${BUILD_DIR}/*.elf ${BUILD_DIR}/*.map ${I18N}/*.pot tags doc
 
 lang_extract: ${LANG_TEMPLATE}
 
