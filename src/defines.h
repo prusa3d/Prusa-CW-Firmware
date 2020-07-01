@@ -59,7 +59,7 @@
 #define FANS_TEST_TIME		2		// minutes
 #define UVLED_TEST_TIME		10		// minutes
 #define UVLED_TEST_GAIN		10.0	// celsius
-#define UVLED_MAX_TEMP		60.0	// celsius
+#define UVLED_MAX_TEMP		70.0	// celsius
 #define HEATER_TEST_TIME	10		// minutes
 #define HEATER_TEST_GAIN	5.0		// celsius
 #define HEATER_CHECK_DELAY	2000	// microseconds
