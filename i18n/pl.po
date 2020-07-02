@@ -1,15 +1,20 @@
 msgid ""
 msgstr ""
-"Language: cs\n"
+"Language: pl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
-"X-Generator: PhraseApp (phraseapp.com)\n"
+"Plural-Forms: nplurals=4; plural=(n == 1) ? 0 : ((n%10 >= 2 && n%10 <=4 && (n%100 < 12 || n%100 > 14)) ? 1 : ((n%10 == 0 || n%10 == 1 || (n%10 >= 5 && n%10 <=9)) || (n%100 >= 12 && n%100 <= 14)) ? 2 : 3);\n"
+"X-Generator: Poedit 2.3\n"
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
 
 #: i18n/en.h:142
 msgid "  F2:"
-msgstr "  V2:"
+msgstr "  W2:"
 
 #: i18n/en.h:9
 msgid " min."
@@ -17,159 +22,159 @@ msgstr " min."
 
 #: i18n/en.h:2
 msgid "Back"
-msgstr "Zpet"
+msgstr "Wstecz"
 
 #: i18n/en.h:70
 msgid "Build: "
-msgstr "Sestaveni: "
+msgstr "Build: "
 
 #: i18n/en.h:98
 msgid "Cham. temp.:"
-msgstr "Tep. komory:"
+msgstr "Temp. wewn.:"
 
 #: i18n/en.h:115
 msgid "Close the cover"
-msgstr "Zavrete viko"
+msgstr "Zamknij pokrywe"
 
 #: i18n/en.h:87
 msgid "Continue"
-msgstr "Pokracovat"
+msgstr "Kontynuuj"
 
 #: i18n/en.h:40
 msgid "continuous"
-msgstr "nepretrzite"
+msgstr "ciagle"
 
 #: i18n/en.h:37
 msgid "Control echo"
-msgstr "Odezva ovl."
+msgstr "Inf. zwr. pokretla"
 
 #: i18n/en.h:102
 msgid "Cooldown"
-msgstr "Zchladit"
+msgstr "Chlodzenie"
 
 #: i18n/en.h:150
 msgid "Cover test"
-msgstr "Test vika"
+msgstr "Test pokrywy"
 
 #: i18n/en.h:80
 msgid "Curing"
-msgstr "Tvrzeni"
+msgstr "Utwardzanie"
 
 #: i18n/en.h:16
 msgid "Curing run-time"
-msgstr "Cas vytvrzovani"
+msgstr "Czas utwardzania"
 
 #: i18n/en.h:23
 msgid "Curing speed"
-msgstr "Rychlost pro tvrz."
+msgstr "Predk. utwardzania"
 
 #: i18n/en.h:81
 msgid "Drying"
-msgstr "Suseni"
+msgstr "Suszenie"
 
 #: i18n/en.h:17
 msgid "Drying run-time"
-msgstr "Doba suseni"
+msgstr "Czas suszenia"
 
 #: i18n/en.h:29
 msgid "Drying warm-up t."
-msgstr "T. pro suseni"
+msgstr "Temp. suszenia"
 
 #: i18n/en.h:79
 msgid "Drying/curing"
-msgstr "Tvrzeni/suseni"
+msgstr "Suszenie/utwardz."
 
 #: i18n/en.h:141
 msgid "F1:"
-msgstr "V1:"
+msgstr "W1:"
 
 #: i18n/en.h:143
 msgid "F3:"
-msgstr "V3:"
+msgstr "W3:"
 
 #: i18n/en.h:45
 msgid "Fan1 curing speed"
-msgstr "Rychlost V1 tvrz."
+msgstr "Predk. utw. went 1"
 
 #: i18n/en.h:50
 msgid "Fan1 drying speed"
-msgstr "Rychlost V1 sus."
+msgstr "Predk. susz. went1"
 
 #: i18n/en.h:144
 msgid "Fan1 failure"
-msgstr "Ventilator1 selhal"
+msgstr "Blad wentylatora 1"
 
 #: i18n/en.h:60
 msgid "Fan1 menu speed"
-msgstr "Rychl. V1 (menu)"
+msgstr "Pr. jalowa went. 1"
 
 #: i18n/en.h:95
 msgid "Fan1 RPM: "
-msgstr "V1 ot/min: "
+msgstr "Obroty w1: "
 
 #: i18n/en.h:55
 msgid "Fan1 washing speed"
-msgstr "Rychlost V1 myti"
+msgstr "Predk. myc. went 1"
 
 #: i18n/en.h:46
 msgid "Fan2 curing speed"
-msgstr "Rychlost V2 tvrz."
+msgstr "Predk. utw. went 2"
 
 #: i18n/en.h:51
 msgid "Fan2 drying speed"
-msgstr "Rychlost V2 sus."
+msgstr "Predk. susz. went2"
 
 #: i18n/en.h:145
 msgid "Fan2 failure"
-msgstr "Ventilator2 selhal"
+msgstr "Blad wentylatora 2"
 
 #: i18n/en.h:61
 msgid "Fan2 menu speed"
-msgstr "Rychlost V2 menu"
+msgstr "Pr. jalowa went. 2"
 
 #: i18n/en.h:96
 msgid "Fan2 RPM: "
-msgstr "V2 ot/min: "
+msgstr "Obroty w2: "
 
 #: i18n/en.h:56
 msgid "Fan2 washing speed"
-msgstr "Rychl. V2 (myti)"
+msgstr "Predk. myc. went 2"
 
 #: i18n/en.h:97
 msgid "Fan3 RPM: "
-msgstr "V3 ot/min: "
+msgstr "Obroty w3: "
 
 #: i18n/en.h:64
 msgid "Fans"
-msgstr "Ventilatory"
+msgstr "Wentylatory"
 
 #: i18n/en.h:44
 msgid "Fans curing speed"
-msgstr "Rychl. v. (tvrzeni)"
+msgstr "Predk. went. utw."
 
 #: i18n/en.h:49
 msgid "Fans drying speed"
-msgstr "Rychlost pro sus."
+msgstr "Predk. went. susz."
 
 #: i18n/en.h:59
 msgid "Fans menu speed"
-msgstr "Rychl. v. (menu)"
+msgstr "Pr. jalowa went."
 
 #: i18n/en.h:140
 msgid "Fans test"
-msgstr "Test ventilatoru"
+msgstr "Test wentylatorow"
 
 #: i18n/en.h:54
 msgid "Fans washing speed"
-msgstr "Rychlost pro myti"
+msgstr "Predk. went. myc."
 
 #: i18n/en.h:41
 msgid "Finish beep"
-msgstr "Koncovy pip"
+msgstr "Powiadom. o zakon."
 
 #: i18n/en.h:121
 msgid "Finished"
-msgstr "Hotovo"
+msgstr "Zakonczono"
 
 #: i18n/en.h:68
 msgid "FW: "
@@ -177,59 +182,59 @@ msgstr "FW: "
 
 #: i18n/en.h:137
 msgid "Heater failure"
-msgstr "Chyba nahrivani"
+msgstr "Blad grzalki"
 
 #: i18n/en.h:117
 msgid "Heater fan error"
-msgstr "Chyba nahriv. v."
+msgstr "Blad went. grzalki"
 
 #: i18n/en.h:136
 msgid "Heater test"
-msgstr "Test nahrivani"
+msgstr "Test grzalki"
 
 #: i18n/en.h:125
 msgid "Heating"
-msgstr "Nahrivani"
+msgstr "Podgrzewanie"
 
 #: i18n/en.h:67
 msgid "Information"
-msgstr "Informace"
+msgstr "Informacja"
 
 #: i18n/en.h:133
 msgid "Insert IPA tank"
-msgstr "Vlozte IPA nadobu"
+msgstr "Wsun zbiornik IPA"
 
 #: i18n/en.h:149
 msgid "IPA tank test"
-msgstr "Test IPA nadoby"
+msgstr "Test zbiornika IPA"
 
 #: i18n/en.h:83
 msgid "LCD brightness"
-msgstr "Jas LCD"
+msgstr "Jasnosc LCD"
 
 #: i18n/en.h:139
 msgid "No/low power"
-msgstr "Zadny/maly vykon"
+msgstr "Brak/niska moc"
 
 #: i18n/en.h:38
 msgid "none"
-msgstr "zadny"
+msgstr "brak"
 
 #: i18n/en.h:147
 msgid "Not/bad spinning"
-msgstr "Problem otaceni"
+msgstr "Nie/nie obraca sie"
 
 #: i18n/en.h:39
 msgid "once"
-msgstr "jednou"
+msgstr "raz"
 
 #: i18n/en.h:151
 msgid "Open the cover"
-msgstr "Otevrete viko"
+msgstr "Otworz pokrywe"
 
 #: i18n/en.h:130
 msgid "Overheat"
-msgstr "Prehrati"
+msgstr "Przegrzanie"
 
 #: i18n/en.h:86
 msgid "Pause"
@@ -237,51 +242,51 @@ msgstr "Pauza"
 
 #: i18n/en.h:114
 msgid "Paused"
-msgstr "Pauza"
+msgstr "Wstrzymane"
 
 #: i18n/en.h:118
 msgid "Please restart"
-msgstr "Restartujte CW1"
+msgstr "Zrestartuj"
 
 #: i18n/en.h:122
 msgid "Press to continue"
-msgstr "Potvrdte stiskem"
+msgstr "Nacisnij, aby kont"
 
 #: i18n/en.h:129
 msgid "Read temper. error"
-msgstr "Chyba cteni t."
+msgstr "Blad odczytu temp."
 
 #: i18n/en.h:116
 msgid "Remove IPA tank"
-msgstr "Vyjmete IPA nadobu"
+msgstr "Wyc. zbiornik IPA"
 
 #: i18n/en.h:92
 msgid "Resin preheat"
-msgstr "Ohrati resinu"
+msgstr "Podgrzew. zywicy"
 
 #: i18n/en.h:30
 msgid "Resin preheat t."
-msgstr "T. ohrati resinu"
+msgstr "Temp. podg. zywicy"
 
 #: i18n/en.h:19
 msgid "Resin preheat time"
-msgstr "Doba ohrati resinu"
+msgstr "Czas podg. zywicy"
 
 #: i18n/en.h:22
 msgid "Rotation speed"
-msgstr "Rychlost otaceni"
+msgstr "Predkosc obrotowa"
 
 #: i18n/en.h:148
 msgid "Rotation test"
-msgstr "Test otaceni"
+msgstr "Test obracania"
 
 #: i18n/en.h:78
 msgid "Run mode"
-msgstr "Pracovni rezim"
+msgstr "Tryb pracy"
 
 #: i18n/en.h:15
 msgid "Run-time"
-msgstr "Doba behu"
+msgstr "Czasy"
 
 #: i18n/en.h:103
 msgid "Selftest"
@@ -289,15 +294,15 @@ msgstr "Selftest"
 
 #: i18n/en.h:77
 msgid "Settings"
-msgstr "Nastaveni"
+msgstr "Ustawienia"
 
 #: i18n/en.h:36
 msgid "Sound"
-msgstr "Zvuk"
+msgstr "Dzwiek"
 
 #: i18n/en.h:146
 msgid "Spinning turned off"
-msgstr "Toci se vypnuty"
+msgstr "Obracanie wyl."
 
 #: i18n/en.h:88
 msgid "Stop"
@@ -305,23 +310,23 @@ msgstr "Stop"
 
 #: i18n/en.h:31
 msgid "Temp. units"
-msgstr "T. jednotky"
+msgstr "Jednostki temp."
 
 #: i18n/en.h:27
 msgid "Temperatures"
-msgstr "Teploty"
+msgstr "Temperatury"
 
 #: i18n/en.h:128
 msgid "UVLED failure"
-msgstr "Chyba UVLED"
+msgstr "Blad UVLED"
 
 #: i18n/en.h:82
 msgid "UVLED intensity"
-msgstr "Intenzita UVLED"
+msgstr "Intensywnosc UVLED"
 
 #: i18n/en.h:99
 msgid "UVLED temp.:"
-msgstr "Tep. UVLED: "
+msgstr "Temp. UVLED:"
 
 #: i18n/en.h:138
 msgid "UVLED test"
@@ -329,28 +334,28 @@ msgstr "Test UVLED"
 
 #: i18n/en.h:28
 msgid "Warm-up"
-msgstr "Predehrev"
+msgstr "Nagrzewanie"
 
 #: i18n/en.h:91
 msgid "Washing"
-msgstr "Myti"
+msgstr "Mycie"
 
 #: i18n/en.h:18
 msgid "Washing run-time"
-msgstr "Doba myti"
+msgstr "Czas mycia"
 
 #: i18n/en.h:24
 msgid "Washing speed"
-msgstr "Rychlost pro myti"
+msgstr "Predkosc mycia"
 
 #: i18n/en.h:73
 msgid "Workspace dirty"
-msgstr "Pozor - necistoty"
+msgstr "Wykr. zm. w kodzie"
 
 #: i18n/en.h:4
 msgid "[off]"
-msgstr "[vyp]"
+msgstr "[wyl]"
 
 #: i18n/en.h:3
 msgid "[on]"
-msgstr "[zap]"
+msgstr "[wl]"

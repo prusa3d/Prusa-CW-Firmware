@@ -1,15 +1,20 @@
 msgid ""
 msgstr ""
-"Language: cs\n"
+"Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
-"X-Generator: PhraseApp (phraseapp.com)\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 2.3\n"
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
 
 #: i18n/en.h:142
 msgid "  F2:"
-msgstr "  V2:"
+msgstr "  F2:"
 
 #: i18n/en.h:9
 msgid " min."
@@ -17,159 +22,159 @@ msgstr " min."
 
 #: i18n/en.h:2
 msgid "Back"
-msgstr "Zpet"
+msgstr "Atras"
 
 #: i18n/en.h:70
 msgid "Build: "
-msgstr "Sestaveni: "
+msgstr "Build: "
 
 #: i18n/en.h:98
 msgid "Cham. temp.:"
-msgstr "Tep. komory:"
+msgstr "Temp. camara:"
 
 #: i18n/en.h:115
 msgid "Close the cover"
-msgstr "Zavrete viko"
+msgstr "Cierra la tapa"
 
 #: i18n/en.h:87
 msgid "Continue"
-msgstr "Pokracovat"
+msgstr "Continuar"
 
 #: i18n/en.h:40
 msgid "continuous"
-msgstr "nepretrzite"
+msgstr "continuo"
 
 #: i18n/en.h:37
 msgid "Control echo"
-msgstr "Odezva ovl."
+msgstr "Control sonido"
 
 #: i18n/en.h:102
 msgid "Cooldown"
-msgstr "Zchladit"
+msgstr "Enfriamiento"
 
 #: i18n/en.h:150
 msgid "Cover test"
-msgstr "Test vika"
+msgstr "Test de la tapa"
 
 #: i18n/en.h:80
 msgid "Curing"
-msgstr "Tvrzeni"
+msgstr "Curado"
 
 #: i18n/en.h:16
 msgid "Curing run-time"
-msgstr "Cas vytvrzovani"
+msgstr "Tiempo de curado"
 
 #: i18n/en.h:23
 msgid "Curing speed"
-msgstr "Rychlost pro tvrz."
+msgstr "Vel. de curado"
 
 #: i18n/en.h:81
 msgid "Drying"
-msgstr "Suseni"
+msgstr "Secado"
 
 #: i18n/en.h:17
 msgid "Drying run-time"
-msgstr "Doba suseni"
+msgstr "Tiempo de secado"
 
 #: i18n/en.h:29
 msgid "Drying warm-up t."
-msgstr "T. pro suseni"
+msgstr "Temp. de presecado"
 
 #: i18n/en.h:79
 msgid "Drying/curing"
-msgstr "Tvrzeni/suseni"
+msgstr "Secado/curado"
 
 #: i18n/en.h:141
 msgid "F1:"
-msgstr "V1:"
+msgstr "F1:"
 
 #: i18n/en.h:143
 msgid "F3:"
-msgstr "V3:"
+msgstr "F3:"
 
 #: i18n/en.h:45
 msgid "Fan1 curing speed"
-msgstr "Rychlost V1 tvrz."
+msgstr "Vel. cur. Vent1"
 
 #: i18n/en.h:50
 msgid "Fan1 drying speed"
-msgstr "Rychlost V1 sus."
+msgstr "Vel. secado Vent1"
 
 #: i18n/en.h:144
 msgid "Fan1 failure"
-msgstr "Ventilator1 selhal"
+msgstr "Fallo Vent1"
 
 #: i18n/en.h:60
 msgid "Fan1 menu speed"
-msgstr "Rychl. V1 (menu)"
+msgstr "Menu vel. Vent1"
 
 #: i18n/en.h:95
 msgid "Fan1 RPM: "
-msgstr "V1 ot/min: "
+msgstr "RPM Vent1: "
 
 #: i18n/en.h:55
 msgid "Fan1 washing speed"
-msgstr "Rychlost V1 myti"
+msgstr "Vel. curado Vent1"
 
 #: i18n/en.h:46
 msgid "Fan2 curing speed"
-msgstr "Rychlost V2 tvrz."
+msgstr "Vel. cur. Vent2"
 
 #: i18n/en.h:51
 msgid "Fan2 drying speed"
-msgstr "Rychlost V2 sus."
+msgstr "Vel. secado Vent2"
 
 #: i18n/en.h:145
 msgid "Fan2 failure"
-msgstr "Ventilator2 selhal"
+msgstr "Fallo Vent2"
 
 #: i18n/en.h:61
 msgid "Fan2 menu speed"
-msgstr "Rychlost V2 menu"
+msgstr "Menu vel. Vent2"
 
 #: i18n/en.h:96
 msgid "Fan2 RPM: "
-msgstr "V2 ot/min: "
+msgstr "RPM Vent2: "
 
 #: i18n/en.h:56
 msgid "Fan2 washing speed"
-msgstr "Rychl. V2 (myti)"
+msgstr "Vel. curado Vent2"
 
 #: i18n/en.h:97
 msgid "Fan3 RPM: "
-msgstr "V3 ot/min: "
+msgstr "RPM Vent3: "
 
 #: i18n/en.h:64
 msgid "Fans"
-msgstr "Ventilatory"
+msgstr "Ventiladores"
 
 #: i18n/en.h:44
 msgid "Fans curing speed"
-msgstr "Rychl. v. (tvrzeni)"
+msgstr "Vel. curado vent."
 
 #: i18n/en.h:49
 msgid "Fans drying speed"
-msgstr "Rychlost pro sus."
+msgstr "Vel. secado vent."
 
 #: i18n/en.h:59
 msgid "Fans menu speed"
-msgstr "Rychl. v. (menu)"
+msgstr "Menu vel. vent."
 
 #: i18n/en.h:140
 msgid "Fans test"
-msgstr "Test ventilatoru"
+msgstr "Test ventilador"
 
 #: i18n/en.h:54
 msgid "Fans washing speed"
-msgstr "Rychlost pro myti"
+msgstr "Vel. lavado vent."
 
 #: i18n/en.h:41
 msgid "Finish beep"
-msgstr "Koncovy pip"
+msgstr "Beep al finalizar"
 
 #: i18n/en.h:121
 msgid "Finished"
-msgstr "Hotovo"
+msgstr "Finalizado"
 
 #: i18n/en.h:68
 msgid "FW: "
@@ -177,111 +182,111 @@ msgstr "FW: "
 
 #: i18n/en.h:137
 msgid "Heater failure"
-msgstr "Chyba nahrivani"
+msgstr "Fallo en calentador"
 
 #: i18n/en.h:117
 msgid "Heater fan error"
-msgstr "Chyba nahriv. v."
+msgstr "Error vent. calent."
 
 #: i18n/en.h:136
 msgid "Heater test"
-msgstr "Test nahrivani"
+msgstr "Test calentador"
 
 #: i18n/en.h:125
 msgid "Heating"
-msgstr "Nahrivani"
+msgstr "Calentando"
 
 #: i18n/en.h:67
 msgid "Information"
-msgstr "Informace"
+msgstr "Informacion"
 
 #: i18n/en.h:133
 msgid "Insert IPA tank"
-msgstr "Vlozte IPA nadobu"
+msgstr "Introd. tanque IPA"
 
 #: i18n/en.h:149
 msgid "IPA tank test"
-msgstr "Test IPA nadoby"
+msgstr "Test tanque IPA"
 
 #: i18n/en.h:83
 msgid "LCD brightness"
-msgstr "Jas LCD"
+msgstr "Brillo LCD"
 
 #: i18n/en.h:139
 msgid "No/low power"
-msgstr "Zadny/maly vykon"
+msgstr "No/poca energia"
 
 #: i18n/en.h:38
 msgid "none"
-msgstr "zadny"
+msgstr "ninguno"
 
 #: i18n/en.h:147
 msgid "Not/bad spinning"
-msgstr "Problem otaceni"
+msgstr "No/mal giro"
 
 #: i18n/en.h:39
 msgid "once"
-msgstr "jednou"
+msgstr "una vez"
 
 #: i18n/en.h:151
 msgid "Open the cover"
-msgstr "Otevrete viko"
+msgstr "Abre la tapa"
 
 #: i18n/en.h:130
 msgid "Overheat"
-msgstr "Prehrati"
+msgstr "Sobrecalent."
 
 #: i18n/en.h:86
 msgid "Pause"
-msgstr "Pauza"
+msgstr "Pausar"
 
 #: i18n/en.h:114
 msgid "Paused"
-msgstr "Pauza"
+msgstr "Pausada"
 
 #: i18n/en.h:118
 msgid "Please restart"
-msgstr "Restartujte CW1"
+msgstr "Por favor reinicia"
 
 #: i18n/en.h:122
 msgid "Press to continue"
-msgstr "Potvrdte stiskem"
+msgstr "Presiona para cont."
 
 #: i18n/en.h:129
 msgid "Read temper. error"
-msgstr "Chyba cteni t."
+msgstr "Error lect. temp."
 
 #: i18n/en.h:116
 msgid "Remove IPA tank"
-msgstr "Vyjmete IPA nadobu"
+msgstr "Retira tanq. IPA"
 
 #: i18n/en.h:92
 msgid "Resin preheat"
-msgstr "Ohrati resinu"
+msgstr "Precalent. Resina"
 
 #: i18n/en.h:30
 msgid "Resin preheat t."
-msgstr "T. ohrati resinu"
+msgstr "Temp. precal. res."
 
 #: i18n/en.h:19
 msgid "Resin preheat time"
-msgstr "Doba ohrati resinu"
+msgstr "Tiempo precal. res."
 
 #: i18n/en.h:22
 msgid "Rotation speed"
-msgstr "Rychlost otaceni"
+msgstr "Vel. rotacion"
 
 #: i18n/en.h:148
 msgid "Rotation test"
-msgstr "Test otaceni"
+msgstr "Test rotacion"
 
 #: i18n/en.h:78
 msgid "Run mode"
-msgstr "Pracovni rezim"
+msgstr "Modo de uso"
 
 #: i18n/en.h:15
 msgid "Run-time"
-msgstr "Doba behu"
+msgstr "Tiempo de uso"
 
 #: i18n/en.h:103
 msgid "Selftest"
@@ -289,68 +294,68 @@ msgstr "Selftest"
 
 #: i18n/en.h:77
 msgid "Settings"
-msgstr "Nastaveni"
+msgstr "Ajustes"
 
 #: i18n/en.h:36
 msgid "Sound"
-msgstr "Zvuk"
+msgstr "Sonido"
 
 #: i18n/en.h:146
 msgid "Spinning turned off"
-msgstr "Toci se vypnuty"
+msgstr "Rotacion apagada"
 
 #: i18n/en.h:88
 msgid "Stop"
-msgstr "Stop"
+msgstr "Parar"
 
 #: i18n/en.h:31
 msgid "Temp. units"
-msgstr "T. jednotky"
+msgstr "Unidad de temp."
 
 #: i18n/en.h:27
 msgid "Temperatures"
-msgstr "Teploty"
+msgstr "Temperaturas"
 
 #: i18n/en.h:128
 msgid "UVLED failure"
-msgstr "Chyba UVLED"
+msgstr "Fallo LED UV"
 
 #: i18n/en.h:82
 msgid "UVLED intensity"
-msgstr "Intenzita UVLED"
+msgstr "Intensidad LED UV"
 
 #: i18n/en.h:99
 msgid "UVLED temp.:"
-msgstr "Tep. UVLED: "
+msgstr "Temp. LED UV:"
 
 #: i18n/en.h:138
 msgid "UVLED test"
-msgstr "Test UVLED"
+msgstr "Test LED UV"
 
 #: i18n/en.h:28
 msgid "Warm-up"
-msgstr "Predehrev"
+msgstr "Precalent."
 
 #: i18n/en.h:91
 msgid "Washing"
-msgstr "Myti"
+msgstr "Lavado"
 
 #: i18n/en.h:18
 msgid "Washing run-time"
-msgstr "Doba myti"
+msgstr "Tiempo lavado"
 
 #: i18n/en.h:24
 msgid "Washing speed"
-msgstr "Rychlost pro myti"
+msgstr "Vel. lavado"
 
 #: i18n/en.h:73
 msgid "Workspace dirty"
-msgstr "Pozor - necistoty"
+msgstr "Area sucia"
 
 #: i18n/en.h:4
 msgid "[off]"
-msgstr "[vyp]"
+msgstr "[off]"
 
 #: i18n/en.h:3
 msgid "[on]"
-msgstr "[zap]"
+msgstr "[on]"
