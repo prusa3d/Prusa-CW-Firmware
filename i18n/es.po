@@ -1,0 +1,361 @@
+msgid ""
+msgstr ""
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 2.3\n"
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+
+#: i18n/en.h:142
+msgid "  F2:"
+msgstr "  F2:"
+
+#: i18n/en.h:9
+msgid " min."
+msgstr " min."
+
+#: i18n/en.h:2
+msgid "Back"
+msgstr "Atras"
+
+#: i18n/en.h:70
+msgid "Build: "
+msgstr "Build: "
+
+#: i18n/en.h:98
+msgid "Cham. temp.:"
+msgstr "Temp. camara:"
+
+#: i18n/en.h:115
+msgid "Close the cover"
+msgstr "Cierra la tapa"
+
+#: i18n/en.h:87
+msgid "Continue"
+msgstr "Continuar"
+
+#: i18n/en.h:40
+msgid "continuous"
+msgstr "continuo"
+
+#: i18n/en.h:37
+msgid "Control echo"
+msgstr "Control sonido"
+
+#: i18n/en.h:102
+msgid "Cooldown"
+msgstr "Enfriamiento"
+
+#: i18n/en.h:150
+msgid "Cover test"
+msgstr "Test de la tapa"
+
+#: i18n/en.h:80
+msgid "Curing"
+msgstr "Curado"
+
+#: i18n/en.h:16
+msgid "Curing run-time"
+msgstr "Tiempo de curado"
+
+#: i18n/en.h:23
+msgid "Curing speed"
+msgstr "Vel. de curado"
+
+#: i18n/en.h:81
+msgid "Drying"
+msgstr "Secado"
+
+#: i18n/en.h:17
+msgid "Drying run-time"
+msgstr "Tiempo de secado"
+
+#: i18n/en.h:29
+msgid "Drying warm-up t."
+msgstr "Temp. de presecado"
+
+#: i18n/en.h:79
+msgid "Drying/curing"
+msgstr "Secado/curado"
+
+#: i18n/en.h:141
+msgid "F1:"
+msgstr "F1:"
+
+#: i18n/en.h:143
+msgid "F3:"
+msgstr "F3:"
+
+#: i18n/en.h:45
+msgid "Fan1 curing speed"
+msgstr "Vel. cur. Vent1"
+
+#: i18n/en.h:50
+msgid "Fan1 drying speed"
+msgstr "Vel. secado Vent1"
+
+#: i18n/en.h:144
+msgid "Fan1 failure"
+msgstr "Fallo Vent1"
+
+#: i18n/en.h:60
+msgid "Fan1 menu speed"
+msgstr "Menu vel. Vent1"
+
+#: i18n/en.h:95
+msgid "Fan1 RPM: "
+msgstr "RPM Vent1: "
+
+#: i18n/en.h:55
+msgid "Fan1 washing speed"
+msgstr "Vel. curado Vent1"
+
+#: i18n/en.h:46
+msgid "Fan2 curing speed"
+msgstr "Vel. cur. Vent2"
+
+#: i18n/en.h:51
+msgid "Fan2 drying speed"
+msgstr "Vel. secado Vent2"
+
+#: i18n/en.h:145
+msgid "Fan2 failure"
+msgstr "Fallo Vent2"
+
+#: i18n/en.h:61
+msgid "Fan2 menu speed"
+msgstr "Menu vel. Vent2"
+
+#: i18n/en.h:96
+msgid "Fan2 RPM: "
+msgstr "RPM Vent2: "
+
+#: i18n/en.h:56
+msgid "Fan2 washing speed"
+msgstr "Vel. curado Vent2"
+
+#: i18n/en.h:97
+msgid "Fan3 RPM: "
+msgstr "RPM Vent3: "
+
+#: i18n/en.h:64
+msgid "Fans"
+msgstr "Ventiladores"
+
+#: i18n/en.h:44
+msgid "Fans curing speed"
+msgstr "Vel. curado vent."
+
+#: i18n/en.h:49
+msgid "Fans drying speed"
+msgstr "Vel. secado vent."
+
+#: i18n/en.h:59
+msgid "Fans menu speed"
+msgstr "Menu vel. vent."
+
+#: i18n/en.h:140
+msgid "Fans test"
+msgstr "Test ventilador"
+
+#: i18n/en.h:54
+msgid "Fans washing speed"
+msgstr "Vel. lavado vent."
+
+#: i18n/en.h:41
+msgid "Finish beep"
+msgstr "Beep al finalizar"
+
+#: i18n/en.h:121
+msgid "Finished"
+msgstr "Finalizado"
+
+#: i18n/en.h:68
+msgid "FW: "
+msgstr "FW: "
+
+#: i18n/en.h:137
+msgid "Heater failure"
+msgstr "Fallo en calentador"
+
+#: i18n/en.h:117
+msgid "Heater fan error"
+msgstr "Error vent. calent."
+
+#: i18n/en.h:136
+msgid "Heater test"
+msgstr "Test calentador"
+
+#: i18n/en.h:125
+msgid "Heating"
+msgstr "Calentando"
+
+#: i18n/en.h:67
+msgid "Information"
+msgstr "Informacion"
+
+#: i18n/en.h:133
+msgid "Insert IPA tank"
+msgstr "Introd. tanque IPA"
+
+#: i18n/en.h:149
+msgid "IPA tank test"
+msgstr "Test tanque IPA"
+
+#: i18n/en.h:83
+msgid "LCD brightness"
+msgstr "Brillo LCD"
+
+#: i18n/en.h:139
+msgid "No/low power"
+msgstr "No/poca energia"
+
+#: i18n/en.h:38
+msgid "none"
+msgstr "ninguno"
+
+#: i18n/en.h:147
+msgid "Not/bad spinning"
+msgstr "No/mal giro"
+
+#: i18n/en.h:39
+msgid "once"
+msgstr "una vez"
+
+#: i18n/en.h:151
+msgid "Open the cover"
+msgstr "Abre la tapa"
+
+#: i18n/en.h:130
+msgid "Overheat"
+msgstr "Sobrecalent."
+
+#: i18n/en.h:86
+msgid "Pause"
+msgstr "Pausar"
+
+#: i18n/en.h:114
+msgid "Paused"
+msgstr "Pausada"
+
+#: i18n/en.h:118
+msgid "Please restart"
+msgstr "Por favor reinicia"
+
+#: i18n/en.h:122
+msgid "Press to continue"
+msgstr "Presiona para cont."
+
+#: i18n/en.h:129
+msgid "Read temper. error"
+msgstr "Error lect. temp."
+
+#: i18n/en.h:116
+msgid "Remove IPA tank"
+msgstr "Retira tanq. IPA"
+
+#: i18n/en.h:92
+msgid "Resin preheat"
+msgstr "Precalent. Resina"
+
+#: i18n/en.h:30
+msgid "Resin preheat t."
+msgstr "Temp. precal. res."
+
+#: i18n/en.h:19
+msgid "Resin preheat time"
+msgstr "Tiempo precal. res."
+
+#: i18n/en.h:22
+msgid "Rotation speed"
+msgstr "Vel. rotacion"
+
+#: i18n/en.h:148
+msgid "Rotation test"
+msgstr "Test rotacion"
+
+#: i18n/en.h:78
+msgid "Run mode"
+msgstr "Modo de uso"
+
+#: i18n/en.h:15
+msgid "Run-time"
+msgstr "Tiempo de uso"
+
+#: i18n/en.h:103
+msgid "Selftest"
+msgstr "Selftest"
+
+#: i18n/en.h:77
+msgid "Settings"
+msgstr "Ajustes"
+
+#: i18n/en.h:36
+msgid "Sound"
+msgstr "Sonido"
+
+#: i18n/en.h:146
+msgid "Spinning turned off"
+msgstr "Rotacion apagada"
+
+#: i18n/en.h:88
+msgid "Stop"
+msgstr "Parar"
+
+#: i18n/en.h:31
+msgid "Temp. units"
+msgstr "Unidad de temp."
+
+#: i18n/en.h:27
+msgid "Temperatures"
+msgstr "Temperaturas"
+
+#: i18n/en.h:128
+msgid "UVLED failure"
+msgstr "Fallo LED UV"
+
+#: i18n/en.h:82
+msgid "UVLED intensity"
+msgstr "Intensidad LED UV"
+
+#: i18n/en.h:99
+msgid "UVLED temp.:"
+msgstr "Temp. LED UV:"
+
+#: i18n/en.h:138
+msgid "UVLED test"
+msgstr "Test LED UV"
+
+#: i18n/en.h:28
+msgid "Warm-up"
+msgstr "Precalent."
+
+#: i18n/en.h:91
+msgid "Washing"
+msgstr "Lavado"
+
+#: i18n/en.h:18
+msgid "Washing run-time"
+msgstr "Tiempo lavado"
+
+#: i18n/en.h:24
+msgid "Washing speed"
+msgstr "Vel. lavado"
+
+#: i18n/en.h:73
+msgid "Workspace dirty"
+msgstr "Area sucia"
+
+#: i18n/en.h:4
+msgid "[off]"
+msgstr "[off]"
+
+#: i18n/en.h:3
+msgid "[on]"
+msgstr "[on]"
