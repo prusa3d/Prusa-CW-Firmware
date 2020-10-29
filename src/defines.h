@@ -60,7 +60,7 @@
 #define TEST_TEMP			50		// celsius
 #define HEATER_CHECK_DELAY	2500	// microseconds
 #define SN_ADDRESS			0x7fe0
-#define SN_LENGTH			15
+#define SN_LENGTH			16
 #define MAX_MENU_DEPTH		5
 #define ADC_OVRSAMPL		4
 // motor speeds (smaller is faster)

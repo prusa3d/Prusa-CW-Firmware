@@ -43,7 +43,7 @@ namespace UI {
 	Base* const sound_items[] PROGMEM = {&back, &sound_response, &finish_beep};
 	Menu sound_menu(pgmstr_sound, sound_items, COUNT_ITEMS(sound_items));
 
-	// info menu
+	// system info
 	SN serial_number(pgmstr_sn);
 	Text fw_version(pgmstr_fw_version);
 	Text build_nr(pgmstr_build_nr);
@@ -54,13 +54,13 @@ namespace UI {
 #else
 	Base* const info_items[] PROGMEM = {&back, &serial_number, &fw_version, &build_nr, &fw_hash};
 #endif
-	Menu info_menu(pgmstr_information, info_items, COUNT_ITEMS(info_items));
+	Info system_info(pgmstr_information, info_items, COUNT_ITEMS(info_items));
 
 	// config menu
 	const char* const curing_machine_mode_options[] PROGMEM = {pgmstr_drying_curing, pgmstr_curing, pgmstr_drying};
 	Option curing_machine_mode(pgmstr_run_mode, config.curing_machine_mode, curing_machine_mode_options, COUNT_ITEMS(curing_machine_mode_options));
 	Percent_with_action lcd_brightness(pgmstr_lcd_brightness, config.lcd_brightness, MIN_LCD_BRIGHTNESS, lcd.setBrightness);
-	Base* const config_items[] PROGMEM = {&back, &speed_menu, &curing_machine_mode, &temperature_menu, &sound_menu, &lcd_brightness, &info_menu};
+	Base* const config_items[] PROGMEM = {&back, &speed_menu, &curing_machine_mode, &temperature_menu, &sound_menu, &lcd_brightness, &system_info};
 	Menu config_menu(pgmstr_settings, config_items, COUNT_ITEMS(config_items));
 
 	// run menu
