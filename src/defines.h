@@ -44,8 +44,8 @@
 #define MAX_WARMUP_RUNTIME	15		// minutes
 #define MAX_CURING_RUNTIME	60		// minutes
 #define MAX_DRYING_RUNTIME	60		// minutes
-#define MAX_WASHING_RUNTIME	10		// minutes
-#define MAX_PREHEAT_RUNTIME	30		// minutes
+#define MAX_WASHING_RUNTIME	60		// minutes
+#define MAX_PREHEAT_RUNTIME	60		// minutes
 #define COOLDOWN_RUNTIME	10		// minutes
 #define INC_DEC_TIME_STEP	30		// seconds
 #define MIN_LED_INTENSITY	1		// 0-100 %
