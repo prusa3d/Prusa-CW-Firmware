@@ -1,4 +1,7 @@
+#include <avr/io.h>
+#include <avr/wdt.h>
 #include "states.h"
+#include "EEPROM.h"
 
 namespace States {
 
@@ -354,6 +357,19 @@ namespace States {
 		} else {
 			return nullptr;
 		}
+	}
+
+
+	// States::Reset
+	Reset::Reset() :
+		Base(pgmstr_emptystr, 0)
+	{}
+
+	void Reset::start(__attribute__((unused)) bool handle_heater) {
+		EEPROM.write(CONFIG_START, 0xff);
+		// use internal Watchdog to reset
+		wdt_enable(WDTO_30MS);
+		while(1) {};
 	}
 
 

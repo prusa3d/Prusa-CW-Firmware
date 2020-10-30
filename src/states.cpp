@@ -49,6 +49,7 @@ namespace States {
 		&config.curing_speed,
 		&config.resin_target_temp);
 	Cooldown cooldown(&confirm);
+	Reset reset;
 
 	Test_heater selftest_heater(
 		pgmstr_heater_test,

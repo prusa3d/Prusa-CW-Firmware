@@ -73,6 +73,8 @@ static const char pgmstr_resin_preheat[] PROGMEM = _("Resin preheat");
 // advanced menu
 static const char pgmstr_cooldown[] PROGMEM = _("Cooldown");
 static const char pgmstr_selftest[] PROGMEM = _("Selftest");
+static const char pgmstr_factory_reset[] PROGMEM = _("Factory reset");
+static const char pgmstr_reset_confirm[] PROGMEM = _("Really reset all?");
 
 // state menu
 static const char pgmstr_progress[] PROGMEM = { '|', '/', '-', BACKSLASH_CHAR };

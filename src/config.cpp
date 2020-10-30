@@ -2,9 +2,7 @@
 #include "config.h"
 #include "hardware.h"
 
-#define EEPROM_OFFSET	128
 #define MAGIC_SIZE		6
-#define EEPROM_BASE		E2END + 1 - EEPROM_OFFSET
 static_assert(sizeof(eeprom_v2_t) <= EEPROM_OFFSET, "eeprom_t doesn't fit in it's reserved space in the memory.");
 
 const char legacy_magic1[MAGIC_SIZE] PROGMEM = "CURWA";
@@ -40,8 +38,8 @@ eeprom_v3_t config = {
 void write_config() {
 	char magic[MAGIC_SIZE];
 	strncpy_P(magic, config_magic, MAGIC_SIZE);
-	EEPROM.put(EEPROM_BASE, reinterpret_cast<uint8_t*>(magic), MAGIC_SIZE);
-	EEPROM.put(EEPROM_BASE + MAGIC_SIZE, reinterpret_cast<uint8_t*>(&config), sizeof(config));
+	EEPROM.put(CONFIG_START, reinterpret_cast<uint8_t*>(magic), MAGIC_SIZE);
+	EEPROM.put(CONFIG_START + MAGIC_SIZE, reinterpret_cast<uint8_t*>(&config), sizeof(config));
 }
 
 /*! \brief This function loads user-defined values from eeprom.
@@ -54,17 +52,17 @@ void write_config() {
  */
 void read_config() {
 	char test_magic[MAGIC_SIZE];
-	EEPROM.get(EEPROM_BASE, reinterpret_cast<uint8_t*>(test_magic), MAGIC_SIZE);
+	EEPROM.get(CONFIG_START, reinterpret_cast<uint8_t*>(test_magic), MAGIC_SIZE);
 	if (!strncmp_P(test_magic, config_magic, MAGIC_SIZE)) {
 		// latest magic
-		EEPROM.get(EEPROM_BASE + MAGIC_SIZE, reinterpret_cast<uint8_t*>(&config), sizeof(config));
+		EEPROM.get(CONFIG_START + MAGIC_SIZE, reinterpret_cast<uint8_t*>(&config), sizeof(config));
 	} else if (!strncmp_P(test_magic, legacy_magic2, MAGIC_SIZE)) {
 		// legacy magic
-		EEPROM.get(EEPROM_BASE + MAGIC_SIZE, reinterpret_cast<uint8_t*>(&config), sizeof(eeprom_v2_t));
+		EEPROM.get(CONFIG_START + MAGIC_SIZE, reinterpret_cast<uint8_t*>(&config), sizeof(eeprom_v2_t));
 	} else if (!strncmp_P(test_magic, legacy_magic1, MAGIC_SIZE)) {
 		// legacy magic
 		uint8_t tmp = config.resin_target_temp;	// remember default
-		EEPROM.get(EEPROM_BASE + MAGIC_SIZE, reinterpret_cast<uint8_t*>(&config), sizeof(eeprom_v1_t));
+		EEPROM.get(CONFIG_START + MAGIC_SIZE, reinterpret_cast<uint8_t*>(&config), sizeof(eeprom_v1_t));
 		if (config.SI_unit_system) {
 			config.resin_target_temp = tmp;
 		} else {

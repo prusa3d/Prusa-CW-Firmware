@@ -2,6 +2,9 @@
 
 #include <stdint.h>
 
+#define EEPROM_OFFSET	128
+#define CONFIG_START	E2END + 1 - EEPROM_OFFSET
+
 //! @brief legacy configuration store structure
 //!
 //! It is restored when magic read from eeprom equals magic "CURWA".

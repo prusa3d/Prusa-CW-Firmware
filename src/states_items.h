@@ -122,6 +122,14 @@ namespace States {
 	};
 
 
+	// States::Reset
+	class Reset : public Base {
+	public:
+		Reset();
+		void start(bool handle_heater = true);
+	};
+
+
 	// States::Test_switch
 	class Test_switch : public Base {
 	public:

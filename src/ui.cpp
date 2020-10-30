@@ -79,11 +79,16 @@ namespace UI {
 	Base* const home_items[] PROGMEM = {&do_it, &resin_preheat, &run_time_menu, &hold_platform_menu, &config_menu};
 	Menu home_menu(pgmstr_emptystr, home_items, COUNT_ITEMS(home_items));
 
+	// factory reset confirm
+	State factory_reset(pgmstr_reset_confirm, &States::reset);
+	Base* const reset_items[] PROGMEM = {&back, &factory_reset};
+	Menu reset(pgmstr_factory_reset, reset_items, COUNT_ITEMS(reset_items));
+
 	// advanced menu
 	Percent led_intensity(pgmstr_led_intensity, config.led_intensity, MIN_LED_INTENSITY);
 	State cooldown(pgmstr_cooldown, &States::cooldown, nullptr);
 	State selftest(pgmstr_selftest, &States::selftest_cover, nullptr);
-	Base* const advanced_items[] PROGMEM = {&back, &led_intensity, &cooldown, &selftest};
+	Base* const advanced_items[] PROGMEM = {&back, &led_intensity, &reset, &cooldown, &selftest};
 	Menu advanced_menu(pgmstr_emptystr, advanced_items, COUNT_ITEMS(advanced_items));
 
 
