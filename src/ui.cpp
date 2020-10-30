@@ -21,11 +21,12 @@ namespace UI {
 	Base* const run_time_items[] PROGMEM = {&back, &curing_run_time, &drying_run_time, &washing_run_time, &resin_preheat_run_time};
 	Menu run_time_menu(pgmstr_run_time, run_time_items, COUNT_ITEMS(run_time_items));
 
-	// speed menu
+	// rotation menu
 	X_of_ten curing_speed(pgmstr_curing_speed, config.curing_speed);
 	X_of_ten washing_speed(pgmstr_washing_speed, config.washing_speed);
-	Base* const speed_items[] PROGMEM = {&back, &curing_speed, &washing_speed};
-	Menu speed_menu(pgmstr_rotation_speed, speed_items, COUNT_ITEMS(speed_items));
+	X_of_ten wash_dir_changes(pgmstr_wash_dir_changes, config.wash_cycles);
+	Base* const speed_items[] PROGMEM = {&back, &curing_speed, &washing_speed, &wash_dir_changes};
+	Menu speed_menu(pgmstr_rotation_settings, speed_items, COUNT_ITEMS(speed_items));
 
 	// temperatore menu
 	Bool heat_to_target_temp(pgmstr_warmup, config.heat_to_target_temp);

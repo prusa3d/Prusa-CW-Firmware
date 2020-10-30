@@ -19,10 +19,11 @@ static const char pgmstr_drying_run_time[] PROGMEM = _("Drying run-time");
 static const char pgmstr_washing_run_time[] PROGMEM = _("Washing run-time");
 static const char pgmstr_resin_preheat_time[] PROGMEM = _("Resin preheat time");
 
-// speed menu
-static const char pgmstr_rotation_speed[] PROGMEM = _("Rotation speed");
+// rotation menu
+static const char pgmstr_rotation_settings[] PROGMEM = _("Rotation settings");
 static const char pgmstr_curing_speed[] PROGMEM = _("Curing speed");
 static const char pgmstr_washing_speed[] PROGMEM = _("Washing speed");
+static const char pgmstr_wash_dir_changes[] PROGMEM = _("Wash cycles");
 
 // temperatore menu
 static const char pgmstr_temperatures[] PROGMEM = _("Temperatures");

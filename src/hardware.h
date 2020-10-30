@@ -24,7 +24,7 @@ public:
 	Hardware(uint16_t model_magic);
 
 	void encoder_read();
-	void run_motor();
+	void run_motor(bool direction);
 	void stop_motor();
 	void enable_stepper();
 	void disable_stepper();

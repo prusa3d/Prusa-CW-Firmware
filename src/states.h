@@ -10,7 +10,7 @@ namespace States {
 	extern Base menu;
 	extern Confirm confirm;
 	extern Confirm error;
-	extern Base washing;
+	extern Direction_change washing;
 	extern Base drying;
 	extern Base curing;
 	extern Base resin;

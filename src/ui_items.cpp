@@ -79,8 +79,7 @@ namespace UI {
 		items(items),
 		long_press_ui_item(nullptr),
 		items_count(items_count),
-		menu_offset(0),
-		cursor_position(0)
+		menu_offset(0)
 	{
 		max_items = items_count < DISPLAY_LINES ? items_count : DISPLAY_LINES;
 	}

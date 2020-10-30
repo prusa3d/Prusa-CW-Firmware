@@ -18,15 +18,15 @@ namespace States {
 		continue_to(continue_to),
 		message(nullptr),
 		target_temp(target_temp),
-		ms_last(0),
-		canceled(false),
-		title(title),
+		motor_speed(motor_speed),
 		continue_after(continue_after),
-		motor_speed(motor_speed)
+		title(title)
 	{}
 
 	void Base::start(bool handle_heater) {
+		ms_last = 0;
 		canceled = false;
+		motor_direction = false;
 		if (continue_after) {
 			timer.setCounter(0, *continue_after, 0, options & STATE_OPTION_TIMER_UP);
 		}
@@ -99,7 +99,7 @@ namespace States {
 	void Base::do_continue(bool handle_heater) {
 		if (motor_speed) {
 			hw.speed_configuration(*motor_speed, options & STATE_OPTION_WASHING);
-			hw.run_motor();
+			hw.run_motor(motor_direction);
 		}
 		if (handle_heater && options & STATE_OPTION_HEATER) {
 			hw.run_heater();
@@ -237,6 +237,50 @@ namespace States {
 	}
 
 
+	// States::Direction_change
+	Direction_change::Direction_change(
+		const char* title,
+		uint8_t options,
+		uint8_t* direction_cycles,
+		Base* continue_to,
+		uint8_t* continue_after,
+		uint8_t* motor_speed,
+		uint8_t* target_temp)
+	:
+		Base(title, options, continue_to, continue_after, motor_speed, target_temp),
+		direction_cycles(direction_cycles)
+	{}
+
+	void Direction_change::start(bool handle_heater) {
+		old_seconds = 0;
+		stop_seconds = 0;
+		if (*direction_cycles) {
+			direction_change_time = *continue_after * 60 / *direction_cycles;
+		} else {
+			direction_change_time = *continue_after * 60;
+		}
+		Base::start(handle_heater);
+	}
+
+	Base* Direction_change::loop() {
+		uint16_t seconds = timer.getCurrentTimeInSeconds();
+		if (seconds != old_seconds) {
+			if (stop_seconds && stop_seconds - seconds >= DIR_CHANGE_DELAY) {
+				hw.speed_configuration(*motor_speed, options & STATE_OPTION_WASHING);
+				hw.run_motor(motor_direction);
+				stop_seconds = 0;
+			}
+			if (old_seconds && !(seconds % direction_change_time)) {
+				hw.stop_motor();
+				motor_direction = !motor_direction;
+				stop_seconds = seconds;
+			}
+			old_seconds = seconds;
+		}
+		return Base::loop();
+	}
+
+
 	// States::Warmup
 	Warmup::Warmup(
 		const char* title,
@@ -324,9 +368,7 @@ namespace States {
 		Base(title, 0, continue_to),
 		message_on(message_on),
 		message_off(message_off),
-		value_getter(value_getter),
-		test_count(0),
-		old_state(false)
+		value_getter(value_getter)
 	{}
 
 	void Test_switch::start(__attribute__((unused)) bool handle_heater) {
@@ -361,15 +403,11 @@ namespace States {
 		const char* title,
 		Base* continue_to)
 	:
-		Base(title, 0, continue_to, &test_time, &test_speed),
-		test_time(ROTATION_TEST_TIME),
-		test_speed(0),
-		old_seconds(0),
-		fast_mode(false),
-		draw(false)
+		Base(title, 0, continue_to, &test_time, &test_speed)
 	{}
 
 	void Test_rotation::start(bool handle_heater) {
+		test_time = ROTATION_TEST_TIME;
 		test_speed = 10;
 		old_seconds = 60 * ROTATION_TEST_TIME;
 		fast_mode = true;
@@ -412,16 +450,11 @@ namespace States {
 		const char* title,
 		Base* continue_to)
 	:
-		Base(title, 0, continue_to, &test_time),
-		test_time(FANS_TEST_TIME),
-		fans_speed{0, 0},
-		old_fan_rpm{0, 0},
-		old_seconds(0),
-		draw1(false),
-		draw2(false)
+		Base(title, 0, continue_to, &test_time)
 	{}
 
 	void Test_fans::start(bool handle_heater) {
+		test_time = FANS_TEST_TIME;
 		fans_speed[0] = 0;
 		fans_speed[1] = 100;
 		old_fan_rpm[0] = 0;
@@ -501,11 +534,11 @@ namespace States {
 		const char* title,
 		Base* continue_to)
 	:
-		Base(title, STATE_OPTION_UVLED | STATE_OPTION_UVLED_TEMP, continue_to, &test_time),
-		test_time(UVLED_TEST_MAX_TIME)
+		Base(title, STATE_OPTION_UVLED | STATE_OPTION_UVLED_TEMP, continue_to, &test_time)
 	{}
 
 	void Test_uvled::start(bool handle_heater) {
+		test_time = UVLED_TEST_MAX_TIME;
 		hw.force_fan_speed(30, 30);
 		Base::start(handle_heater);
 	}
@@ -529,13 +562,11 @@ namespace States {
 		Base* continue_to,
 		uint8_t* continue_after)
 	:
-		Base(title, STATE_OPTION_HEATER | STATE_OPTION_CHAMB_TEMP, continue_to, continue_after, nullptr, &temp),
-		temp(0),
-		old_seconds(0),
-		draw(false)
+		Base(title, STATE_OPTION_HEATER | STATE_OPTION_CHAMB_TEMP, continue_to, continue_after, nullptr, &temp)
 	{}
 
 	void Test_heater::start(bool handle_heater) {
+		old_seconds = 0;
 		temp = get_configured_temp(TEST_TEMP);
 		hw.force_fan_speed(0, 0);
 		draw = true;
