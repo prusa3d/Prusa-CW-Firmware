@@ -45,7 +45,7 @@
 #define MAX_TARGET_TEMP_F	MAX_TARGET_TEMP_C * 1.8 + 32
 #define MAX_WARMUP_RUNTIME	15		// minutes
 #define MAX_CURING_RUNTIME	60		// minutes
-#define MAX_DRYING_RUNTIME	10		// minutes
+#define MAX_DRYING_RUNTIME	60		// minutes
 #define MAX_WASHING_RUNTIME	10		// minutes
 #define MAX_PREHEAT_RUNTIME	30		// minutes
 #define COOLDOWN_RUNTIME	10		// minutes
