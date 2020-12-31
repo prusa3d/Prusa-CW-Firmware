@@ -7,13 +7,14 @@ namespace States {
 	Base menu;
 	Confirm confirm;
 	Confirm error;
-	Base washing(
+	Washing washing(
 		pgmstr_washing,
 		STATE_OPTION_CONTROLS | STATE_OPTION_WASHING,
 		config.fans_washing_speed,
 		&confirm,
 		&config.washing_run_time,
-		&config.washing_speed);
+		&config.washing_speed,
+		&config.washing_direction);
 	// FIXME - would be better to set PI regulator and manage heater for drying/curing?
 	Base drying(
 		pgmstr_drying,

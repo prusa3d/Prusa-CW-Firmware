@@ -80,6 +80,25 @@ namespace States {
 	};
 
 
+	// States::Washing
+	class Washing : public Base {
+	public:
+		Washing(
+			const char* title = pgmstr_emptystr,
+			uint8_t options = 0,
+			uint8_t* fans_duties = config.fans_menu_speed,
+			Base* continue_to = nullptr,
+			uint8_t* continue_after = nullptr,
+			uint8_t* motor_speed = nullptr,
+			uint8_t* motor_direction = nullptr);
+		void start();
+
+	private:
+		uint8_t* motor_direction;
+		uint8_t current_direction;
+	};
+
+
 	// States::Confirm
 	class Confirm : public Base {
 	public:

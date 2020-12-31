@@ -93,6 +93,10 @@ Hardware::Hardware() {
 	myStepper.set_toff(8);					// ([0-15]) 0: driver disable, 1: use only with TBL>2, 2-15: off time setting during slow decay phase
 	myStepper.set_en_pwm_mode(1);			// 0: driver disable PWM mode, 1: driver enable PWM mode
 
+	// Set direction directly to CW
+	outputchip.pinMode(DIR_PIN, OUTPUT);
+	outputchip.digitalWrite(DIR_PIN, LOW);
+
 	cover_closed = is_cover_closed();
 	tank_inserted = is_tank_inserted();
 }
@@ -161,6 +165,14 @@ void Hardware::encoder_read() {
 			rotary_diff = 124;
 		else if (rotary_diff < -124)
 			rotary_diff = -124;
+	}
+}
+
+void Hardware::set_motor_direction(bool ccw) {
+	if (ccw) {
+		outputchip.digitalWrite(DIR_PIN, HIGH);
+	} else {
+		outputchip.digitalWrite(DIR_PIN, LOW);
 	}
 }
 

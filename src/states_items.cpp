@@ -239,6 +239,33 @@ namespace States {
 		return nullptr;
 	}
 
+	// States::Washing
+	Washing::Washing(
+		const char* title,
+		uint8_t options,
+		uint8_t* fans_duties,
+		Base* continue_to,
+		uint8_t* continue_after,
+		uint8_t* motor_speed,
+		uint8_t* motor_direction)
+	:
+		Base(title, options, fans_duties, continue_to, continue_after, motor_speed),
+		motor_direction(motor_direction)
+	{}
+
+	void Washing::start() {
+		// Default is CW
+		current_direction = 0;
+
+		if (motor_direction) {
+			current_direction = *motor_direction;
+		}
+
+		hw.set_motor_direction(current_direction != 0);
+		
+		Base::start();
+	}
+
 
 	// States::Warmup
 	Warmup::Warmup(
