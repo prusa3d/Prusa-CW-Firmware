@@ -5,6 +5,7 @@ ENV_DIR="build/env"
 SYSTEM="Linux64"
 SCRIPT_PATH="$( cd "$(dirname "$0")" ; pwd -P )"
 REDOWNLOAD="false"
+LANG_ONLY=""
 
 usage() {
 	echo "usage: build.sh --download --system WIN|LINUX"
@@ -24,6 +25,11 @@ while [ "$1" != "" ]; do
 
         --download )    
 			REDOWNLOAD="true"
+            ;;
+
+        --lang )
+            shift
+            LANG_ONLY="$1"
             ;;
 
         -h | --help )           
@@ -47,7 +53,12 @@ fi
 
 export PATH=$SCRIPT_PATH/$ENV_DIR/avr/bin:$PATH
 
-for LG in "en" "cs" "de" "es" "fr" "it" "pl" ; do
-	make clean || exit 4
-	make "LANG=$LG" dist || exit 5
-done
+if [ "$LANG_ONLY" == "" ]; then
+    for LG in "en" "cs" "de" "es" "fr" "it" "pl" ; do
+    	make clean || exit 4
+    	make "LANG=$LG" dist || exit 5
+    done
+else
+    make clean || exit 4
+    make "LANG=$LANG_ONLY" dist || exit 5
+fi

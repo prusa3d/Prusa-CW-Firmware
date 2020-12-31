@@ -70,6 +70,13 @@ namespace UI {
 	Base* const fans_items[] PROGMEM = {&back, &fans_curing_menu, &fans_drying_menu, &fans_washing_menu, &fans_menu_menu};
 	Menu fans_menu(pgmstr_fans, fans_items, COUNT_ITEMS(fans_items));
 
+	// Washing menu
+	const char* const washing_direction_options[] PROGMEM = {pgmstr_washing_direction_cw, pgmstr_washing_direction_ccw};
+	Option washing_direction(pgmstr_washing_direction, config.washing_direction, washing_direction_options, COUNT_ITEMS(washing_direction_options));
+	Minutes_with_off washing_change_direction(pgmstr_washing_change_direction, config.change_direction_time, MAX_WASHING_RUNTIME);
+	Base* const washing_menu_items[] PROGMEM = {&back, &washing_direction, &washing_change_direction};
+	Menu washing_menu(pgmstr_washing_menu, washing_menu_items, COUNT_ITEMS(washing_menu_items));
+
 	// info menu
 	SN serial_number(pgmstr_sn);
 	Text fw_version(pgmstr_fw_version);
@@ -88,7 +95,7 @@ namespace UI {
 	Option curing_machine_mode(pgmstr_run_mode, config.curing_machine_mode, curing_machine_mode_options, COUNT_ITEMS(curing_machine_mode_options));
 	Percent led_intensity(pgmstr_led_intensity, config.led_intensity, MIN_LED_INTENSITY);
 	Percent_with_action lcd_brightness(pgmstr_lcd_brightness, config.lcd_brightness, MIN_LCD_BRIGHTNESS, lcd.setBrightness);
-	Base* const config_items[] PROGMEM = {&back, &speed_menu, &curing_machine_mode, &temperature_menu, &sound_menu, &lcd_brightness, &info_menu};
+	Base* const config_items[] PROGMEM = {&back, &speed_menu, &curing_machine_mode, &temperature_menu, &washing_menu, &sound_menu, &lcd_brightness, &info_menu};
 	Menu config_menu(pgmstr_settings, config_items, COUNT_ITEMS(config_items));
 
 	// run menu

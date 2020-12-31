@@ -109,6 +109,12 @@ namespace UI {
 		Minutes(const char* label, uint8_t& value, uint8_t max = 10);
 	};
 
+	class Minutes_with_off : public Value {
+	public:
+		Minutes_with_off(const char* label, uint8_t& value, uint8_t max = 10);
+		void show();
+	};
+
 	class Percent : public Value {
 	public:
 		Percent(const char* label, uint8_t& value, uint8_t min = 0);

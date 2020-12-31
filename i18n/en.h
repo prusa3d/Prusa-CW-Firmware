@@ -2,6 +2,7 @@
 static const char pgmstr_back[] PROGMEM = _("Back");
 static const char pgmstr_on[] PROGMEM = _("[on]");
 static const char pgmstr_off[] PROGMEM = _("[off]");
+static const char pgmstr_off_plain[] PROGMEM = _("Off");
 static const char pgmstr_percent[] PROGMEM = " %";
 static const char pgmstr_xoften[] PROGMEM = "/10";
 static const char pgmstr_celsius[] PROGMEM = " \xDF" "C";
@@ -62,6 +63,13 @@ static const char pgmstr_fan2_menu_speed[] PROGMEM = _("Fan2 menu speed");
 
 // fans menu
 static const char pgmstr_fans[] PROGMEM = _("Fans");
+
+// washing menu
+static const char pgmstr_washing_menu[] PROGMEM = _("Washing options");
+static const char pgmstr_washing_direction[] PROGMEM = _("Turning Direction");
+static const char pgmstr_washing_direction_cw[] PROGMEM = _("Clockwise");
+static const char pgmstr_washing_direction_ccw[] PROGMEM = _("Counter-Clockwise");
+static const char pgmstr_washing_change_direction[] PROGMEM = _("Change dir. after");
 
 // info menu
 static const char pgmstr_information[] PROGMEM = _("Information");

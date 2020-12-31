@@ -239,6 +239,23 @@ namespace UI {
 		Value(label, value, pgmstr_minutes, max)
 	{}
 
+	// Minutes_with_off
+	Minutes_with_off::Minutes_with_off(const char* label, uint8_t& value, uint8_t max) :
+		Value(label, value, pgmstr_minutes, max, 0)
+	{}
+
+	void Minutes_with_off::show() {
+		lcd.print_P(label, 1, 0);
+
+		lcd.clearLine(2);
+		if (value == 0) {
+			lcd.print_P(pgmstr_off_plain, 8, 2);
+		} else {
+			lcd.print(value, 5, 2);
+			lcd.print_P(units);
+		}
+	}
+
 	Percent::Percent(const char* label, uint8_t& value, uint8_t min) :
 		Value(label, value, pgmstr_percent, 100, min)
 	{}
