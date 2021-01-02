@@ -74,3 +74,19 @@ void SimplePrint::write(uint8_t c) {
 char* SimplePrint::get_position() {
 	return _buffer_position;
 }
+
+void SimplePrint::fill_buffer(uint8_t c, bool terminate) {
+	uint8_t current_size = _buffer_size;
+	char* current_position = _buffer_position;
+
+	while (_buffer_size) {
+		if (terminate && _buffer_size == 1) {
+			write(0);
+		} else {
+			write(c);
+		}
+	}
+
+	_buffer_size = current_size;
+	_buffer_position = current_position;
+}

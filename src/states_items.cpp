@@ -21,8 +21,8 @@ namespace States {
 		fans_duties(fans_duties),
 		us_last(0),
 		canceled(false),
-		title(title),
 		continue_after(continue_after),
+		title(title),
 		motor_speed(motor_speed),
 		options(options)
 	{}
@@ -237,6 +237,109 @@ namespace States {
 			}
 		}
 		return nullptr;
+	}
+
+	// States::Washing
+	Washing::Washing(
+		const char* title,
+		uint8_t options,
+		uint8_t* fans_duties,
+		Base* continue_to,
+		uint8_t* continue_after,
+		uint8_t* motor_speed,
+		uint8_t* motor_direction,
+		uint8_t* change_direction_after)
+	:
+		Base(title, options | STATE_OPTION_WASHING, fans_duties, continue_to, continue_after, motor_speed),
+		motor_direction(motor_direction),
+		change_direction_after(change_direction_after),
+		need_direction_change(false),
+		draw(true),
+		last_acceleration_status(false),
+		last_decceleration_status(false)
+	{}
+
+	void Washing::start() {
+		// Default is CW
+		current_direction = 0;
+
+		if (motor_direction) {
+			current_direction = *motor_direction;
+		}
+
+		if (change_direction_after) {
+			time_to_change = *change_direction_after * 60L;
+		}
+
+		last_acceleration_status = false;
+		last_decceleration_status = false;
+		need_direction_change = false;
+
+		hw.set_motor_direction(current_direction != 0);
+		
+		Base::start();
+	}
+
+	Base* Washing::loop() {
+		bool current_acceleration_status = hw.isAccelerating();
+		if (current_acceleration_status != last_acceleration_status) {
+			draw = true;
+			last_acceleration_status = current_acceleration_status;
+		}
+
+		bool current_decceleration_status = hw.isDeccelerating();
+		if (current_decceleration_status != last_decceleration_status) {
+			draw = true;
+			last_decceleration_status = current_decceleration_status;
+		}
+
+		// Only if time to change directions is set and not directly at start
+
+		if (!timer.isStopped() && time_to_change > 0 && !need_direction_change) {
+			uint16_t current_time = timer.getCurrentTimeInSeconds();
+			need_direction_change = (current_time < *continue_after * 60L && current_time % time_to_change == 0);
+		}
+
+		if (need_direction_change && hw.doneBreaking()) {
+			hw.stop_motor();
+			current_direction = 1 - current_direction;
+			hw.set_motor_direction(current_direction != 0);
+			do_continue();
+			need_direction_change = false;
+		} else if (need_direction_change && !last_decceleration_status) {
+			hw.startBreaking();
+		}
+
+		return Base::loop();
+	}
+
+	bool Washing::get_info2(char* buffer, uint8_t size) {
+		if (draw) {
+			buffer_init(buffer, size);
+			fill_buffer();
+			if (current_direction == 0) {
+				// CW
+				if (last_acceleration_status) {
+					buffer[6] = '<';
+				} else if (!last_decceleration_status) {
+					buffer[6] = '|';
+				}
+				buffer[7] = '<';
+			} else {
+				// CCW
+				buffer[10] = '>';
+				if (last_acceleration_status) {
+					buffer[11] = '>';
+				} else if (!last_decceleration_status) {
+					buffer[11] = '|';
+				}
+			}
+
+			draw = false;
+			return true;
+		}
+
+		return false;
 	}
 
 

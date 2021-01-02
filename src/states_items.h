@@ -58,10 +58,10 @@ namespace States {
 		uint8_t* const fans_duties;
 		unsigned long us_last;
 		bool canceled;
+		uint8_t* const continue_after;
 	private:
 		const char* get_hw_pause_reason();
 		const char* title;
-		uint8_t* const continue_after;
 		uint8_t* const motor_speed;
 		uint8_t const options;
 	};
@@ -77,6 +77,34 @@ namespace States {
 			uint8_t* motor_speed,
 			uint8_t* target_temp);
 		Base* loop();
+	};
+
+
+	// States::Washing
+	class Washing : public Base, public SimplePrint {
+	public:
+		Washing(
+			const char* title = pgmstr_emptystr,
+			uint8_t options = 0,
+			uint8_t* fans_duties = config.fans_menu_speed,
+			Base* continue_to = nullptr,
+			uint8_t* continue_after = nullptr,
+			uint8_t* motor_speed = nullptr,
+			uint8_t* motor_direction = nullptr,
+			uint8_t* change_direction_after = nullptr);
+		void start();
+		Base* loop();
+		bool get_info2(char* buffer, uint8_t size);
+
+	private:
+		uint8_t* motor_direction;
+		uint8_t* change_direction_after;
+		uint8_t time_to_change;
+		uint8_t current_direction;
+		bool need_direction_change;
+		bool draw;
+		bool last_acceleration_status;
+		bool last_decceleration_status;
 	};
 
 

@@ -22,10 +22,16 @@ public:
 
 	static void encoder_read();
 
+	static void set_motor_direction(bool ccw);
 	static void run_motor();
 	static void stop_motor();
 	static void speed_configuration(uint8_t speed, bool fast_mode, bool gear_shifting = false);
 	static void acceleration();
+	static void decceleration();
+	static void startBreaking();
+	static bool isAccelerating();
+	static bool isDeccelerating();
+	static bool doneBreaking();
 
 	static void run_heater();
 	static void stop_heater();
@@ -70,6 +76,7 @@ private:
 	static uint8_t lcd_encoder_bits;
 	static volatile int8_t rotary_diff;
 	static uint8_t target_accel_period;
+	static uint8_t target_deccel_period;
 
 	static uint8_t fan_duty[2];
 	static uint8_t fan_pwm_pins[2];
@@ -79,12 +86,14 @@ private:
 	static uint8_t fan_errors;
 
 	static unsigned long accel_us_last;
+	static unsigned long deccel_us_last;
 	static unsigned long fans_us_last;
 	static unsigned long adc_us_last;
 	static unsigned long heater_us_last;
 	static unsigned long button_timer;
 	static double PI_summ_err;
 	static bool do_acceleration;
+	static bool do_decceleration;
 	static bool cover_closed;
 	static bool tank_inserted;
 	static bool button_active;
