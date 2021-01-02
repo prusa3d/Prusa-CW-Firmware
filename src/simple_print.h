@@ -14,6 +14,7 @@ public:
 	void buffer_init(char* buffer_start, uint8_t buffer_size);
 	virtual void write(uint8_t c);
 	char* get_position();
+	void fill_buffer(uint8_t c = 32, bool terminate = true);
 private:
 	char* _buffer_position;
 	uint8_t _buffer_size;

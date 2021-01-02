@@ -36,17 +36,20 @@ Trinamic_TMC2130 Hardware::myStepper(CS_PIN);
 uint8_t Hardware::lcd_encoder_bits(0);
 volatile int8_t Hardware::rotary_diff(0);
 uint8_t Hardware::target_accel_period(FAST_SPEED_START);
+uint8_t Hardware::target_deccel_period(MIN_SLOW_SPEED);
 uint8_t Hardware::fan_duty[2] = {0, 0};
 uint8_t Hardware::fan_pwm_pins[2] = {FAN1_PWM_PIN, FAN2_PWM_PIN};
 uint8_t Hardware::fan_enable_pins[2] = {FAN1_PIN, FAN2_PIN};
 uint8_t Hardware::fans_target_temp(0);
 unsigned long Hardware::accel_us_last(0);
+unsigned long Hardware::deccel_us_last(0);
 unsigned long Hardware::fans_us_last(0);
 unsigned long Hardware::adc_us_last(0);
 unsigned long Hardware::heater_us_last(0);
 unsigned long Hardware::button_timer(0);
 double Hardware::PI_summ_err(0.0);
 bool Hardware::do_acceleration(false);
+bool Hardware::do_decceleration(false);
 bool Hardware::cover_closed(false);
 bool Hardware::tank_inserted(false);
 bool Hardware::button_active(false);
@@ -92,10 +95,6 @@ Hardware::Hardware() {
 	myStepper.set_tbl(1);					// ([0-3]) set comparator blank time to 16, 24, 36 or 54 clocks, 1 or 2 is recommended
 	myStepper.set_toff(8);					// ([0-15]) 0: driver disable, 1: use only with TBL>2, 2-15: off time setting during slow decay phase
 	myStepper.set_en_pwm_mode(1);			// 0: driver disable PWM mode, 1: driver enable PWM mode
-
-	// Set direction directly to CW
-	outputchip.pinMode(DIR_PIN, OUTPUT);
-	outputchip.digitalWrite(DIR_PIN, LOW);
 
 	cover_closed = is_cover_closed();
 	tank_inserted = is_tank_inserted();
@@ -169,11 +168,7 @@ void Hardware::encoder_read() {
 }
 
 void Hardware::set_motor_direction(bool ccw) {
-	if (ccw) {
-		outputchip.digitalWrite(DIR_PIN, HIGH);
-	} else {
-		outputchip.digitalWrite(DIR_PIN, LOW);
-	}
+	myStepper.set_shaft(ccw ? 1 : 0);
 }
 
 void Hardware::run_motor() {
@@ -207,11 +202,20 @@ void Hardware::speed_configuration(uint8_t speed, bool fast_mode, bool gear_shif
 		microstep_control = map(speed, 1, 10, MIN_SLOW_SPEED, MAX_SLOW_SPEED);
 	}
 	do_acceleration = fast_mode && !gear_shifting;
+	do_decceleration = false;
+}
+
+bool Hardware::isAccelerating() {
+	return do_acceleration;
+}
+
+bool Hardware::isDeccelerating() {
+	return do_decceleration;
 }
 
 void Hardware::acceleration() {
 	if (microstep_control > target_accel_period) {
-		// step is 5 to MIN_FAST_SPEED+5, then step is 1
+		// step is 5 to MIN_FAST_SPEED + 5, then step is 1
 		if (microstep_control > MIN_FAST_SPEED + 5)
 			microstep_control -= 4;
 		microstep_control--;
@@ -219,6 +223,30 @@ void Hardware::acceleration() {
 		do_acceleration = false;
 		myStepper.set_IHOLD_IRUN(10, 10, 5);
 	}
+}
+
+void Hardware::startBreaking() {
+	myStepper.set_IHOLD_IRUN(31, 31, 5);
+	deccel_us_last = millis();
+	do_decceleration = true;
+}
+
+void Hardware::decceleration() {
+	if (microstep_control < target_deccel_period) {
+		// step is 1 to MIN_FAST_SPEED - 5, then step is 5
+		if (microstep_control < MIN_FAST_SPEED - 5) {
+			microstep_control++;
+		} else {
+			microstep_control += 5;	
+		}
+	} else {
+		do_decceleration = false;
+		myStepper.set_IHOLD_IRUN(10, 10, 5);
+	}
+}
+
+bool Hardware::doneBreaking() {
+	return microstep_control == target_deccel_period;
 }
 
 void Hardware::run_heater() {
@@ -366,6 +394,10 @@ uint8_t Hardware::loop() {
 	if (do_acceleration && us_now - accel_us_last >= 50) {
 		accel_us_last = us_now;
 		acceleration();
+	}
+	if (do_decceleration && us_now - deccel_us_last >= 50) {
+		deccel_us_last = us_now;
+		decceleration();
 	}
 	if (us_now - fans_us_last >= FAN_CHECK_PERIOD) {
 		fans_us_last = us_now;

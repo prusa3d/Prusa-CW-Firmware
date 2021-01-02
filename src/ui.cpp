@@ -73,9 +73,9 @@ namespace UI {
 	// Washing menu
 	const char* const washing_direction_options[] PROGMEM = {pgmstr_washing_direction_cw, pgmstr_washing_direction_ccw};
 	Option washing_direction(pgmstr_washing_direction, config.washing_direction, washing_direction_options, COUNT_ITEMS(washing_direction_options));
-	//Minutes_with_off washing_change_direction(pgmstr_washing_change_direction, config.change_direction_time, MAX_WASHING_RUNTIME);
-	//Base* const washing_menu_items[] PROGMEM = {&back, &washing_direction, &washing_change_direction};
-	Base* const washing_menu_items[] PROGMEM = {&back, &washing_direction};
+	Minutes_with_off washing_change_direction(pgmstr_washing_change_direction, config.change_direction_time, MAX_WASHING_RUNTIME);
+	Base* const washing_menu_items[] PROGMEM = {&back, &washing_direction, &washing_change_direction};
+	//Base* const washing_menu_items[] PROGMEM = {&back, &washing_direction};
 	Menu washing_menu(pgmstr_washing_menu, washing_menu_items, COUNT_ITEMS(washing_menu_items));
 
 	// info menu
