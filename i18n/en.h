@@ -149,7 +149,4 @@ static const char pgmstr_rotation_test[] PROGMEM = _("Rotation test");
 static const char pgmstr_ipatank_test[] PROGMEM = _("IPA tank test");
 static const char pgmstr_cover_test[] PROGMEM = _("Cover test");
 static const char pgmstr_open_cover[] PROGMEM = _("Open the cover");
-
-#ifdef CW1S
-  static const char pgmstr_hold_platform[] PROGMEM = _("Hold platform");
-#endif
+static const char pgmstr_hold_platform[] PROGMEM = _("Hold the platform");

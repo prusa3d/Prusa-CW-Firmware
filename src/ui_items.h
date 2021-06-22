@@ -73,14 +73,12 @@ namespace UI {
 
 
 	// UI:Hold_platform
-	#ifdef CW1S
-		class Hold_platform : public Menu {
-		public:
-			Hold_platform(const char* label, Base* const* items, uint8_t items_count);
-			void show();
-			void leave();
-		};
-	#endif
+	class Hold_platform : public Menu {
+	public:
+		Hold_platform(const char* label, Base* const* items, uint8_t items_count);
+		void show();
+		void leave();
+	};
 
 
 	// UI::Menu_self_redraw

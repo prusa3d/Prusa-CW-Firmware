@@ -175,21 +175,19 @@ namespace UI {
 
 
 	// UI::Hold_platform
-	#ifdef CW1S
-		Hold_platform::Hold_platform(const char* label, Base* const* items, uint8_t items_count) :
-			Menu(label, items, items_count)
-		{}
+	Hold_platform::Hold_platform(const char* label, Base* const* items, uint8_t items_count) :
+		Menu(label, items, items_count)
+	{}
 
-		void Hold_platform::show() {
-			Menu::show();
-			hw.enable_stepper();
-		}
+	void Hold_platform::show() {
+		Menu::show();
+		hw.enable_stepper();
+	}
 
-		void Hold_platform::leave() {
-			Menu::leave();
-			hw.disable_stepper();
-		}
-	#endif
+	void Hold_platform::leave() {
+		Menu::leave();
+		hw.disable_stepper();
+	}
 
 
 	// UI::Menu_self_redraw
