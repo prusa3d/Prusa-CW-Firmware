@@ -165,16 +165,20 @@ void Hardware::encoder_read() {
 }
 
 void Hardware::run_motor() {
-	// enable stepper timer
-	TIMSK3 |= (1 << OCIE3A);
-	// enable stepper
-	outputchip.digitalWrite(EN_PIN, LOW);
+	TIMSK3 |= (1 << OCIE3A); // enable stepper timer
+	enable_stepper();
 }
 
 void Hardware::stop_motor() {
-	// disable stepper timer
-	TIMSK3 = 0;
-	// disable stepper
+	TIMSK3 = 0; // disable stepper timer
+	disable_stepper();
+}
+
+void Hardware::enable_stepper() {
+	outputchip.digitalWrite(EN_PIN, LOW);
+}
+
+void Hardware::disable_stepper() {
 	outputchip.digitalWrite(EN_PIN, HIGH);
 }
 

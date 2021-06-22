@@ -24,6 +24,8 @@ public:
 
 	static void run_motor();
 	static void stop_motor();
+	static void enable_stepper();
+	static void disable_stepper();
 	static void speed_configuration(uint8_t speed, bool fast_mode, bool gear_shifting = false);
 	static void acceleration();
 

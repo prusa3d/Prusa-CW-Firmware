@@ -96,10 +96,20 @@ namespace UI {
 	Base* const run_items[] PROGMEM = {&pause, &stop, &back};
 	Menu run_menu(pgmstr_emptystr, run_items, COUNT_ITEMS(run_items));
 
+	// hold platform function
+	#ifdef CW1S
+		Base* const hold_platform_items[] PROGMEM = {&back};
+		Hold_platform hold_platform_menu(pgmstr_hold_platform, hold_platform_items, COUNT_ITEMS(hold_platform_items));
+	#endif
+
 	// home menu
 	Do_it do_it(config.curing_machine_mode, &run_menu);
 	State resin_preheat(pgmstr_resin_preheat, &States::warmup_resin, &run_menu);
-	Base* const home_items[] PROGMEM = {&do_it, &resin_preheat, &run_time_menu, &config_menu};
+	#ifdef CW1S
+		Base* const home_items[] PROGMEM = {&do_it, &resin_preheat, &run_time_menu, &config_menu, &hold_platform_menu};
+	#else
+		Base* const home_items[] PROGMEM = {&do_it, &resin_preheat, &run_time_menu, &config_menu};
+	#endif
 	Menu home_menu(pgmstr_emptystr, home_items, COUNT_ITEMS(home_items));
 
 	// hw menu
