@@ -32,10 +32,17 @@ eeprom_v2_t config = {
 
 	10,			// resin_preheat_run_time
 	100,		// led_intensity
-	{MIN_FAN_SPEED, MIN_FAN_SPEED},	// fans_menu_speed
-	{60, 70},	// fans_washing_speed
-	{60, 70},	// fans_drying_speed
-	{60, 70},	// fans_curing_speed
+	#ifdef CW1S
+		{0, MIN_FAN_SPEED},	// fans_menu_speed
+		{0, 70},	// fans_washing_speed
+		{30, 70},	// fans_drying_speed
+		{0, 70},	// fans_curing_speed
+	#else
+		{MIN_FAN_SPEED, MIN_FAN_SPEED},	// fans_menu_speed
+		{60, 70},	// fans_washing_speed
+		{60, 70},	// fans_drying_speed
+		{60, 70},	// fans_curing_speed
+	#endif
 	100,		// lcd_brightness
 };
 

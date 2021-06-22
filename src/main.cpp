@@ -74,6 +74,9 @@ void setupTimer0() {
 
 ISR(TIMER0_COMPA_vect) {
 	hw.encoder_read();
+	#ifdef CW1S
+		hw.slow_pwm_tick();
+	#endif
 }
 
 // timer for stepper move
@@ -143,6 +146,9 @@ void setup() {
 	States::init();
 	UI::init();
 
+	#ifdef CW1S
+		hw.set_heater_pwm_duty(0);
+	#endif
 }
 
 void loop() {

@@ -40,12 +40,16 @@
 #define	P					10	// 0.5
 #define I					0.001
 #define MIN_TARGET_TEMP_C	20
-#define MAX_TARGET_TEMP_C	40
+#ifdef CW1S
+  #define MAX_TARGET_TEMP_C	60
+#else
+  #define MAX_TARGET_TEMP_C	40
+#endif
 #define MIN_TARGET_TEMP_F	MIN_TARGET_TEMP_C * 1.8 + 32
 #define MAX_TARGET_TEMP_F	MAX_TARGET_TEMP_C * 1.8 + 32
 #define MAX_WARMUP_RUNTIME	15		// minutes
 #define MAX_CURING_RUNTIME	60		// minutes
-#define MAX_DRYING_RUNTIME	10		// minutes
+#define MAX_DRYING_RUNTIME	60		// minutes
 #define MAX_WASHING_RUNTIME	10		// minutes
 #define MAX_PREHEAT_RUNTIME	30		// minutes
 #define COOLDOWN_RUNTIME	10		// minutes
