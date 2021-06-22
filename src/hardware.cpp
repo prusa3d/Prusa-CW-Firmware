@@ -375,8 +375,10 @@ uint8_t Hardware::loop() {
 	if (heater_error)
 		return events;
 
-	// failed once, failed every time
-	heater_error = heater_us_last && !fan_rpm[2] && us_now - heater_us_last > HEATER_CHECK_DELAY;
+	#ifndef CW1S
+		// failed once, failed every time
+		heater_error = heater_us_last && !fan_rpm[2] && us_now - heater_us_last > HEATER_CHECK_DELAY;
+	#endif
 
 	// cover
 	bool cover_closed_now = is_cover_closed();

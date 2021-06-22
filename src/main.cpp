@@ -108,9 +108,11 @@ void fan_tacho2() {
 	hw.fan_tacho_count[1]++;
 }
 
-void fan_tacho3() {
-	hw.fan_tacho_count[2]++;
-}
+#ifndef CW1S
+	void fan_tacho3() {
+		hw.fan_tacho_count[2]++;
+	}
+#endif
 
 void setup() {
 
@@ -126,10 +128,12 @@ void setup() {
 	// FAN tachos
 	pinMode(FAN1_TACHO_PIN, INPUT_PULLUP);
 	pinMode(FAN2_TACHO_PIN, INPUT_PULLUP);
-	pinMode(FAN_HEAT_TACHO_PIN, INPUT_PULLUP);
 	attachInterrupt(digitalPinToInterrupt(FAN1_TACHO_PIN), fan_tacho1, RISING);
 	attachInterrupt(digitalPinToInterrupt(FAN2_TACHO_PIN), fan_tacho2, RISING);
-	attachInterrupt(digitalPinToInterrupt(FAN_HEAT_TACHO_PIN), fan_tacho3, RISING);
+	#ifndef CW1S
+		pinMode(FAN_HEAT_TACHO_PIN, INPUT_PULLUP);
+		attachInterrupt(digitalPinToInterrupt(FAN_HEAT_TACHO_PIN), fan_tacho3, RISING);
+	#endif
 
 	noInterrupts();
 	setupTimer0();
