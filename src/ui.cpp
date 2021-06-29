@@ -103,7 +103,7 @@ namespace UI {
 	// home menu
 	Do_it do_it(config.curing_machine_mode, &run_menu);
 	State resin_preheat(pgmstr_resin_preheat, &States::warmup_resin, &run_menu);
-	Base* const home_items[] PROGMEM = {&do_it, &resin_preheat, &run_time_menu, &config_menu, &hold_platform_menu};
+	Base* const home_items[] PROGMEM = {&do_it, &resin_preheat, &run_time_menu, &hold_platform_menu, &config_menu};
 	Menu home_menu(pgmstr_emptystr, home_items, COUNT_ITEMS(home_items));
 
 	// hw menu
