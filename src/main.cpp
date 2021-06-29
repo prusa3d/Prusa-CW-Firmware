@@ -148,7 +148,15 @@ void setup() {
 
 	#ifdef CW1S
 		hw.set_heater_pwm_duty(0);
+		static const char model_cmp[] = "02_";
+	#else
+		static const char model_cmp[] = "01_";
 	#endif
+	if(memcmp_P(model_cmp, pgmstr_serial_number, 3) != 0) {
+		lcd.clear();
+		lcd.print_P(pgmstr_wrong_model, (20 - strlen_P(pgmstr_wrong_model)) / 2, 1);
+		while(1);
+	}
 }
 
 void loop() {
