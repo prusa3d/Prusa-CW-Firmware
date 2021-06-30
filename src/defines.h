@@ -42,6 +42,9 @@
 #define MIN_TARGET_TEMP_C	20
 #ifdef CW1S
   #define MAX_TARGET_TEMP_C	60
+  #define HEATING_ON_FAN1_DUTY  100
+  #define CHAMBER_TEMP_THR_FAN1_ON	35
+  #define CHAMBER_TEMP_THR_FAN1_DUTY	40
 #else
   #define MAX_TARGET_TEMP_C	40
 #endif

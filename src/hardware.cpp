@@ -119,10 +119,10 @@ void Hardware::read_adc() {
 				float error = config.target_temp - chamber_temp_celsius;
 				uint16_t pwm_duty = error > 0.0 ? round((error < 2.0 ? error : 2.0) * 980) : 0;
 				set_heater_pwm_duty(pwm_duty);
-				adjust_fan_speed(0, 100);
+				adjust_fan_speed(0, HEATING_ON_FAN1_DUTY);
 
 			}else{
-				adjust_fan_speed(0, chamber_temp_celsius > 30 ? 40 : 0);
+				adjust_fan_speed(0, chamber_temp_celsius > CHAMBER_TEMP_THR_FAN1_ON ? (fan_duty[0] > CHAMBER_TEMP_THR_FAN1_DUTY ? fan_duty[0] : CHAMBER_TEMP_THR_FAN1_DUTY) : fan_duty[0]);
 
 			}
 		#endif

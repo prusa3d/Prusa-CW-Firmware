@@ -78,4 +78,7 @@ void read_config() {
 			config.resin_target_temp = round(celsius2fahrenheit(tmp));
 		}
 	}
+	#ifdef CW1S
+		config.fans_menu_speed[0] = 0;
+	#endif
 }
