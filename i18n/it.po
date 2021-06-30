@@ -5,12 +5,6 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 2.3\n"
-"Project-Id-Version: \n"
-"POT-Creation-Date: \n"
-"PO-Revision-Date: \n"
-"Last-Translator: \n"
-"Language-Team: \n"
 
 #: i18n/en.h:142
 msgid "  F2:"
@@ -39,10 +33,6 @@ msgstr "Chiudi il coperch."
 #: i18n/en.h:87
 msgid "Continue"
 msgstr "Continua"
-
-#: i18n/en.h:40
-msgid "continuous"
-msgstr "continuo"
 
 #: i18n/en.h:37
 msgid "Control echo"
@@ -92,6 +82,14 @@ msgstr "F1:"
 msgid "F3:"
 msgstr "F3:"
 
+#: i18n/en.h:68
+msgid "FW: "
+msgstr "FW: "
+
+#: i18n/en.h:95
+msgid "Fan1 RPM: "
+msgstr "RPM Ventola1: "
+
 #: i18n/en.h:45
 msgid "Fan1 curing speed"
 msgstr "Vel. indur. Vent1"
@@ -108,13 +106,13 @@ msgstr "Guasto Ventola1"
 msgid "Fan1 menu speed"
 msgstr "Menu vel. ventola1"
 
-#: i18n/en.h:95
-msgid "Fan1 RPM: "
-msgstr "RPM Ventola1: "
-
 #: i18n/en.h:55
 msgid "Fan1 washing speed"
 msgstr "Vel. lavagg. Vent1"
+
+#: i18n/en.h:96
+msgid "Fan2 RPM: "
+msgstr "RPM Ventola2: "
 
 #: i18n/en.h:46
 msgid "Fan2 curing speed"
@@ -131,10 +129,6 @@ msgstr "Guasto Ventola2"
 #: i18n/en.h:61
 msgid "Fan2 menu speed"
 msgstr "Menu vel. ventola2"
-
-#: i18n/en.h:96
-msgid "Fan2 RPM: "
-msgstr "RPM Ventola2: "
 
 #: i18n/en.h:56
 msgid "Fan2 washing speed"
@@ -176,10 +170,6 @@ msgstr "Suono finale"
 msgid "Finished"
 msgstr "Completato"
 
-#: i18n/en.h:68
-msgid "FW: "
-msgstr "FW: "
-
 #: i18n/en.h:137
 msgid "Heater failure"
 msgstr "Guasto Riscald."
@@ -196,6 +186,18 @@ msgstr "Test riscaldam."
 msgid "Heating"
 msgstr "Riscaldamento"
 
+#: i18n/en.h:152
+msgid "Hold the platform"
+msgstr "Tieni la piattaf."
+
+#: i18n/en.h:149
+msgid "IPA tank test"
+msgstr "Test serb. IPA"
+
+#: i18n/en.h:153
+msgid "Incorrect firmware!"
+msgstr "Firmware incorretto!"
+
 #: i18n/en.h:67
 msgid "Information"
 msgstr "Informazioni"
@@ -203,10 +205,6 @@ msgstr "Informazioni"
 #: i18n/en.h:133
 msgid "Insert IPA tank"
 msgstr "Inserire serb. IPA"
-
-#: i18n/en.h:149
-msgid "IPA tank test"
-msgstr "Test serb. IPA"
 
 #: i18n/en.h:83
 msgid "LCD brightness"
@@ -216,17 +214,9 @@ msgstr "Luminosita LCD"
 msgid "No/low power"
 msgstr "No/poca energia"
 
-#: i18n/en.h:38
-msgid "none"
-msgstr "nessuno"
-
 #: i18n/en.h:147
 msgid "Not/bad spinning"
 msgstr "No/scarsa rotazione"
-
-#: i18n/en.h:39
-msgid "once"
-msgstr "una volta"
 
 #: i18n/en.h:151
 msgid "Open the cover"
@@ -359,3 +349,15 @@ msgstr "[off]"
 #: i18n/en.h:3
 msgid "[on]"
 msgstr "[on]"
+
+#: i18n/en.h:40
+msgid "continuous"
+msgstr "continuo"
+
+#: i18n/en.h:38
+msgid "none"
+msgstr "nessuno"
+
+#: i18n/en.h:39
+msgid "once"
+msgstr "una volta"
