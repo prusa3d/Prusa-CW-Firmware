@@ -78,6 +78,9 @@ There is known issue with `ModemManager`: you either need to deinstall it, or bl
 # Original Prusa CW1
 ATTRS{idVendor}=="2c99", ATTRS{idProduct}=="0007", ENV{ID_MM_DEVICE_IGNORE}="1"
 ATTRS{idVendor}=="2c99", ATTRS{idProduct}=="0008", ENV{ID_MM_DEVICE_IGNORE}="1"
+# Original Prusa CW1S
+ATTRS{idVendor}=="2c99", ATTRS{idProduct}=="000E", ENV{ID_MM_DEVICE_IGNORE}="1"
+ATTRS{idVendor}=="2c99", ATTRS{idProduct}=="000F", ENV{ID_MM_DEVICE_IGNORE}="1"
 ~~~
 * Then reload udev rules :
 ~~~
