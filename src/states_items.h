@@ -83,10 +83,11 @@ namespace States {
 	// States::Confirm
 	class Confirm : public Base {
 	public:
-		Confirm();
+		Confirm(bool force_wait);
 		void start();
 		Base* loop();
 	private:
+		bool force_wait;
 		bool quit;
 	};
 

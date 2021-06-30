@@ -5,8 +5,8 @@ namespace States {
 
 	/*** states definitions ***/
 	Base menu;
-	Confirm confirm;
-	Confirm error;
+	Confirm confirm(false);
+	Confirm error(true);
 	Base washing(
 		pgmstr_washing,
 		STATE_OPTION_CONTROLS | STATE_OPTION_WASHING,
