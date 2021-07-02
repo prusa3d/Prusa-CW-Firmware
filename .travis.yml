@@ -2,7 +2,7 @@ os: linux
 dist: xenial
 language: cpp
 script:
-  - git fetch --unshallow || if [ $? -eq 128 ]; then true; else false; fi
+  - git fetch --tags --unshallow || if [ $? -eq 128 ]; then true; else false; fi
   - git rev-list --count HEAD
   - bash -x build.sh
 deploy:
