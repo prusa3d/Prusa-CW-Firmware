@@ -1,4 +1,5 @@
 PROJECT = Prusa-CW1-Firmware
+PROJECT_CW1S = Prusa-CW1S-Firmware
 DIRS = lib src
 I18N = i18n
 LANG = en
@@ -16,7 +17,7 @@ CPPTUNING = -fno-exceptions -fno-threadsafe-statics
 OPT = -g -Os -ffunction-sections -fdata-sections -flto -fno-fat-lto-objects -funsigned-char -funsigned-bitfields -fshort-enums -fno-inline-small-functions -mcall-prologues -fno-split-wide-types
 MCU = -mmcu=atmega32u4
 
-DEFS = -DF_CPU=16000000 -DARDUINO=10805 -DUSB_VID=0x2c99 -DUSB_PID=0x0008 -DUSB_MANUFACTURER='"Prusa Research prusa3d.com"' -DUSB_PRODUCT='"Original Prusa CW1"'
+DEFS = -DF_CPU=16000000 -DARDUINO=10805 -DUSB_VID=0x2c99 -DUSB_MANUFACTURER='"Prusa Research prusa3d.com"'
 INCLUDE = $(foreach dir, ${DIRS}, -I${dir}) -I${BUILD_DIR}
 
 CFLAGS = ${OPT} ${WARN} ${CSTANDARD} ${MCU} ${INCLUDE} ${DEFS}
@@ -31,10 +32,17 @@ VERSION = $(shell git describe --abbrev=0 --tags)
 VERSION_FILE = ${BUILD_DIR}/version.h
 LANG_TEMPLATE = ${I18N}/${PROJECT}-${VERSION}.pot
 
-default: DEFS += -DSERIAL_COM_DEBUG
+default: DEFS += -DUSB_PRODUCT='"Original Prusa CW1"' -DUSB_PID=0x0008 -DSERIAL_COM_DEBUG
+default: DEVICE = cw1
 default: $(addprefix $(BUILD_DIR)/, ${PROJECT}-${LANG}-devel.hex)
 
+dist: DEFS += -DUSB_PRODUCT='"Original Prusa CW1"' -DUSB_PID=0x0008
+dist: DEVICE = cw1
 dist: $(addprefix $(BUILD_DIR)/, ${PROJECT}-${LANG}-${VERSION}.hex)
+
+cw1s: DEFS += -DCW1S -DUSB_PRODUCT='"Original Prusa CW1S"' -DUSB_PID=0x000F
+cw1s: DEVICE = cw1s
+cw1s: $(addprefix $(BUILD_DIR)/, ${PROJECT_CW1S}-${LANG}-${VERSION}.hex)
 
 .PHONY: clean distclean lang_extract default dist ${VERSION_FILE}.tmp doc
 
@@ -50,7 +58,7 @@ $(BUILD_DIR)%/.:
 
 $(BUILD_DIR)/%.hex: ${BUILD_DIR}/%.elf
 	${OBJCOPY} -O ihex -R .eeprom $< $@.tmp
-	@echo "; device = cw1" > $@
+	@echo "; device = ${DEVICE}" > $@
 	@echo >> $@
 	cat $@.tmp >> $@
 	rm $@.tmp

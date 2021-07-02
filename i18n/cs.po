@@ -5,7 +5,6 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
-"X-Generator: PhraseApp (phraseapp.com)\n"
 
 #: i18n/en.h:142
 msgid "  F2:"
@@ -34,10 +33,6 @@ msgstr "Zavrete viko"
 #: i18n/en.h:87
 msgid "Continue"
 msgstr "Pokracovat"
-
-#: i18n/en.h:40
-msgid "continuous"
-msgstr "nepretrzite"
 
 #: i18n/en.h:37
 msgid "Control echo"
@@ -87,6 +82,14 @@ msgstr "V1:"
 msgid "F3:"
 msgstr "V3:"
 
+#: i18n/en.h:68
+msgid "FW: "
+msgstr "FW: "
+
+#: i18n/en.h:95
+msgid "Fan1 RPM: "
+msgstr "V1 ot/min: "
+
 #: i18n/en.h:45
 msgid "Fan1 curing speed"
 msgstr "Rychlost V1 tvrz."
@@ -103,13 +106,13 @@ msgstr "Ventilator1 selhal"
 msgid "Fan1 menu speed"
 msgstr "Rychl. V1 (menu)"
 
-#: i18n/en.h:95
-msgid "Fan1 RPM: "
-msgstr "V1 ot/min: "
-
 #: i18n/en.h:55
 msgid "Fan1 washing speed"
 msgstr "Rychlost V1 myti"
+
+#: i18n/en.h:96
+msgid "Fan2 RPM: "
+msgstr "V2 ot/min: "
 
 #: i18n/en.h:46
 msgid "Fan2 curing speed"
@@ -126,10 +129,6 @@ msgstr "Ventilator2 selhal"
 #: i18n/en.h:61
 msgid "Fan2 menu speed"
 msgstr "Rychlost V2 menu"
-
-#: i18n/en.h:96
-msgid "Fan2 RPM: "
-msgstr "V2 ot/min: "
 
 #: i18n/en.h:56
 msgid "Fan2 washing speed"
@@ -171,10 +170,6 @@ msgstr "Koncovy pip"
 msgid "Finished"
 msgstr "Hotovo"
 
-#: i18n/en.h:68
-msgid "FW: "
-msgstr "FW: "
-
 #: i18n/en.h:137
 msgid "Heater failure"
 msgstr "Chyba nahrivani"
@@ -191,6 +186,18 @@ msgstr "Test nahrivani"
 msgid "Heating"
 msgstr "Nahrivani"
 
+#: i18n/en.h:152
+msgid "Hold the platform"
+msgstr "Podrzet platformu"
+
+#: i18n/en.h:149
+msgid "IPA tank test"
+msgstr "Test IPA nadoby"
+
+#: i18n/en.h:153
+msgid "Incorrect firmware!"
+msgstr "Nespravny firmware!"
+
 #: i18n/en.h:67
 msgid "Information"
 msgstr "Informace"
@@ -198,10 +205,6 @@ msgstr "Informace"
 #: i18n/en.h:133
 msgid "Insert IPA tank"
 msgstr "Vlozte IPA nadobu"
-
-#: i18n/en.h:149
-msgid "IPA tank test"
-msgstr "Test IPA nadoby"
 
 #: i18n/en.h:83
 msgid "LCD brightness"
@@ -211,17 +214,9 @@ msgstr "Jas LCD"
 msgid "No/low power"
 msgstr "Zadny/maly vykon"
 
-#: i18n/en.h:38
-msgid "none"
-msgstr "zadny"
-
 #: i18n/en.h:147
 msgid "Not/bad spinning"
 msgstr "Problem otaceni"
-
-#: i18n/en.h:39
-msgid "once"
-msgstr "jednou"
 
 #: i18n/en.h:151
 msgid "Open the cover"
@@ -354,3 +349,15 @@ msgstr "[vyp]"
 #: i18n/en.h:3
 msgid "[on]"
 msgstr "[zap]"
+
+#: i18n/en.h:40
+msgid "continuous"
+msgstr "nepretrzite"
+
+#: i18n/en.h:38
+msgid "none"
+msgstr "zadny"
+
+#: i18n/en.h:39
+msgid "once"
+msgstr "jednou"

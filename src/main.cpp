@@ -74,6 +74,9 @@ void setupTimer0() {
 
 ISR(TIMER0_COMPA_vect) {
 	hw.encoder_read();
+	#ifdef CW1S
+		hw.slow_pwm_tick();
+	#endif
 }
 
 // timer for stepper move
@@ -108,9 +111,11 @@ void fan_tacho2() {
 	hw.fan_tacho_count[1]++;
 }
 
-void fan_tacho3() {
-	hw.fan_tacho_count[2]++;
-}
+#ifndef CW1S
+	void fan_tacho3() {
+		hw.fan_tacho_count[2]++;
+	}
+#endif
 
 void setup() {
 
@@ -126,10 +131,12 @@ void setup() {
 	// FAN tachos
 	pinMode(FAN1_TACHO_PIN, INPUT_PULLUP);
 	pinMode(FAN2_TACHO_PIN, INPUT_PULLUP);
-	pinMode(FAN_HEAT_TACHO_PIN, INPUT_PULLUP);
 	attachInterrupt(digitalPinToInterrupt(FAN1_TACHO_PIN), fan_tacho1, RISING);
 	attachInterrupt(digitalPinToInterrupt(FAN2_TACHO_PIN), fan_tacho2, RISING);
-	attachInterrupt(digitalPinToInterrupt(FAN_HEAT_TACHO_PIN), fan_tacho3, RISING);
+	#ifndef CW1S
+		pinMode(FAN_HEAT_TACHO_PIN, INPUT_PULLUP);
+		attachInterrupt(digitalPinToInterrupt(FAN_HEAT_TACHO_PIN), fan_tacho3, RISING);
+	#endif
 
 	noInterrupts();
 	setupTimer0();
@@ -139,6 +146,17 @@ void setup() {
 	States::init();
 	UI::init();
 
+	#ifdef CW1S
+		hw.set_heater_pwm_duty(0);
+		static const char model_cmp[] = "02_";
+	#else
+		static const char model_cmp[] = "01_";
+	#endif
+	if(memcmp_P(model_cmp, pgmstr_serial_number, 3) != 0) {
+		lcd.clear();
+		lcd.print_P(pgmstr_wrong_model, (20 - strlen_P(pgmstr_wrong_model)) / 2, 1);
+		while(1);
+	}
 }
 
 void loop() {

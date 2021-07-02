@@ -5,12 +5,6 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 2.3\n"
-"Project-Id-Version: \n"
-"POT-Creation-Date: \n"
-"PO-Revision-Date: \n"
-"Last-Translator: \n"
-"Language-Team: \n"
 
 #: i18n/en.h:142
 msgid "  F2:"
@@ -39,10 +33,6 @@ msgstr "Cierra la tapa"
 #: i18n/en.h:87
 msgid "Continue"
 msgstr "Continuar"
-
-#: i18n/en.h:40
-msgid "continuous"
-msgstr "continuo"
 
 #: i18n/en.h:37
 msgid "Control echo"
@@ -92,6 +82,14 @@ msgstr "F1:"
 msgid "F3:"
 msgstr "F3:"
 
+#: i18n/en.h:68
+msgid "FW: "
+msgstr "FW: "
+
+#: i18n/en.h:95
+msgid "Fan1 RPM: "
+msgstr "RPM Vent1: "
+
 #: i18n/en.h:45
 msgid "Fan1 curing speed"
 msgstr "Vel. cur. Vent1"
@@ -108,13 +106,13 @@ msgstr "Fallo Vent1"
 msgid "Fan1 menu speed"
 msgstr "Menu vel. Vent1"
 
-#: i18n/en.h:95
-msgid "Fan1 RPM: "
-msgstr "RPM Vent1: "
-
 #: i18n/en.h:55
 msgid "Fan1 washing speed"
 msgstr "Vel. curado Vent1"
+
+#: i18n/en.h:96
+msgid "Fan2 RPM: "
+msgstr "RPM Vent2: "
 
 #: i18n/en.h:46
 msgid "Fan2 curing speed"
@@ -131,10 +129,6 @@ msgstr "Fallo Vent2"
 #: i18n/en.h:61
 msgid "Fan2 menu speed"
 msgstr "Menu vel. Vent2"
-
-#: i18n/en.h:96
-msgid "Fan2 RPM: "
-msgstr "RPM Vent2: "
 
 #: i18n/en.h:56
 msgid "Fan2 washing speed"
@@ -176,10 +170,6 @@ msgstr "Beep al finalizar"
 msgid "Finished"
 msgstr "Finalizado"
 
-#: i18n/en.h:68
-msgid "FW: "
-msgstr "FW: "
-
 #: i18n/en.h:137
 msgid "Heater failure"
 msgstr "Fallo en calentador"
@@ -196,6 +186,18 @@ msgstr "Test calentador"
 msgid "Heating"
 msgstr "Calentando"
 
+#: i18n/en.h:152
+msgid "Hold the platform"
+msgstr "Sujeta la plat."
+
+#: i18n/en.h:149
+msgid "IPA tank test"
+msgstr "Test tanque IPA"
+
+#: i18n/en.h:153
+msgid "Incorrect firmware!"
+msgstr "Firmware incorrecto!"
+
 #: i18n/en.h:67
 msgid "Information"
 msgstr "Informacion"
@@ -203,10 +205,6 @@ msgstr "Informacion"
 #: i18n/en.h:133
 msgid "Insert IPA tank"
 msgstr "Introd. tanque IPA"
-
-#: i18n/en.h:149
-msgid "IPA tank test"
-msgstr "Test tanque IPA"
 
 #: i18n/en.h:83
 msgid "LCD brightness"
@@ -216,17 +214,9 @@ msgstr "Brillo LCD"
 msgid "No/low power"
 msgstr "No/poca energia"
 
-#: i18n/en.h:38
-msgid "none"
-msgstr "ninguno"
-
 #: i18n/en.h:147
 msgid "Not/bad spinning"
 msgstr "No/mal giro"
-
-#: i18n/en.h:39
-msgid "once"
-msgstr "una vez"
 
 #: i18n/en.h:151
 msgid "Open the cover"
@@ -359,3 +349,15 @@ msgstr "[off]"
 #: i18n/en.h:3
 msgid "[on]"
 msgstr "[on]"
+
+#: i18n/en.h:40
+msgid "continuous"
+msgstr "continuo"
+
+#: i18n/en.h:38
+msgid "none"
+msgstr "ninguno"
+
+#: i18n/en.h:39
+msgid "once"
+msgstr "una vez"

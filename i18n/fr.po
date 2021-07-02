@@ -5,12 +5,6 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
-"X-Generator: Poedit 2.3.1\n"
-"Project-Id-Version: \n"
-"POT-Creation-Date: \n"
-"PO-Revision-Date: \n"
-"Last-Translator: \n"
-"Language-Team: \n"
 
 #: i18n/en.h:142
 msgid "  F2:"
@@ -39,10 +33,6 @@ msgstr "Fermez le capot"
 #: i18n/en.h:87
 msgid "Continue"
 msgstr "Continuer"
-
-#: i18n/en.h:40
-msgid "continuous"
-msgstr "continu"
 
 #: i18n/en.h:37
 msgid "Control echo"
@@ -92,6 +82,14 @@ msgstr "F1:"
 msgid "F3:"
 msgstr "F3:"
 
+#: i18n/en.h:68
+msgid "FW: "
+msgstr "FW: "
+
+#: i18n/en.h:95
+msgid "Fan1 RPM: "
+msgstr "RPM Ventilateur1: "
+
 #: i18n/en.h:45
 msgid "Fan1 curing speed"
 msgstr "Vit. durcis. vent.1"
@@ -108,13 +106,13 @@ msgstr "Echec ventilateur1"
 msgid "Fan1 menu speed"
 msgstr "Menu vit. vent.1"
 
-#: i18n/en.h:95
-msgid "Fan1 RPM: "
-msgstr "RPM Ventilateur1: "
-
 #: i18n/en.h:55
 msgid "Fan1 washing speed"
 msgstr "Vit. nettoy. vent.1"
+
+#: i18n/en.h:96
+msgid "Fan2 RPM: "
+msgstr "RPM ventilateur2: "
 
 #: i18n/en.h:46
 msgid "Fan2 curing speed"
@@ -131,10 +129,6 @@ msgstr "Echec ventilateur2"
 #: i18n/en.h:61
 msgid "Fan2 menu speed"
 msgstr "Menu vit. vent.2"
-
-#: i18n/en.h:96
-msgid "Fan2 RPM: "
-msgstr "RPM ventilateur2: "
 
 #: i18n/en.h:56
 msgid "Fan2 washing speed"
@@ -176,10 +170,6 @@ msgstr "Signal de fin"
 msgid "Finished"
 msgstr "Termine"
 
-#: i18n/en.h:68
-msgid "FW: "
-msgstr "FW: "
-
 #: i18n/en.h:137
 msgid "Heater failure"
 msgstr "Echec chauffe"
@@ -196,6 +186,14 @@ msgstr "Test chauffe"
 msgid "Heating"
 msgstr "Chauffe"
 
+#: i18n/en.h:152
+msgid "Hold the platform"
+msgstr "Tenez la plateforme"
+
+#: i18n/en.h:149
+msgid "IPA tank test"
+msgstr "Test reservoir IPA"
+
 #: i18n/en.h:67
 msgid "Information"
 msgstr "Information"
@@ -203,10 +201,6 @@ msgstr "Information"
 #: i18n/en.h:133
 msgid "Insert IPA tank"
 msgstr "Inserer reserv. IPA"
-
-#: i18n/en.h:149
-msgid "IPA tank test"
-msgstr "Test reservoir IPA"
 
 #: i18n/en.h:83
 msgid "LCD brightness"
@@ -216,17 +210,9 @@ msgstr "Luminosite LCD"
 msgid "No/low power"
 msgstr "Pas/peu d'alim."
 
-#: i18n/en.h:38
-msgid "none"
-msgstr "aucun"
-
 #: i18n/en.h:147
 msgid "Not/bad spinning"
 msgstr "Ne tourne pas ou mal"
-
-#: i18n/en.h:39
-msgid "once"
-msgstr "une fois"
 
 #: i18n/en.h:151
 msgid "Open the cover"
@@ -359,3 +345,15 @@ msgstr "[off]"
 #: i18n/en.h:3
 msgid "[on]"
 msgstr "[on]"
+
+#: i18n/en.h:40
+msgid "continuous"
+msgstr "continu"
+
+#: i18n/en.h:38
+msgid "none"
+msgstr "aucun"
+
+#: i18n/en.h:39
+msgid "once"
+msgstr "une fois"

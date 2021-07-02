@@ -260,8 +260,8 @@ namespace States {
 
 
 	// States::Confirm
-	Confirm::Confirm() :
-		Base(pgmstr_emptystr, STATE_OPTION_SHORT_CANCEL), quit(false)
+	Confirm::Confirm(bool force_wait) :
+		Base(pgmstr_emptystr, STATE_OPTION_SHORT_CANCEL), force_wait(force_wait), quit(false)
 	{}
 
 	void Confirm::start() {
@@ -269,7 +269,11 @@ namespace States {
 		quit = true;
 		us_last = 1;				// beep
 		const char* text2 = pgmstr_emptystr;
-		switch(config.finish_beep_mode) {
+		uint8_t mode = config.finish_beep_mode;
+		if (force_wait) {
+			mode = 2;
+		}
+		switch(mode) {
 			case 2:
 				quit = false;
 				text2 = pgmstr_press2continue;
@@ -532,10 +536,13 @@ namespace States {
 			return &error;
 		}
 		uint16_t seconds = timer.getCurrentTimeInSeconds() - 1;
+#ifdef CW1S
+		// TODO this is not working on CW1S
 		if (!seconds && old_chamb_temp + HEATER_TEST_GAIN > hw.chamber_temp_celsius) {
 			error.new_text(pgmstr_heater_failure, pgmstr_nopower_error);
 			return &error;
 		}
+#endif
 		if (seconds != old_seconds) {
 			old_seconds = seconds;
 			draw = true;
@@ -546,8 +553,13 @@ namespace States {
 	bool Test_heater::get_info2(char* buffer, uint8_t size) {
 		if (draw) {
 			buffer_init(buffer, size);
+#ifdef CW1S
+			print_P(pgmstr_fan1);
+			print(hw.fan_rpm[0]);
+#else
 			print_P(pgmstr_fan3);
 			print(hw.fan_rpm[2]);
+#endif
 			get_position()[0] = char(0);
 			draw = false;
 			return true;
