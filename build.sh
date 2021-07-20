@@ -14,8 +14,8 @@ export PATH=$SCRIPT_PATH/$ENV_DIR/avr/bin:$PATH
 
 for LG in "en" "cs" "de" "es" "fr" "it" "pl" ; do
 	make clean || exit 4
-	make "LANG=$LG" dist || exit 5
+	make "LANG=$LG" "DEVICE=CW1" dist || exit 5
 
-	make clean || exit 4
-	make "LANG=$LG" cw1s || exit 5
+	make clean || exit 6
+	make "LANG=$LG" "DEVICE=CW1S" dist || exit 7
 done
