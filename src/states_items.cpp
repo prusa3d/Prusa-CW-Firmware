@@ -19,7 +19,7 @@ namespace States {
 		message(nullptr),
 		target_temp(target_temp),
 		fans_duties(fans_duties),
-		us_last(0),
+		ms_last(0),
 		canceled(false),
 		title(title),
 		continue_after(continue_after),
@@ -69,9 +69,9 @@ namespace States {
 				return &error;
 			}
 		}
-		if (us_last && millis() - us_last > LED_DELAY && options & STATE_OPTION_UVLED) {
+		if (ms_last && millis() - ms_last > LED_DELAY && options & STATE_OPTION_UVLED) {
 			hw.run_led();
-			us_last = 0;
+			ms_last = 0;
 		}
 		return nullptr;
 	}
@@ -110,7 +110,7 @@ namespace States {
 		if (continue_after) {
 			timer.start();
 		}
-		us_last = millis();
+		ms_last = millis();
 	}
 
 	void Base::pause_continue() {
@@ -267,7 +267,7 @@ namespace States {
 	void Confirm::start() {
 		canceled = false;
 		quit = true;
-		us_last = 1;				// beep
+		ms_last = 1;				// beep
 		const char* text2 = pgmstr_emptystr;
 		uint8_t mode = config.finish_beep_mode;
 		if (force_wait) {
@@ -279,7 +279,7 @@ namespace States {
 				text2 = pgmstr_press2continue;
 				break;
 			case 0:
-				us_last = 0;		// no beep
+				ms_last = 0;		// no beep
 				break;
 			default:
 				break;
@@ -290,10 +290,10 @@ namespace States {
 
 	Base* Confirm::loop() {
 		canceled = quit;
-		unsigned long us_now = millis();
-		if (us_last && us_now - us_last > 1000) {
+		unsigned long ms_now = millis();
+		if (ms_last && ms_now - ms_last > 1000) {
 			hw.beep();
-			us_last = us_now;
+			ms_last = ms_now;
 		}
 		if (canceled) {
 			return continue_to;
@@ -324,7 +324,7 @@ namespace States {
 		old_state = value_getter();
 		message = old_state ? message_on : message_off;
 		test_count = SWITCH_TEST_COUNT;
-		us_last = millis();
+		ms_last = millis();
 	}
 
 	Base* Test_switch::loop() {
@@ -332,9 +332,9 @@ namespace States {
 			hw.beep();
 			return continue_to;
 		}
-		unsigned long us_now = millis();
-		if (us_now - us_last > 250) {
-			us_last = us_now;
+		unsigned long ms_now = millis();
+		if (ms_now - ms_last > 250) {
+			ms_last = ms_now;
 			bool state = value_getter();
 			if (old_state != state) {
 				old_state = state;

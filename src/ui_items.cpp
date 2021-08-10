@@ -192,18 +192,18 @@ namespace UI {
 
 	// UI::Menu_self_redraw
 	Menu_self_redraw::Menu_self_redraw(const char* label, Base* const* items, uint8_t items_count, uint16_t redraw_us) :
-		Menu(label, items, items_count), redraw_us(redraw_us), us_last(0)
+		Menu(label, items, items_count), redraw_us(redraw_us), ms_last(0)
 	{}
 
 	void Menu_self_redraw::show() {
-		us_last = millis();
+		ms_last = millis();
 		Menu::show();
 	}
 
 	void Menu_self_redraw::loop() {
-		unsigned long us_now = millis();
-		if (us_now - us_last > redraw_us) {
-			us_last = us_now;
+		unsigned long ms_now = millis();
+		if (ms_now - ms_last > redraw_us) {
+			ms_last = ms_now;
 			show();
 		}
 		Menu::loop();
@@ -400,8 +400,8 @@ namespace UI {
 		old_title(nullptr),
 		old_message(nullptr),
 		old_time(UINT16_MAX),
-		spin_us_last(0),
-		bound_us_last(0),
+		spin_ms_last(0),
+		bound_ms_last(0),
 		spin_count(0)
 	{}
 
@@ -409,8 +409,8 @@ namespace UI {
 		old_title = nullptr;
 		old_message = nullptr;
 		old_time = UINT16_MAX;
-		spin_us_last = 0;
-		bound_us_last = 0;
+		spin_ms_last = 0;
+		bound_ms_last = 0;
 		spin_count = 0;
 		Base::show();
 	}
@@ -430,22 +430,22 @@ namespace UI {
 				lcd.print_P(tmp_str, 1, 2);
 			}
 		} else {
-			unsigned long us_now = millis();
+			unsigned long ms_now = millis();
 			// spinner
 			if (!States::active_state->is_paused()) {
 				lcd.setCursor(19, 0);
 				uint8_t c = pgm_read_byte(pgmstr_progress + spin_count);
 				lcd.write(c);
-				if (us_now - spin_us_last > 100) {
-					spin_us_last = us_now;
+				if (ms_now - spin_ms_last > 100) {
+					spin_ms_last = ms_now;
 					if (++spin_count >= sizeof(pgmstr_progress)) {
 						spin_count = 0;
 					}
 				}
 			}
-			if (bound_us_last && us_now - bound_us_last > 1000) {
+			if (bound_ms_last && ms_now - bound_ms_last > 1000) {
 				clear_time_boundaries();
-				bound_us_last = 0;
+				bound_ms_last = 0;
 			}
 			// time
 			uint16_t time = States::active_state->get_time();
@@ -509,7 +509,7 @@ namespace UI {
 			const char* symbol = States::active_state->increase_time();
 			if (symbol) {
 				lcd.print_P(symbol, LAYOUT_TIME_GT, LAYOUT_TIME_Y);
-				bound_us_last = millis();
+				bound_ms_last = millis();
 			}
 		}
 	}
@@ -520,7 +520,7 @@ namespace UI {
 			const char* symbol = States::active_state->decrease_time();
 			if (symbol) {
 				lcd.print_P(symbol, LAYOUT_TIME_LT, LAYOUT_TIME_Y);
-				bound_us_last = millis();
+				bound_ms_last = millis();
 			}
 		}
 	}

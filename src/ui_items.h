@@ -89,7 +89,7 @@ namespace UI {
 		void loop();
 	private:
 		uint16_t redraw_us;
-		unsigned long us_last;
+		unsigned long ms_last;
 	};
 
 
@@ -202,8 +202,8 @@ namespace UI {
 		const char* old_title;
 		const char* old_message;
 		uint16_t old_time;
-		unsigned long spin_us_last;
-		unsigned long bound_us_last;
+		unsigned long spin_ms_last;
+		unsigned long bound_ms_last;
 		uint8_t spin_count;
 	};
 

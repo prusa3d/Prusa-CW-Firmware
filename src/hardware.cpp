@@ -44,10 +44,10 @@ uint8_t Hardware::fan_duty[2] = {0, 0};
 uint8_t Hardware::fan_pwm_pins[2] = {FAN1_PWM_PIN, FAN2_PWM_PIN};
 uint8_t Hardware::fan_enable_pins[2] = {FAN1_PIN, FAN2_PIN};
 uint8_t Hardware::fans_target_temp(0);
-unsigned long Hardware::accel_us_last(0);
-unsigned long Hardware::fans_us_last(0);
-unsigned long Hardware::adc_us_last(0);
-unsigned long Hardware::heater_us_last(0);
+unsigned long Hardware::accel_ms_last(0);
+unsigned long Hardware::fans_ms_last(0);
+unsigned long Hardware::adc_ms_last(0);
+unsigned long Hardware::heater_ms_last(0);
 unsigned long Hardware::button_timer(0);
 double Hardware::PI_summ_err(0.0);
 bool Hardware::do_acceleration(false);
@@ -224,7 +224,7 @@ void Hardware::speed_configuration(uint8_t speed, bool fast_mode, bool gear_shif
 		} else {
 			target_accel_period = map(speed, 1, 10, MIN_FAST_SPEED, MAX_FAST_SPEED);
 			microstep_control = FAST_SPEED_START;
-			accel_us_last = millis();
+			accel_ms_last = millis();
 		}
 	} else {
 		myStepper.set_IHOLD_IRUN(10, 10, 0);
@@ -253,7 +253,7 @@ void Hardware::run_heater() {
 	#else
 		outputchip.digitalWrite(FAN_HEAT_PIN, HIGH);
 	#endif
-	heater_us_last = millis();
+	heater_ms_last = millis();
 	wdt_enable(WDTO_4S);
 }
 
@@ -266,7 +266,7 @@ void Hardware::stop_heater() {
 	#else
 		outputchip.digitalWrite(FAN_HEAT_PIN, LOW);
 	#endif
-	heater_us_last = 0;
+	heater_ms_last = 0;
 	wdt_disable();
 }
 
@@ -427,17 +427,17 @@ void Hardware::fans_check() {
 }
 
 uint8_t Hardware::loop() {
-	unsigned long us_now = millis();
-	if (do_acceleration && us_now - accel_us_last >= 50) {
-		accel_us_last = us_now;
+	unsigned long ms_now = millis();
+	if (do_acceleration && ms_now - accel_ms_last >= 50) {
+		accel_ms_last = ms_now;
 		acceleration();
 	}
-	if (us_now - fans_us_last >= FAN_CHECK_PERIOD) {
-		fans_us_last = us_now;
+	if (ms_now - fans_ms_last >= FAN_CHECK_PERIOD) {
+		fans_ms_last = ms_now;
 		fans_check();
 	}
-	if (us_now - adc_us_last >= 500) {
-		adc_us_last = us_now;
+	if (ms_now - adc_ms_last >= 500) {
+		adc_ms_last = ms_now;
 		read_adc();
 		if (fans_target_temp) {
 			fans_PI_regulator();
@@ -456,7 +456,7 @@ uint8_t Hardware::loop() {
 
 	#ifndef CW1S
 		// failed once, failed every time
-		heater_error = heater_us_last && !fan_rpm[2] && us_now - heater_us_last > HEATER_CHECK_DELAY;
+		heater_error = heater_ms_last && !fan_rpm[2] && ms_now - heater_ms_last > HEATER_CHECK_DELAY;
 	#endif
 
 	// cover

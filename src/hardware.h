@@ -94,10 +94,10 @@ private:
 
 	static uint8_t fan_errors;
 
-	static unsigned long accel_us_last;
-	static unsigned long fans_us_last;
-	static unsigned long adc_us_last;
-	static unsigned long heater_us_last;
+	static unsigned long accel_ms_last;
+	static unsigned long fans_ms_last;
+	static unsigned long adc_ms_last;
+	static unsigned long heater_ms_last;
 	static unsigned long button_timer;
 	static double PI_summ_err;
 	static bool do_acceleration;

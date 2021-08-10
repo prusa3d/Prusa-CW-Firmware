@@ -56,7 +56,7 @@ namespace States {
 		const char* message;
 		uint8_t* const target_temp;
 		uint8_t* const fans_duties;
-		unsigned long us_last;
+		unsigned long ms_last;
 		bool canceled;
 	private:
 		const char* get_hw_pause_reason();
