@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Countimer.h"
-#include "hardware.h"
+#include "device.h"
 #include "i18n.h"
 #include "config.h"
 #include "simple_print.h"
@@ -54,7 +54,7 @@ namespace States {
 	protected:
 		Base* continue_to;
 		const char* message;
-		uint8_t* const target_temp;
+		uint8_t* target_temp;
 		uint8_t* const fans_duties;
 		unsigned long ms_last;
 		bool canceled;
@@ -166,7 +166,7 @@ namespace States {
 
 
 	// States::Test_heater
-	class Test_heater : public Base, public SimplePrint {
+	class Test_heater : public Base {
 	public:
 		Test_heater(
 			const char* title,
@@ -177,6 +177,7 @@ namespace States {
 		bool get_info2(char* buffer, uint8_t size);
 	private:
 		uint8_t test_time;
+		uint8_t new_chamb_temp;
 		float old_chamb_temp;
 		uint16_t old_seconds;
 		bool draw;

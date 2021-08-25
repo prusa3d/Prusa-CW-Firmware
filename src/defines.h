@@ -39,17 +39,6 @@
 #define LONG_PRESS_TIME		1000
 #define	P					10	// 0.5
 #define I					0.001
-#define MIN_TARGET_TEMP_C	20
-#ifdef CW1S
-  #define MAX_TARGET_TEMP_C	60
-  #define HEATING_ON_FAN1_DUTY  100
-  #define CHAMBER_TEMP_THR_FAN1_ON	35
-  #define CHAMBER_TEMP_THR_FAN1_DUTY	40
-#else
-  #define MAX_TARGET_TEMP_C	40
-#endif
-#define MIN_TARGET_TEMP_F	MIN_TARGET_TEMP_C * 1.8 + 32
-#define MAX_TARGET_TEMP_F	MAX_TARGET_TEMP_C * 1.8 + 32
 #define MAX_WARMUP_RUNTIME	15		// minutes
 #define MAX_CURING_RUNTIME	60		// minutes
 #define MAX_DRYING_RUNTIME	60		// minutes
@@ -60,7 +49,6 @@
 #define MIN_LED_INTENSITY	1		// 0-100 %
 #define MIN_LCD_BRIGHTNESS	5		// 0-100 %
 #define MIN_FAN_SPEED		30		// 0-100 %
-#define FAN_CHECK_PERIOD	500		// microseconds
 #define SWITCH_TEST_COUNT	10
 #define ROTATION_TEST_TIME	3		// minutes
 #define FANS_TEST_TIME		2		// minutes
@@ -69,7 +57,8 @@
 #define UVLED_MAX_TEMP		70.0	// celsius
 #define HEATER_TEST_TIME	10		// minutes
 #define HEATER_TEST_GAIN	5.0		// celsius
-#define HEATER_CHECK_DELAY	2000	// microseconds
+#define HEATER_CHECK_DELAY	2500	// microseconds
+#define SN_ADDRESS			0x7fe0
 #define SN_LENGTH			15
 #define MAX_MENU_DEPTH		5
 #define MENU_REDRAW_US		1000

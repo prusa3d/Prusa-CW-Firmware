@@ -18,100 +18,73 @@ float fahrenheit2celsius(float);
 
 class Hardware {
 public:
-	Hardware();
+	Hardware(uint16_t model_magic);
 
-	static void encoder_read();
+	void encoder_read();
+	void run_motor();
+	void stop_motor();
+	void enable_stepper();
+	void disable_stepper();
+	void speed_configuration(uint8_t speed, bool fast_mode, bool gear_shifting = false);
+	void acceleration();
 
-	static void run_motor();
-	static void stop_motor();
-	static void enable_stepper();
-	static void disable_stepper();
-	static void speed_configuration(uint8_t speed, bool fast_mode, bool gear_shifting = false);
-	static void acceleration();
+	void run_heater();
+	void stop_heater();
+	void run_led();
+	void stop_led();
 
-	static void run_heater();
-	static void stop_heater();
+	bool is_cover_closed();
+	bool is_tank_inserted();
 
-	static void run_led();
-	static void stop_led();
+	void echo();
+	void beep();
+	void warning_beep();
 
-	static bool is_cover_closed();
-	static bool is_tank_inserted();
+	void set_chamber_target_temp(uint8_t target_temp);
 
-	static void echo();
-	static void beep();
-	static void warning_beep();
+	void set_fans(uint8_t* duties);
+	void fans_duty(uint8_t fan, uint8_t duty);
 
-	static void set_fans(uint8_t* duties);
-	static void set_target_temp(uint8_t target_temp);
-	static void set_fan1_duty(uint8_t duty);
-	static void set_fan2_duty(uint8_t duty);
+	uint8_t loop();
 
-	static uint8_t loop();
+	uint16_t model_magic;
+	uint16_t fan_rpm[3];
+	volatile uint8_t fan_tacho_count[3];
+	volatile uint8_t microstep_control;
+	float chamber_temp_celsius;
+	float chamber_temp;
+	float uvled_temp_celsius;
+	float uvled_temp;
+	bool heater_error;
 
-	#ifdef CW1S
-		static void slow_pwm_tick();
-		static void adjust_fan_speed(uint8_t fan, uint8_t duty);
-		static uint8_t get_heater_pwm_duty();
-		static void set_heater_pwm_duty(uint16_t duty);
-	#endif
+protected:
+	MCP outputchip;
+	Trinamic_TMC2130 stepper;
 
-	static uint16_t fan_rpm[3];
-	static volatile uint8_t fan_tacho_count[3];
-	static volatile uint8_t microstep_control;
-	static float chamber_temp_celsius;
-	static float chamber_temp;
-	static float uvled_temp_celsius;
-	static float uvled_temp;
-	static bool heater_error;
-	#ifdef CW1S
-		static bool wanted_heater_pin_state;
-		static bool slow_pwm_on;
-	#endif
+	void read_adc();
+	int16_t read_adc_raw(uint8_t pin);
+	void fans_duty();
+	void fans_PI_regulator();
+	void fans_rpm();
+	virtual void heat_control();
+	virtual bool handle_heater();
 
-private:
-	static MCP outputchip;
-	static Trinamic_TMC2130 myStepper;
+	uint8_t lcd_encoder_bits;
+	volatile int8_t rotary_diff;
+	uint8_t target_accel_period;
 
-	static void read_adc();
-	static int16_t read_adc_raw(uint8_t pin);
-	static void fans_duty();
-	static void fans_duty(uint8_t fan, uint8_t duty);
-	static void fans_PI_regulator();
-	static void fans_check();
-	#ifdef CW1S
-		static void set_heater_pin_state(bool value);
-	#endif
+	uint8_t fan_duty[2];
+	uint8_t chamber_target_temp;
 
-	static uint8_t lcd_encoder_bits;
-	static volatile int8_t rotary_diff;
-	static uint8_t target_accel_period;
-
-	static uint8_t fan_duty[2];
-	static uint8_t fan_pwm_pins[2];
-	static uint8_t fan_enable_pins[2];
-	static uint8_t fans_target_temp;
-
-	static uint8_t fan_errors;
-
-	static unsigned long accel_ms_last;
-	static unsigned long fans_ms_last;
-	static unsigned long adc_ms_last;
-	static unsigned long heater_ms_last;
-	static unsigned long button_timer;
-	static double PI_summ_err;
-	static bool do_acceleration;
-	static bool cover_closed;
-	static bool tank_inserted;
-	static bool button_active;
-	static bool long_press_active;
-	static bool adc_channel;
-
-	#ifdef CW1S
-		static bool heater_on;
-		static bool heater_pin_state;
-		static uint16_t heater_pwm_duty;
-	#endif
+	unsigned long accel_ms_last;
+	unsigned long one_second_ms_last;
+	unsigned long heater_ms_last;
+	unsigned long button_timer;
+	double PI_summ_err;
+	bool do_acceleration;
+	bool cover_closed;
+	bool tank_inserted;
+	bool button_active;
+	bool long_press_active;
+	bool adc_channel;
 };
-
-extern Hardware hw;

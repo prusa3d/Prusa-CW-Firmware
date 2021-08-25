@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hardware.h"
+#include "device.h"
 #include "i18n.h"
 #include "states_items.h"
 #include "simple_print.h"

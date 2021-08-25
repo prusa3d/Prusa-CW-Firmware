@@ -78,13 +78,13 @@ namespace States {
 		&selftest_rotation,
 		pgmstr_remove_tank,
 		pgmstr_insert_tank,
-		hw.is_tank_inserted);
+		is_tank_inserted);
 	Test_switch selftest_cover(
 		pgmstr_cover_test,
 		&selftest_tank,
 		pgmstr_open_cover,
 		pgmstr_close_cover,
-		hw.is_cover_closed);
+		is_cover_closed);
 
 
 	/*** states data ***/

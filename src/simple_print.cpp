@@ -72,5 +72,6 @@ void SimplePrint::write(uint8_t c) {
 }
 
 char* SimplePrint::get_position() {
+	*_buffer_position = char(0);
 	return _buffer_position;
 }

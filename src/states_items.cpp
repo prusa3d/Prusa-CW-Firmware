@@ -33,11 +33,9 @@ namespace States {
 		if (continue_after) {
 			timer.setCounter(0, *continue_after, 0, options & STATE_OPTION_TIMER_UP);
 		}
-		/* FIXME PI_regulator is not working as expected
 		if (target_temp) {
-			hw.set_target_temp(*target_temp);
+			hw.set_chamber_target_temp(*target_temp);
 		}
-		*/
 		if (options & (STATE_OPTION_UVLED | STATE_OPTION_HEATER) && (!hw.is_cover_closed() || hw.is_tank_inserted())) {
 			if (continue_after) {
 				timer.start();
@@ -389,7 +387,7 @@ namespace States {
 			buffer[0] = fast_mode ? 'W' : 'C';
 			buffer_init(++buffer, --size);
 			print(test_speed, 10, '0');
-			get_position()[0] = char(0);
+			get_position();
 			draw = false;
 			return true;
 		}
@@ -463,7 +461,7 @@ namespace States {
 			print(fans_speed[0]);
 			print_P(pgmstr_double_space+1);
 			print(fans_speed[1]);
-			get_position()[0] = char(0);
+			get_position();
 			draw1 = false;
 			return true;
 		}
@@ -477,7 +475,7 @@ namespace States {
 			print(hw.fan_rpm[0]);
 			print_P(pgmstr_fan2);
 			print(hw.fan_rpm[1]);
-			get_position()[0] = char(0);
+			get_position();
 			draw2 = false;
 			return true;
 		}
@@ -526,6 +524,8 @@ namespace States {
 
 	void Test_heater::start() {
 		old_chamb_temp = hw.chamber_temp_celsius;
+		new_chamb_temp = int(2 * HEATER_TEST_GAIN + old_chamb_temp);
+		target_temp = &new_chamb_temp;
 		draw = true;
 		Base::start();
 	}
@@ -536,13 +536,10 @@ namespace States {
 			return &error;
 		}
 		uint16_t seconds = timer.getCurrentTimeInSeconds() - 1;
-#ifdef CW1S
-		// TODO this is not working on CW1S
 		if (!seconds && old_chamb_temp + HEATER_TEST_GAIN > hw.chamber_temp_celsius) {
 			error.new_text(pgmstr_heater_failure, pgmstr_nopower_error);
 			return &error;
 		}
-#endif
 		if (seconds != old_seconds) {
 			old_seconds = seconds;
 			draw = true;
@@ -552,15 +549,7 @@ namespace States {
 
 	bool Test_heater::get_info2(char* buffer, uint8_t size) {
 		if (draw) {
-			buffer_init(buffer, size);
-#ifdef CW1S
-			print_P(pgmstr_fan1);
-			print(hw.fan_rpm[0]);
-#else
-			print_P(pgmstr_fan3);
-			print(hw.fan_rpm[2]);
-#endif
-			get_position()[0] = char(0);
+			hw.print_heater_fan(buffer, size);
 			draw = false;
 			return true;
 		}

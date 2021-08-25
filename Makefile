@@ -2,6 +2,7 @@
 DEVICE = CW1S
 PROJECT = Prusa-${DEVICE}-Firmware
 DIRS = lib src
+DEVICES_DIR = devices
 I18N = i18n
 LANG = en
 BUILD_DIR = build
@@ -26,18 +27,19 @@ else
 $(error Use CW1 or CW1S as DEVICE)
 endif
 
-DEFS = -DF_CPU=16000000 -DARDUINO=10805 -DUSB_VID=0x2c99 -DUSB_PID=${USB_PID} -DUSB_MANUFACTURER='"Prusa Research prusa3d.com"' -DUSB_PRODUCT='"Original Prusa ${DEVICE}"' -D${DEVICE}
-INCLUDE = $(foreach dir, ${DIRS}, -I${dir}) -I${BUILD_DIR}
+DEFS = -DF_CPU=16000000 -DARDUINO=10805 -DUSB_VID=0x2c99 -DUSB_PID=${USB_PID} -DUSB_MANUFACTURER='"Prusa Research prusa3d.com"' -DUSB_PRODUCT='"Original Prusa ${DEVICE}"' -D${DEVICE}_HW
+INCLUDE = $(foreach dir, ${DIRS}, -I${dir}) -I${DEVICES_DIR} -I${BUILD_DIR}
 
 CFLAGS = ${OPT} ${WARN} ${CSTANDARD} ${MCU} ${INCLUDE} ${DEFS}
 CPPFLAGS = ${OPT} ${WARN} ${CPPSTANDARD} ${CPPTUNING} ${MCU} ${INCLUDE} ${DEFS}
 LINKFLAGS = -fuse-linker-plugin -Wl,--relax,--gc-sections,--defsym=__TEXT_REGION_LENGTH__=28k
 
-CSRCS = $(foreach dir, ${DIRS}, $(wildcard ${dir}/*.c))
-CPPSRCS = $(foreach dir, ${DIRS}, $(wildcard ${dir}/*.cpp))
-OBJS = $(addprefix $(BUILD_DIR)/, $(patsubst %.c, %.o, $(CSRCS))) $(addprefix $(BUILD_DIR)/, $(patsubst %.cpp, %.o, $(CPPSRCS)))
-DEPS = $(addprefix $(BUILD_DIR)/, $(patsubst %.c, %.d, $(CSRCS))) $(addprefix $(BUILD_DIR)/, $(patsubst %.cpp, %.dd, $(CPPSRCS)))
-VERSION = $(shell git describe --abbrev=0 --tags)
+DEVICE_LOWER := $(shell echo ${DEVICE} | tr '[:upper:]' '[:lower:]')
+CSRCS := $(foreach dir, ${DIRS}, $(wildcard ${dir}/*.c))
+CPPSRCS := $(foreach dir, ${DIRS}, $(wildcard ${dir}/*.cpp)) ${DEVICES_DIR}/${DEVICE_LOWER}.cpp
+OBJS := $(addprefix $(BUILD_DIR)/, $(patsubst %.c, %.o, $(CSRCS))) $(addprefix $(BUILD_DIR)/, $(patsubst %.cpp, %.o, $(CPPSRCS)))
+DEPS := $(addprefix $(BUILD_DIR)/, $(patsubst %.c, %.d, $(CSRCS))) $(addprefix $(BUILD_DIR)/, $(patsubst %.cpp, %.dd, $(CPPSRCS)))
+VERSION := $(shell git describe --abbrev=0 --tags)
 VERSION_FILE = ${BUILD_DIR}/version.h
 LANG_TEMPLATE = ${I18N}/${PROJECT}-${VERSION}.pot
 
@@ -60,7 +62,7 @@ $(BUILD_DIR)%/.:
 
 $(BUILD_DIR)/%.hex: ${BUILD_DIR}/%.elf
 	${OBJCOPY} -O ihex -R .eeprom $< $@.tmp
-	@echo "; device = $(shell echo ${DEVICE} | tr '[:upper:]' '[:lower:]')" > $@
+	@echo "; device = ${DEVICE_LOWER}" > $@
 	@echo >> $@
 	cat $@.tmp >> $@
 	rm $@.tmp
@@ -94,7 +96,7 @@ $(VERSION_FILE).tmp: ${BUILD_DIR}/${LANG}.h | $${@D}/.
 	@echo "\"${LANG}.h\"" >> $@
 
 clean:
-	rm -f $(foreach dir, ${DIRS}, $(wildcard ${BUILD_DIR}/${dir}/*.o)) $(foreach dir, ${DIRS}, $(wildcard ${BUILD_DIR}/${dir}/*.d*)) ${BUILD_DIR}/*.h $(VERSION_FILE).tmp ${BUILD_DIR}/*.sed
+	rm -f $(foreach dir, ${DIRS} ${DEVICES_DIR}, $(wildcard ${BUILD_DIR}/${dir}/*.o)) $(foreach dir, ${DIRS} ${DEVICES_DIR}, $(wildcard ${BUILD_DIR}/${dir}/*.d*)) ${BUILD_DIR}/*.h $(VERSION_FILE).tmp ${BUILD_DIR}/*.sed
 
 distclean: clean
 	rm -rf ${BUILD_DIR}/*.hex ${BUILD_DIR}/*.elf ${BUILD_DIR}/*.map ${I18N}/*.pot tags doc

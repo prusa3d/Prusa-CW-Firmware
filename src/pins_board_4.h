@@ -41,9 +41,7 @@
 #define FAN2_TACHO_PIN				2
 
 #define FAN_HEAT_PIN				MCP_B2
-#ifndef CW1S
-  #define FAN_HEAT_TACHO_PIN			1
-#endif
+#define FAN_HEAT_TACHO_PIN			1
 
 #define ANALOG_SWITCH_A				MCP_B1
 #define ANALOG_SWITCH_B				MCP_B0

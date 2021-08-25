@@ -23,47 +23,36 @@ const int16_t uvled_temp_table_raw[34] PROGMEM = {
 };
 
 
-uint16_t Hardware::fan_rpm[3] = {1, 1, 1};
-volatile uint8_t Hardware::fan_tacho_count[3] = {0, 0, 0};
-volatile uint8_t Hardware::microstep_control(FAST_SPEED_START);
-float Hardware::chamber_temp_celsius(-40.0);
-float Hardware::chamber_temp(-40.0);
-float Hardware::uvled_temp_celsius(-40.0);
-float Hardware::uvled_temp(-40.0);
-bool Hardware::heater_error(false);
-#ifdef CW1S
-	bool Hardware::wanted_heater_pin_state(false);
-	bool Hardware::slow_pwm_on(false);
-#endif
-MCP Hardware::outputchip(0, 8);
-Trinamic_TMC2130 Hardware::myStepper(CS_PIN);
-uint8_t Hardware::lcd_encoder_bits(0);
-volatile int8_t Hardware::rotary_diff(0);
-uint8_t Hardware::target_accel_period(FAST_SPEED_START);
-uint8_t Hardware::fan_duty[2] = {0, 0};
-uint8_t Hardware::fan_pwm_pins[2] = {FAN1_PWM_PIN, FAN2_PWM_PIN};
-uint8_t Hardware::fan_enable_pins[2] = {FAN1_PIN, FAN2_PIN};
-uint8_t Hardware::fans_target_temp(0);
-unsigned long Hardware::accel_ms_last(0);
-unsigned long Hardware::fans_ms_last(0);
-unsigned long Hardware::adc_ms_last(0);
-unsigned long Hardware::heater_ms_last(0);
-unsigned long Hardware::button_timer(0);
-double Hardware::PI_summ_err(0.0);
-bool Hardware::do_acceleration(false);
-bool Hardware::cover_closed(false);
-bool Hardware::tank_inserted(false);
-bool Hardware::button_active(false);
-bool Hardware::long_press_active(false);
-bool Hardware::adc_channel(false);
-#ifdef CW1S
-	bool Hardware::heater_on(false);
-	bool Hardware::heater_pin_state(false);
-	uint16_t Hardware::heater_pwm_duty(0);
-#endif
-
-
-Hardware::Hardware() {
+Hardware::Hardware(uint16_t model_magic)
+:
+	model_magic(model_magic),
+	fan_rpm{0, 0, 0},
+	fan_tacho_count{0, 0, 0},
+	microstep_control(FAST_SPEED_START),
+	chamber_temp_celsius(-40.0),
+	chamber_temp(-40.0),
+	uvled_temp_celsius(-40.0),
+	uvled_temp(-40.0),
+	heater_error(false),
+	outputchip(0, 8),
+	stepper(CS_PIN),
+	lcd_encoder_bits(0),
+	rotary_diff(0),
+	target_accel_period(FAST_SPEED_START),
+	fan_duty{0, 0},
+	chamber_target_temp(0),
+	accel_ms_last(0),
+	one_second_ms_last(0),
+	heater_ms_last(0),
+	button_timer(0),
+	PI_summ_err(0.0),
+	do_acceleration(false),
+	cover_closed(false),
+	tank_inserted(false),
+	button_active(false),
+	long_press_active(false),
+	adc_channel(false)
+{
 
 	outputchip.begin();
 	outputchip.pinMode(0B0000000010010111);
@@ -94,13 +83,13 @@ Hardware::Hardware() {
 	stop_heater();
 
 	// stepper driver init
-	myStepper.init();
-	myStepper.set_mres(16);					// ({1,2,4,8,16,32,64,128,256}) number of microsteps
-	myStepper.set_IHOLD_IRUN(10, 10, 0);	// ([0-31],[0-31],[0-5]) sets all currents to maximum
-	myStepper.set_I_scale_analog(0);		// ({0,1}) 0: I_REF internal, 1: sets I_REF to AIN
-	myStepper.set_tbl(1);					// ([0-3]) set comparator blank time to 16, 24, 36 or 54 clocks, 1 or 2 is recommended
-	myStepper.set_toff(8);					// ([0-15]) 0: driver disable, 1: use only with TBL>2, 2-15: off time setting during slow decay phase
-	myStepper.set_en_pwm_mode(1);			// 0: driver disable PWM mode, 1: driver enable PWM mode
+	stepper.init();
+	stepper.set_mres(16);				// ({1,2,4,8,16,32,64,128,256}) number of microsteps
+	stepper.set_IHOLD_IRUN(10, 10, 0);	// ([0-31],[0-31],[0-5]) sets all currents to maximum
+	stepper.set_I_scale_analog(0);		// ({0,1}) 0: I_REF internal, 1: sets I_REF to AIN
+	stepper.set_tbl(1);					// ([0-3]) set comparator blank time to 16, 24, 36 or 54 clocks, 1 or 2 is recommended
+	stepper.set_toff(8);				// ([0-15]) 0: driver disable, 1: use only with TBL>2, 2-15: off time setting during slow decay phase
+	stepper.set_en_pwm_mode(1);			// 0: driver disable PWM mode, 1: driver enable PWM mode
 
 	cover_closed = is_cover_closed();
 	tank_inserted = is_tank_inserted();
@@ -110,23 +99,13 @@ void Hardware::read_adc() {
 	if (adc_channel) {
 		uvled_temp_celsius = interpolate_i16_ylin_P(read_adc_raw(THERM_READ_PIN) >> 2, 34, uvled_temp_table_raw, 1250, -50) / 10.0;
 		uvled_temp = config.SI_unit_system ? uvled_temp_celsius : celsius2fahrenheit(uvled_temp_celsius);
+		USB_PRINTP("UV: ");
+		USB_PRINTLN(uvled_temp_celsius);
 	} else {
 		chamber_temp_celsius = interpolate_i16_ylin_P(read_adc_raw(THERM_READ_PIN) >> 2, 34, chamber_temp_table_raw, 1250, -50) / 10.0;
 		chamber_temp = config.SI_unit_system ? chamber_temp_celsius : celsius2fahrenheit(chamber_temp_celsius);
-
-		#ifdef CW1S
-			if(heater_on){
-				float error = config.target_temp - chamber_temp_celsius;
-				uint16_t pwm_duty = error > 0.0 ? round((error < 2.0 ? error : 2.0) * 980) : 0;
-				set_heater_pwm_duty(pwm_duty);
-				adjust_fan_speed(0, HEATING_ON_FAN1_DUTY);
-
-			}else{
-				adjust_fan_speed(0, chamber_temp_celsius > CHAMBER_TEMP_THR_FAN1_ON ? (fan_duty[0] > CHAMBER_TEMP_THR_FAN1_DUTY ? fan_duty[0] : CHAMBER_TEMP_THR_FAN1_DUTY) : fan_duty[0]);
-
-			}
-		#endif
-
+		USB_PRINTP("CH: ");
+		USB_PRINTLN(chamber_temp_celsius);
 	}
 	adc_channel = !adc_channel;
 	outputchip.digitalWrite(ANALOG_SWITCH_A, adc_channel);
@@ -187,23 +166,13 @@ void Hardware::encoder_read() {
 	}
 }
 
-#ifdef CW1S
-	void Hardware::slow_pwm_tick() {
-		static uint16_t timer0_ticks = 0;
-		if(slow_pwm_on){
-			if(++timer0_ticks > 1000) timer0_ticks = 0;
-			wanted_heater_pin_state = timer0_ticks < heater_pwm_duty;
-		}
-	}
-#endif
-
 void Hardware::run_motor() {
-	TIMSK3 |= (1 << OCIE3A); // enable stepper timer
+	TIMSK3 |= (1 << OCIE3A);	// enable stepper timer
 	enable_stepper();
 }
 
 void Hardware::stop_motor() {
-	TIMSK3 = 0; // disable stepper timer
+	TIMSK3 = 0;					// disable stepper timer
 	disable_stepper();
 }
 
@@ -217,8 +186,8 @@ void Hardware::disable_stepper() {
 
 void Hardware::speed_configuration(uint8_t speed, bool fast_mode, bool gear_shifting) {
 	if (fast_mode) {
-		myStepper.set_IHOLD_IRUN(31, 31, 5);
-		myStepper.set_mres(16);
+		stepper.set_IHOLD_IRUN(31, 31, 5);
+		stepper.set_mres(16);
 		if (gear_shifting) {
 			microstep_control = map(speed, 1, 10, MIN_FAST_SPEED, MAX_FAST_SPEED);
 		} else {
@@ -227,8 +196,8 @@ void Hardware::speed_configuration(uint8_t speed, bool fast_mode, bool gear_shif
 			accel_ms_last = millis();
 		}
 	} else {
-		myStepper.set_IHOLD_IRUN(10, 10, 0);
-		myStepper.set_mres(256);
+		stepper.set_IHOLD_IRUN(10, 10, 0);
+		stepper.set_mres(256);
 		microstep_control = map(speed, 1, 10, MIN_SLOW_SPEED, MAX_SLOW_SPEED);
 	}
 	do_acceleration = fast_mode && !gear_shifting;
@@ -242,30 +211,16 @@ void Hardware::acceleration() {
 		microstep_control--;
 	} else {
 		do_acceleration = false;
-		myStepper.set_IHOLD_IRUN(10, 10, 5);
+		stepper.set_IHOLD_IRUN(10, 10, 5);
 	}
 }
 
 void Hardware::run_heater() {
-	#ifdef CW1S
-		heater_on = true;
-		slow_pwm_on = true;
-	#else
-		outputchip.digitalWrite(FAN_HEAT_PIN, HIGH);
-	#endif
 	heater_ms_last = millis();
 	wdt_enable(WDTO_4S);
 }
 
 void Hardware::stop_heater() {
-	#ifdef CW1S
-		set_heater_pin_state(false);
-		heater_on = false;
-		slow_pwm_on = false;
-		set_heater_pwm_duty(0);
-	#else
-		outputchip.digitalWrite(FAN_HEAT_PIN, LOW);
-	#endif
 	heater_ms_last = 0;
 	wdt_disable();
 }
@@ -298,13 +253,8 @@ void Hardware::echo() {
 }
 
 void Hardware::beep() {
-	analogWrite(BEEPER, 220);
-	delay(50);
-	digitalWrite(BEEPER, LOW);
-	delay(250);
-	analogWrite(BEEPER, 220);
-	delay(50);
-	digitalWrite(BEEPER, LOW);
+	warning_beep();
+	warning_beep();
 }
 
 void Hardware::warning_beep() {
@@ -314,53 +264,16 @@ void Hardware::warning_beep() {
 	delay(250);
 }
 
+void Hardware::set_chamber_target_temp(uint8_t target_temp) {
+	chamber_target_temp = target_temp;
+//	PI_summ_err = 0;
+}
+
 void Hardware::set_fans(uint8_t* duties) {
 	fan_duty[0] = duties[0];
 	fan_duty[1] = duties[1];
-	fans_target_temp = 0;
 	fans_duty();
 }
-
-void Hardware::set_target_temp(uint8_t target_temp) {
-	fans_target_temp = target_temp;
-	PI_summ_err = 0;
-}
-
-void Hardware::set_fan1_duty(uint8_t duty) {
-	fans_duty(0, duty);
-}
-
-void Hardware::set_fan2_duty(uint8_t duty) {
-	fans_duty(1, duty);
-}
-
-#ifdef CW1S
-	void Hardware::adjust_fan_speed(uint8_t fan, uint8_t duty) {
-		if(fan_duty[fan] != duty){
-			fan_duty[fan] = duty;
-			fans_duty(fan, duty);
-		}
-	}
-
-	uint8_t Hardware::get_heater_pwm_duty() {
-		return heater_pwm_duty;
-	}
-
-	void Hardware::set_heater_pwm_duty(uint16_t duty) {
-		heater_pwm_duty = duty;
-		if(heater_pwm_duty > 1000) heater_pwm_duty = 1000;
-		if(duty == 0){
-			wanted_heater_pin_state = false;
-		}
-	}
-
-	void Hardware::set_heater_pin_state(bool value) {
-		if(heater_pin_state != value) {
-			outputchip.digitalWrite(FAN_HEAT_PIN, value);
-			heater_pin_state = value;
-		}
-	}
-#endif
 
 void Hardware::fans_duty() {
 	for (uint8_t i = 0; i < 2; ++i) {
@@ -372,6 +285,8 @@ void Hardware::fans_duty(uint8_t fan, uint8_t duty) {
 	USB_PRINTP("fan ");
 	USB_PRINT(fan);
 	USB_PRINTP("->");
+	uint8_t fan_pwm_pins[2] = {FAN1_PWM_PIN, FAN2_PWM_PIN};
+	uint8_t fan_enable_pins[2] = {FAN1_PIN, FAN2_PIN};
 	if (duty) {
 		USB_PRINTLN(duty);
 		analogWrite(fan_pwm_pins[fan], map(duty, 0, 100, 255, 0));
@@ -382,7 +297,7 @@ void Hardware::fans_duty(uint8_t fan, uint8_t duty) {
 		digitalWrite(fan_pwm_pins[fan], LOW);
 	}
 }
-
+/*
 void Hardware::fans_PI_regulator() {
 	// FIXME this is not working as expected :(
 //	USB_PRINTP("actual: ");
@@ -415,15 +330,24 @@ void Hardware::fans_PI_regulator() {
 		fans_duty();
 	}
 }
-
-void Hardware::fans_check() {
+*/
+void Hardware::fans_rpm() {
 	for (uint8_t i = 0; i < 3; ++i) {
-		fan_rpm[i] = 60000 / FAN_CHECK_PERIOD * fan_tacho_count[i];
-		fan_tacho_count[i] = 0;
+		fan_rpm[i] = 60 * fan_tacho_count[i];
 //		USB_PRINT(i);
 //		USB_PRINTP(": ");
+//		USB_PRINT(fan_tacho_count[i]);
+//		USB_PRINTP("->");
 //		USB_PRINTLN(fan_rpm[i]);
+		fan_tacho_count[i] = 0;
 	}
+}
+
+void Hardware::heat_control() {
+}
+
+bool Hardware::handle_heater() {
+	return false;
 }
 
 uint8_t Hardware::loop() {
@@ -432,32 +356,29 @@ uint8_t Hardware::loop() {
 		accel_ms_last = ms_now;
 		acceleration();
 	}
-	if (ms_now - fans_ms_last >= FAN_CHECK_PERIOD) {
-		fans_ms_last = ms_now;
-		fans_check();
-	}
-	if (ms_now - adc_ms_last >= 500) {
-		adc_ms_last = ms_now;
+	if (ms_now - one_second_ms_last >= 1000) {
+		one_second_ms_last = ms_now;
 		read_adc();
-		if (fans_target_temp) {
+		fans_rpm();
+		heat_control();
+/*
+		// TODO to fan_control() of cw1
+		if (chamber_target_temp) {
 			fans_PI_regulator();
 		}
+*/
 	}
 
-	#ifdef CW1S
-		if (wanted_heater_pin_state != heater_pin_state) {
-			set_heater_pin_state(wanted_heater_pin_state);
-		}
-	#endif
-
 	uint8_t events = 0;
-	if (heater_error)
+	// failed once, failed every time
+	if (heater_error) {
 		return events;
+	}
 
-	#ifndef CW1S
-		// failed once, failed every time
-		heater_error = heater_ms_last && !fan_rpm[2] && ms_now - heater_ms_last > HEATER_CHECK_DELAY;
-	#endif
+	heater_error = heater_ms_last && !handle_heater() && ms_now - heater_ms_last > HEATER_CHECK_DELAY;
+	if (heater_error) {
+		stop_heater();
+	}
 
 	// cover
 	bool cover_closed_now = is_cover_closed();
@@ -512,5 +433,3 @@ uint8_t Hardware::loop() {
 
 	return events;
 }
-
-Hardware hw;
