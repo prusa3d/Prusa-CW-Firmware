@@ -16,6 +16,7 @@
 float celsius2fahrenheit(float);
 float fahrenheit2celsius(float);
 
+
 class Hardware {
 public:
 	Hardware(uint16_t model_magic);
@@ -41,9 +42,7 @@ public:
 	void warning_beep();
 
 	void set_chamber_target_temp(uint8_t target_temp);
-
-	void set_fans(uint8_t* duties);
-	void fans_duty(uint8_t fan, uint8_t duty);
+	void force_fan_speed(uint8_t fan_speed_1, uint8_t fan_speed_2);
 
 	uint8_t loop();
 
@@ -63,28 +62,29 @@ protected:
 
 	void read_adc();
 	int16_t read_adc_raw(uint8_t pin);
-	void fans_duty();
-	void fans_PI_regulator();
+	void cooling();
 	void fans_rpm();
-	virtual void heat_control();
+	void set_fan_speed(uint8_t fan, uint8_t speed);
+	virtual void heating();
 	virtual bool handle_heater();
+	virtual void set_cooling_speed(uint8_t speed);
 
 	uint8_t lcd_encoder_bits;
 	volatile int8_t rotary_diff;
 	uint8_t target_accel_period;
 
-	uint8_t fan_duty[2];
+	uint8_t fan_speed[2];
 	uint8_t chamber_target_temp;
 
 	unsigned long accel_ms_last;
 	unsigned long one_second_ms_last;
 	unsigned long heater_ms_last;
 	unsigned long button_timer;
-	double PI_summ_err;
 	bool do_acceleration;
 	bool cover_closed;
 	bool tank_inserted;
 	bool button_active;
 	bool long_press_active;
 	bool adc_channel;
+	bool fans_forced;
 };

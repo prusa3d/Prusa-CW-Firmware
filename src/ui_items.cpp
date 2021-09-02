@@ -3,6 +3,7 @@
 #include "config.h"
 #include "ui_items.h"
 #include "states.h"
+#include "device.h"
 
 namespace UI {
 

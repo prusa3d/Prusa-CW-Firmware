@@ -9,7 +9,6 @@ namespace States {
 	Base::Base(
 		const char* title,
 		uint8_t options,
-		uint8_t* fans_duties,
 		Base* continue_to,
 		uint8_t* continue_after,
 		uint8_t* motor_speed,
@@ -18,7 +17,6 @@ namespace States {
 		continue_to(continue_to),
 		message(nullptr),
 		target_temp(target_temp),
-		fans_duties(fans_duties),
 		ms_last(0),
 		canceled(false),
 		title(title),
@@ -29,7 +27,6 @@ namespace States {
 
 	void Base::start() {
 		canceled = false;
-		hw.set_fans(fans_duties);
 		if (continue_after) {
 			timer.setCounter(0, *continue_after, 0, options & STATE_OPTION_TIMER_UP);
 		}
@@ -246,7 +243,7 @@ namespace States {
 		uint8_t* motor_speed,
 		uint8_t* target_temp)
 	:
-		Base(title, STATE_OPTION_TIMER_UP | STATE_OPTION_HEATER | STATE_OPTION_CHAMB_TEMP, config.fans_drying_speed, continue_to, continue_after, motor_speed, target_temp)
+		Base(title, STATE_OPTION_TIMER_UP | STATE_OPTION_HEATER | STATE_OPTION_CHAMB_TEMP, continue_to, continue_after, motor_speed, target_temp)
 	{}
 
 	Base* Warmup::loop() {
@@ -254,6 +251,17 @@ namespace States {
 			return continue_to;
 		}
 		return Base::loop();
+	}
+
+
+	// States::Cooldown
+	Cooldown::Cooldown(Base* continue_to, uint8_t* continue_after) :
+		Base(pgmstr_cooldown, STATE_OPTION_CONTROLS, continue_to, continue_after)
+	{}
+
+	void Cooldown::start() {
+		hw.force_fan_speed(100, 100);
+		Base::start();
 	}
 
 
@@ -283,7 +291,7 @@ namespace States {
 				break;
 		}
 		confirm.new_text(pgmstr_finished, text2);
-		hw.set_fans(fans_duties);
+		hw.force_fan_speed(0, 0);	// automatic fan control
 	}
 
 	Base* Confirm::loop() {
@@ -309,7 +317,7 @@ namespace States {
 		const char* message_off,
 		bool (*value_getter)())
 	:
-		Base(title, 0, config.fans_menu_speed, continue_to),
+		Base(title, 0, continue_to),
 		message_on(message_on),
 		message_off(message_off),
 		value_getter(value_getter),
@@ -349,7 +357,7 @@ namespace States {
 		const char* title,
 		Base* continue_to)
 	:
-		Base(title, 0, config.fans_menu_speed, continue_to, &test_time, &test_speed),
+		Base(title, 0, continue_to, &test_time, &test_speed),
 		test_time(ROTATION_TEST_TIME),
 		test_speed(0),
 		old_seconds(0),
@@ -400,7 +408,7 @@ namespace States {
 		const char* title,
 		Base* continue_to)
 	:
-		Base(title, 0, fans_speed, continue_to, &test_time),
+		Base(title, 0, continue_to, &test_time),
 		test_time(FANS_TEST_TIME),
 		fans_speed{0, 0},
 		old_fan_rpm{0, 0},
@@ -417,6 +425,7 @@ namespace States {
 		old_seconds = 60 * FANS_TEST_TIME;
 		draw1 = true;
 		draw2 = true;
+		hw.force_fan_speed(fans_speed[0], fans_speed[1]);
 		Base::start();
 	}
 
@@ -445,7 +454,7 @@ namespace States {
 				if (fans_speed[0] < 100) {
 					fans_speed[0] += 20;
 					fans_speed[1] = 100 - fans_speed[0];
-					hw.set_fans(fans_speed);
+					hw.force_fan_speed(fans_speed[0], fans_speed[1]);
 					draw1 = true;
 					old_fan_rpm[0] = hw.fan_rpm[0];
 					old_fan_rpm[1] = hw.fan_rpm[1];
@@ -486,16 +495,16 @@ namespace States {
 	// States::Test_uvled
 	Test_uvled::Test_uvled(
 		const char* title,
-		uint8_t* fans_duties,
 		Base* continue_to)
 	:
-		Base(title, STATE_OPTION_UVLED | STATE_OPTION_UVLED_TEMP, fans_duties, continue_to, &test_time),
+		Base(title, STATE_OPTION_UVLED | STATE_OPTION_UVLED_TEMP, continue_to, &test_time),
 		test_time(UVLED_TEST_TIME),
 		old_uvled_temp(0.0)
 	{}
 
 	void Test_uvled::start() {
 		old_uvled_temp = hw.uvled_temp_celsius;
+		hw.force_fan_speed(0, 0);	// automatic fan control
 		Base::start();
 	}
 
@@ -512,10 +521,9 @@ namespace States {
 	// States::Test_heater
 	Test_heater::Test_heater(
 		const char* title,
-		uint8_t* fans_duties,
 		Base* continue_to)
 	:
-		Base(title, STATE_OPTION_HEATER | STATE_OPTION_CHAMB_TEMP, fans_duties, continue_to, &test_time),
+		Base(title, STATE_OPTION_HEATER | STATE_OPTION_CHAMB_TEMP, continue_to, &test_time),
 		test_time(HEATER_TEST_TIME),
 		old_chamb_temp(0.0),
 		old_seconds(0),
@@ -525,6 +533,10 @@ namespace States {
 	void Test_heater::start() {
 		old_chamb_temp = hw.chamber_temp_celsius;
 		new_chamb_temp = int(2 * HEATER_TEST_GAIN + old_chamb_temp);
+		USB_PRINTP("actual: ");
+		USB_PRINTLN(old_chamb_temp);
+		USB_PRINTP("target: ");
+		USB_PRINTLN(new_chamb_temp);
 		target_temp = &new_chamb_temp;
 		draw = true;
 		Base::start();

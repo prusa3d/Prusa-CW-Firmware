@@ -39,19 +39,19 @@ Hardware::Hardware(uint16_t model_magic)
 	lcd_encoder_bits(0),
 	rotary_diff(0),
 	target_accel_period(FAST_SPEED_START),
-	fan_duty{0, 0},
+	fan_speed{0, 0},
 	chamber_target_temp(0),
 	accel_ms_last(0),
 	one_second_ms_last(0),
 	heater_ms_last(0),
 	button_timer(0),
-	PI_summ_err(0.0),
 	do_acceleration(false),
 	cover_closed(false),
 	tank_inserted(false),
 	button_active(false),
 	long_press_active(false),
-	adc_channel(false)
+	adc_channel(false),
+	fans_forced(false)
 {
 
 	outputchip.begin();
@@ -266,30 +266,31 @@ void Hardware::warning_beep() {
 
 void Hardware::set_chamber_target_temp(uint8_t target_temp) {
 	chamber_target_temp = target_temp;
-//	PI_summ_err = 0;
 }
 
-void Hardware::set_fans(uint8_t* duties) {
-	fan_duty[0] = duties[0];
-	fan_duty[1] = duties[1];
-	fans_duty();
-}
-
-void Hardware::fans_duty() {
-	for (uint8_t i = 0; i < 2; ++i) {
-		fans_duty(i, fan_duty[i]);
+void Hardware::force_fan_speed(uint8_t fan_speed_1, uint8_t fan_speed_2) {
+	if (fan_speed_1 || fan_speed_2) {
+		fans_forced = true;
+		set_fan_speed(0, fan_speed_1);
+		set_fan_speed(1, fan_speed_2);
+	} else {
+		fans_forced = false;
 	}
 }
 
-void Hardware::fans_duty(uint8_t fan, uint8_t duty) {
+void Hardware::set_fan_speed(uint8_t fan, uint8_t speed) {
+	if (fan_speed[fan] == speed) {
+		return;
+	}
+	fan_speed[fan] = speed;
 	USB_PRINTP("fan ");
 	USB_PRINT(fan);
 	USB_PRINTP("->");
 	uint8_t fan_pwm_pins[2] = {FAN1_PWM_PIN, FAN2_PWM_PIN};
 	uint8_t fan_enable_pins[2] = {FAN1_PIN, FAN2_PIN};
-	if (duty) {
-		USB_PRINTLN(duty);
-		analogWrite(fan_pwm_pins[fan], map(duty, 0, 100, 255, 0));
+	if (speed) {
+		USB_PRINTLN(speed);
+		analogWrite(fan_pwm_pins[fan], map(speed, 0, 100, 255, 0));
 		outputchip.digitalWrite(fan_enable_pins[fan], HIGH);
 	} else {
 		USB_PRINTLNP("OFF");
@@ -297,40 +298,26 @@ void Hardware::fans_duty(uint8_t fan, uint8_t duty) {
 		digitalWrite(fan_pwm_pins[fan], LOW);
 	}
 }
+
+void Hardware::cooling() {
+	float error = uvled_temp_celsius - OPTIMAL_TEMP;
+	uint8_t new_speed = error > 0.0 ? round((error < 10.0 ? error : 10.0) * 10) : 0;
 /*
-void Hardware::fans_PI_regulator() {
-	// FIXME this is not working as expected :(
-//	USB_PRINTP("actual: ");
-//	USB_PRINTLN(chamber_temp);
-//	USB_PRINTP("target: ");
-//	USB_PRINTLN(fans_target_temp);
-	double err_value = chamber_temp - fans_target_temp;
-//	USB_PRINTP("err: ");
-//	USB_PRINTLN(err_value);
-	PI_summ_err += err_value;
-//	USB_PRINTP("sum: ");
-//	USB_PRINTLN(PI_summ_err);
-
-	if ((PI_summ_err > 10000) || (PI_summ_err < -10000)) {
-		PI_summ_err = 10000;
-	}
-
-	double new_speed = P * err_value + I * PI_summ_err;		// TODO uint8_t?
-//	USB_PRINTP("PI new value: ");
-//	USB_PRINTLN(new_speed);
-	if (new_speed > 100) {
-		new_speed = 100;
-	} else if (new_speed < MIN_FAN_SPEED) {
+	USB_PRINTP("actual t.: ");
+	USB_PRINTLN(uvled_temp_celsius);
+	USB_PRINTP("target t.: ");
+	USB_PRINTLN(OPTIMAL_TEMP);
+	USB_PRINTP("error: ");
+	USB_PRINTLN(error);
+	USB_PRINTP("new_speed: ");
+	USB_PRINTLN(new_speed);
+*/
+	if (new_speed < MIN_FAN_SPEED) {
 		new_speed = MIN_FAN_SPEED;
 	}
-
-	if (new_speed != fan_duty[0] || new_speed != fan_duty[1]) {
-		fan_duty[0] = new_speed;
-		fan_duty[1] = new_speed;
-		fans_duty();
-	}
+	set_cooling_speed(new_speed);
 }
-*/
+
 void Hardware::fans_rpm() {
 	for (uint8_t i = 0; i < 3; ++i) {
 		fan_rpm[i] = 60 * fan_tacho_count[i];
@@ -343,11 +330,14 @@ void Hardware::fans_rpm() {
 	}
 }
 
-void Hardware::heat_control() {
+void Hardware::heating() {
 }
 
 bool Hardware::handle_heater() {
 	return false;
+}
+
+void Hardware::set_cooling_speed(__attribute__((unused)) uint8_t speed) {
 }
 
 uint8_t Hardware::loop() {
@@ -360,13 +350,11 @@ uint8_t Hardware::loop() {
 		one_second_ms_last = ms_now;
 		read_adc();
 		fans_rpm();
-		heat_control();
-/*
-		// TODO to fan_control() of cw1
-		if (chamber_target_temp) {
-			fans_PI_regulator();
+		// after uvled_temp_celsius has been read
+		if (!adc_channel and !fans_forced) {
+			cooling();
 		}
-*/
+		heating();
 	}
 
 	uint8_t events = 0;

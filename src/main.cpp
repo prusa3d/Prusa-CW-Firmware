@@ -113,23 +113,6 @@ void fan_tacho3() {
 	hw.fan_tacho_count[2]++;
 }
 
-// static wrappers for UI
-bool is_cover_closed() {
-	return hw.is_cover_closed();
-}
-
-bool is_tank_inserted() {
-	return hw.is_tank_inserted();
-}
-
-void set_fan1_duty(uint8_t duty) {
-	hw.fans_duty(0, duty);
-}
-
-void set_fan2_duty(uint8_t duty) {
-	hw.fans_duty(1, duty);
-}
-
 void setup() {
 	uint16_t model_magic = pgm_read_word_near(SN_ADDRESS);
 	if (hw.model_magic != model_magic) {

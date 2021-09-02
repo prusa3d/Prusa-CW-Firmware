@@ -44,10 +44,10 @@ typedef struct {
 
 	uint8_t resin_preheat_run_time;
 	uint8_t led_intensity;
-	uint8_t fans_menu_speed[2];
-	uint8_t fans_washing_speed[2];
-	uint8_t fans_drying_speed[2];
-	uint8_t fans_curing_speed[2];
+	uint8_t reserved0[2];
+	uint8_t reserved1[2];
+	uint8_t reserved2[2];
+	uint8_t reserved3[2];
 	uint8_t lcd_brightness;
 } eeprom_v2_t;
 

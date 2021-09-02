@@ -31,8 +31,13 @@ inline bool CW1::handle_heater() {
 	return fan_rpm[2];
 }
 
-void CW1::heat_control() {
+void CW1::heating() {
 	// TODO turn heater on and off based on chamber temperature
+}
+
+void CW1::set_cooling_speed(uint8_t speed) {
+	set_fan_speed(0, speed);
+	set_fan_speed(1, speed);
 }
 
 

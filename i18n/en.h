@@ -40,29 +40,6 @@ static const char pgmstr_once[] PROGMEM = _("once");
 static const char pgmstr_continuous[] PROGMEM = _("continuous");
 static const char pgmstr_finish_beep[] PROGMEM = _("Finish beep");
 
-// fans curing speed
-static const char pgmstr_fans_curing[] PROGMEM = _("Fans curing speed");
-static const char pgmstr_fan1_curing_speed[] PROGMEM = _("Fan1 curing speed");
-static const char pgmstr_fan2_curing_speed[] PROGMEM = _("Fan2 curing speed");
-
-// fans drying speed
-static const char pgmstr_fans_drying[] PROGMEM = _("Fans drying speed");
-static const char pgmstr_fan1_drying_speed[] PROGMEM = _("Fan1 drying speed");
-static const char pgmstr_fan2_drying_speed[] PROGMEM = _("Fan2 drying speed");
-
-// fans washing speed
-static const char pgmstr_fans_washing[] PROGMEM = _("Fans washing speed");
-static const char pgmstr_fan1_washing_speed[] PROGMEM = _("Fan1 washing speed");
-static const char pgmstr_fan2_washing_speed[] PROGMEM = _("Fan2 washing speed");
-
-// fans menu speed
-static const char pgmstr_fans_menu[] PROGMEM = _("Fans menu speed");
-static const char pgmstr_fan1_menu_speed[] PROGMEM = _("Fan1 menu speed");
-static const char pgmstr_fan2_menu_speed[] PROGMEM = _("Fan2 menu speed");
-
-// fans menu
-static const char pgmstr_fans[] PROGMEM = _("Fans");
-
 // info menu
 static const char pgmstr_information[] PROGMEM = _("Information");
 static const char pgmstr_fw_version[] PROGMEM = _("FW: ")  FW_VERSION;

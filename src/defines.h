@@ -37,8 +37,6 @@
 // various constants
 #define LED_DELAY			2000
 #define LONG_PRESS_TIME		1000
-#define	P					10	// 0.5
-#define I					0.001
 #define MAX_WARMUP_RUNTIME	15		// minutes
 #define MAX_CURING_RUNTIME	60		// minutes
 #define MAX_DRYING_RUNTIME	60		// minutes
@@ -55,6 +53,7 @@
 #define UVLED_TEST_TIME		10		// minutes
 #define UVLED_TEST_GAIN		10.0	// celsius
 #define UVLED_MAX_TEMP		70.0	// celsius
+#define OPTIMAL_TEMP		35.0	// celsius
 #define HEATER_TEST_TIME	10		// minutes
 #define HEATER_TEST_GAIN	5.0		// celsius
 #define HEATER_CHECK_DELAY	2500	// microseconds

@@ -42,46 +42,6 @@ namespace UI {
 	Base* const sound_items[] PROGMEM = {&back, &sound_response, &finish_beep};
 	Menu sound_menu(pgmstr_sound, sound_items, COUNT_ITEMS(sound_items));
 
-	// fans curing speed
-	Percent fan1_curing_speed(pgmstr_fan1_curing_speed, config.fans_curing_speed[0], MIN_FAN_SPEED);
-	Percent fan2_curing_speed(pgmstr_fan2_curing_speed, config.fans_curing_speed[1], MIN_FAN_SPEED);
-	Base* const fans_curing_speed[] PROGMEM = {&back, &fan1_curing_speed, &fan2_curing_speed};
-	Menu fans_curing_menu(pgmstr_fans_curing, fans_curing_speed, COUNT_ITEMS(fans_curing_speed));
-
-	// fans drying speed
-	Percent fan2_drying_speed(pgmstr_fan2_drying_speed, config.fans_drying_speed[1], MIN_FAN_SPEED);
-#ifdef CW1S_HW
-	Base* const fans_drying_speed[] PROGMEM = {&back, &fan2_drying_speed};
-#else
-	Percent fan1_drying_speed(pgmstr_fan1_drying_speed, config.fans_drying_speed[0], MIN_FAN_SPEED);
-	Base* const fans_drying_speed[] PROGMEM = {&back, &fan1_drying_speed, &fan2_drying_speed};
-#endif
-	Menu fans_drying_menu(pgmstr_fans_drying, fans_drying_speed, COUNT_ITEMS(fans_drying_speed));
-
-	// fans washing speed
-	Percent fan2_washing_speed(pgmstr_fan2_washing_speed, config.fans_washing_speed[1], MIN_FAN_SPEED);
-#ifdef CW1S_HW
-	Base* const fans_washing_speed[] PROGMEM = {&back, &fan2_washing_speed};
-#else
-	Percent fan1_washing_speed(pgmstr_fan1_washing_speed, config.fans_washing_speed[0], MIN_FAN_SPEED);
-	Base* const fans_washing_speed[] PROGMEM = {&back, &fan1_washing_speed, &fan2_washing_speed};
-#endif
-	Menu fans_washing_menu(pgmstr_fans_washing, fans_washing_speed, COUNT_ITEMS(fans_washing_speed));
-
-	// fans menu speed
-	Percent_with_action fan2_menu_speed(pgmstr_fan2_menu_speed, config.fans_menu_speed[1], MIN_FAN_SPEED, set_fan2_duty);
-#ifdef CW1S_HW
-	Base* const fans_menu_speed[] PROGMEM = {&back, &fan2_menu_speed};
-#else
-	Percent_with_action fan1_menu_speed(pgmstr_fan1_menu_speed, config.fans_menu_speed[0], MIN_FAN_SPEED, set_fan1_duty);
-	Base* const fans_menu_speed[] PROGMEM = {&back, &fan1_menu_speed, &fan2_menu_speed};
-#endif
-	Menu fans_menu_menu(pgmstr_fans_menu, fans_menu_speed, COUNT_ITEMS(fans_menu_speed));
-
-	// fans menu
-	Base* const fans_items[] PROGMEM = {&back, &fans_curing_menu, &fans_drying_menu, &fans_washing_menu, &fans_menu_menu};
-	Menu fans_menu(pgmstr_fans, fans_items, COUNT_ITEMS(fans_items));
-
 	// info menu
 	SN serial_number(pgmstr_sn);
 	Text fw_version(pgmstr_fw_version);
@@ -121,20 +81,23 @@ namespace UI {
 	// hw menu
 	Live_value<uint16_t> fan1_rpm(pgmstr_fan1_rpm, hw.fan_rpm[0]);
 	Live_value<uint16_t> fan2_rpm(pgmstr_fan2_rpm, hw.fan_rpm[1]);
+#ifdef CW1_HW
+	Live_value<uint16_t> fan3_rpm(pgmstr_fan2_rpm, hw.fan_rpm[2]);
+#endif
 	Live_value<float> chamber_temp(pgmstr_chamber_temp, hw.chamber_temp);
 	Live_value<float> uvled_temp(pgmstr_uvled_temp, hw.uvled_temp);
+#ifdef CW1_HW
+	Base* const hw_items[] PROGMEM = {&back, &fan1_rpm, &fan2_rpm, &fan3_rpm, &chamber_temp, &uvled_temp};
+#endif
 #ifdef CW1S_HW
 	Base* const hw_items[] PROGMEM = {&back, &fan1_rpm, &fan2_rpm, &chamber_temp, &uvled_temp};
-#else
-	Live_value<uint16_t> fan3_rpm(pgmstr_fan3_rpm, hw.fan_rpm[2]);
-	Base* const hw_items[] PROGMEM = {&back, &fan1_rpm, &fan2_rpm, &fan3_rpm, &chamber_temp, &uvled_temp};
 #endif
 	Menu_self_redraw hw_menu(pgmstr_emptystr, hw_items, COUNT_ITEMS(hw_items), MENU_REDRAW_US);
 
 	// advanced menu
 	State cooldown(pgmstr_cooldown, &States::cooldown, &hw_menu);
 	State selftest(pgmstr_selftest, &States::selftest_cover, nullptr);
-	Base* const advanced_items[] PROGMEM = {&back, &fans_menu, &led_intensity, &cooldown, &selftest};
+	Base* const advanced_items[] PROGMEM = {&back, &led_intensity, &cooldown, &selftest};
 	Menu advanced_menu(pgmstr_emptystr, advanced_items, COUNT_ITEMS(advanced_items));
 
 

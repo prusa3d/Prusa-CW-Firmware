@@ -13,7 +13,9 @@ public:
 
 private:
 	inline bool handle_heater();
-	inline void heat_control();
+	inline void heating();
+	inline void set_cooling_speed(uint8_t speed);
 };
+
 
 extern CW1 hw;

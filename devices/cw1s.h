@@ -12,14 +12,14 @@ public:
 
 private:
 	bool handle_heater();
-	void heat_control();
-	void adjust_fan_speed(uint8_t fan, uint8_t duty);
+	void heating();
+	inline void set_cooling_speed(uint8_t speed);
 	void set_heater_pin_state(bool value);
 
 	bool wanted_heater_pin_state;
 	bool heater_on;
 	bool heater_pin_state;
-	uint16_t heater_pwm_duty;
+	uint16_t heater_pwm;
 };
 
 

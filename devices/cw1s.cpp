@@ -8,7 +8,7 @@ CW1S::CW1S()
 	Hardware(0x3230),	// "02"
 	wanted_heater_pin_state(false),
 	heater_pin_state(false),
-	heater_pwm_duty(0)
+	heater_pwm(0)
 {}
 
 void CW1S::one_ms_tick() {
@@ -18,7 +18,7 @@ void CW1S::one_ms_tick() {
 		if (++ticks > 1000) {
 			ticks = 0;
 		}
-		wanted_heater_pin_state = ticks < heater_pwm_duty;
+		wanted_heater_pin_state = ticks < heater_pwm;
 	}
 }
 
@@ -42,36 +42,32 @@ bool CW1S::handle_heater() {
 	return fan_rpm[0];
 }
 
-void CW1S::heat_control() {
+void CW1S::heating() {
+	if (fans_forced) {
+		return;
+	}
 	if (heater_ms_last) {
 		// heater is on
 		float error = chamber_target_temp - chamber_temp_celsius;
-		uint16_t pwm_duty = error > 0.0 ? round((error < 2.0 ? error : 2.0) * 980) : 0;
+		uint16_t pwm = error > 0.0 ? round((error < 2.0 ? error : 2.0) * 500) : 0;
 		USB_PRINT(error);
 		USB_PRINTP("->");
-		USB_PRINTLN(pwm_duty);
-		if (pwm_duty > 1000) {
-			pwm_duty = 1000;
-		}
-		heater_pwm_duty = pwm_duty;
-		adjust_fan_speed(0, HEATING_ON_FAN1_DUTY);
+		USB_PRINTLN(pwm);
+		heater_pwm = pwm;
+		set_fan_speed(0, HEATING_ON_FAN1_SPEED);
 	} else {
 		// heater is off
-		adjust_fan_speed(0, chamber_temp_celsius > CHAMBER_TEMP_THR_FAN1_ON ? (fan_duty[0] > CHAMBER_TEMP_THR_FAN1_DUTY ? fan_duty[0] : CHAMBER_TEMP_THR_FAN1_DUTY) : fan_duty[0]);
-	}
-}
-
-// TODO fan is always 0
-void CW1S::adjust_fan_speed(uint8_t fan, uint8_t duty) {
-	if (fan_duty[fan] != duty) {
-		fan_duty[fan] = duty;
-		fans_duty(fan, duty);
+		set_fan_speed(0, MIN_FAN_SPEED);
 	}
 }
 
 void CW1S::set_heater_pin_state(bool value) {
 	outputchip.digitalWrite(FAN_HEAT_PIN, value);
 	heater_pin_state = value;
+}
+
+void CW1S::set_cooling_speed(uint8_t speed) {
+	set_fan_speed(1, speed);
 }
 
 

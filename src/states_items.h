@@ -24,7 +24,6 @@ namespace States {
 		Base(
 			const char* title = pgmstr_emptystr,
 			uint8_t options = 0,
-			uint8_t* fans_duties = config.fans_menu_speed,
 			Base* continue_to = nullptr,
 			uint8_t* continue_after = nullptr,
 			uint8_t* motor_speed = nullptr,
@@ -55,7 +54,6 @@ namespace States {
 		Base* continue_to;
 		const char* message;
 		uint8_t* target_temp;
-		uint8_t* const fans_duties;
 		unsigned long ms_last;
 		bool canceled;
 	private:
@@ -77,6 +75,14 @@ namespace States {
 			uint8_t* motor_speed,
 			uint8_t* target_temp);
 		Base* loop();
+	};
+
+
+	// States::Cooldown
+	class Cooldown : public Base {
+	public:
+		Cooldown(Base* continue_to, uint8_t* continue_after);
+		void start();
 	};
 
 
@@ -155,7 +161,6 @@ namespace States {
 	public:
 		Test_uvled(
 			const char* title,
-			uint8_t* fans_duties,
 			Base* to);
 		void start();
 		Base* loop();
@@ -170,7 +175,6 @@ namespace States {
 	public:
 		Test_heater(
 			const char* title,
-			uint8_t* fans_duties,
 			Base* to);
 		void start();
 		Base* loop();
