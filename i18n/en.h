@@ -10,6 +10,7 @@ static const char pgmstr_minutes[] PROGMEM = _(" min.");
 static const char pgmstr_gt[] PROGMEM = " >";
 static const char pgmstr_lt[] PROGMEM = "< ";
 static const char pgmstr_emptystr[] PROGMEM = "";
+static const char pgmstr_doubledash[] PROGMEM = "--";
 
 // run-time menu
 static const char pgmstr_run_time[] PROGMEM = _("Run-time");
@@ -26,7 +27,7 @@ static const char pgmstr_washing_speed[] PROGMEM = _("Washing speed");
 // temperatore menu
 static const char pgmstr_temperatures[] PROGMEM = _("Temperatures");
 static const char pgmstr_warmup[] PROGMEM = _("Warm-up");
-static const char pgmstr_drying_warmup_temp[] PROGMEM = _("Drying warm-up t.");
+static const char pgmstr_drying_warmup_temp[] PROGMEM = _("Drying/Warm-up t.");
 static const char pgmstr_resin_preheat_temp[] PROGMEM = _("Resin preheat t.");
 static const char pgmstr_units[] PROGMEM = _("Temp. units");
 static const char pgmstr_celsius_units[] PROGMEM = "[\xDF" "C]";
@@ -47,7 +48,7 @@ static const char pgmstr_sn[] PROGMEM = "SN: ";
 static const char pgmstr_build_nr[] PROGMEM = _("Build: ") FW_BUILDNR;
 static const char pgmstr_fw_hash[] PROGMEM = FW_HASH;
 #if FW_LOCAL_CHANGES
-static const char pgmstr_workspace_dirty[] PROGMEM = _("Workspace dirty");
+static const char pgmstr_workspace_dirty[] PROGMEM = "(modified sources)";
 #endif
 
 // config menu
@@ -68,13 +69,6 @@ static const char pgmstr_stop[] PROGMEM = _("Stop");
 static const char pgmstr_washing[] PROGMEM = _("Washing");
 static const char pgmstr_resin_preheat[] PROGMEM = _("Resin preheat");
 
-// hw menu
-static const char pgmstr_fan1_rpm[] PROGMEM = _("Fan1 RPM: ");
-static const char pgmstr_fan2_rpm[] PROGMEM = _("Fan2 RPM: ");
-static const char pgmstr_fan3_rpm[] PROGMEM = _("Fan3 RPM: ");
-static const char pgmstr_chamber_temp[] PROGMEM = _("Cham. temp.:");
-static const char pgmstr_uvled_temp[] PROGMEM = _("UVLED temp.:");
-
 // advanced menu
 static const char pgmstr_cooldown[] PROGMEM = _("Cooldown");
 static const char pgmstr_selftest[] PROGMEM = _("Selftest");
@@ -92,7 +86,6 @@ static const char pgmstr_paused[] PROGMEM = _("Paused");
 static const char pgmstr_close_cover[] PROGMEM = _("Close the cover");
 static const char pgmstr_remove_tank[] PROGMEM = _("Remove IPA tank");
 static const char pgmstr_heater_error[] PROGMEM = _("Heater fan error");
-static const char pgmstr_please_restart[] PROGMEM = _("Please restart");
 
 // confirm state
 static const char pgmstr_finished[] PROGMEM = _("Finished");

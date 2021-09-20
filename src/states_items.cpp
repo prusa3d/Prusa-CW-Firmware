@@ -14,6 +14,7 @@ namespace States {
 		uint8_t* motor_speed,
 		uint8_t* target_temp)
 	:
+		options(options),
 		continue_to(continue_to),
 		message(nullptr),
 		target_temp(target_temp),
@@ -21,11 +22,10 @@ namespace States {
 		canceled(false),
 		title(title),
 		continue_after(continue_after),
-		motor_speed(motor_speed),
-		options(options)
+		motor_speed(motor_speed)
 	{}
 
-	void Base::start() {
+	void Base::start(bool handle_heater) {
 		canceled = false;
 		if (continue_after) {
 			timer.setCounter(0, *continue_after, 0, options & STATE_OPTION_TIMER_UP);
@@ -37,9 +37,9 @@ namespace States {
 			if (continue_after) {
 				timer.start();
 			}
-			do_pause();
+			do_pause(handle_heater);
 		} else {
-			do_continue();
+			do_continue(handle_heater);
 		}
 	}
 
@@ -51,18 +51,20 @@ namespace States {
 			return continue_to;
 		}
 		if (hw.heater_error) {
-			error.new_text(pgmstr_heater_error, pgmstr_please_restart);
+			error.new_text(pgmstr_heater_error, pgmstr_not_spinning);
 			return &error;
 		}
-		if (options & STATE_OPTION_UVLED) {
-			if (hw.uvled_temp_celsius < 0.0) {
-				error.new_text(pgmstr_led_failure, pgmstr_read_temp_error);
-				return &error;
-			}
-			if (hw.uvled_temp_celsius > UVLED_MAX_TEMP) {
-				error.new_text(pgmstr_led_failure, pgmstr_overheat_error);
-				return &error;
-			}
+		if (hw.chamber_temp_celsius < 0.0) {
+			error.new_text(pgmstr_heater_failure, pgmstr_read_temp_error);
+			return &error;
+		}
+		if (hw.uvled_temp_celsius < 0.0) {
+			error.new_text(pgmstr_led_failure, pgmstr_read_temp_error);
+			return &error;
+		}
+		if (options & STATE_OPTION_UVLED && (uint8_t)hw.uvled_temp_celsius > UVLED_MAX_TEMP) {
+			error.new_text(pgmstr_led_failure, pgmstr_overheat_error);
+			return &error;
 		}
 		if (ms_last && millis() - ms_last > LED_DELAY && options & STATE_OPTION_UVLED) {
 			hw.run_led();
@@ -79,11 +81,11 @@ namespace States {
 		return false;
 	}
 
-	void Base::do_pause() {
+	void Base::do_pause(bool handle_heater) {
 		if (options & STATE_OPTION_UVLED) {
 			hw.stop_led();
 		}
-		if (options & STATE_OPTION_HEATER) {
+		if (handle_heater && options & STATE_OPTION_HEATER) {
 			hw.stop_heater();
 		}
 		if (motor_speed) {
@@ -94,12 +96,12 @@ namespace States {
 		}
 	}
 
-	void Base::do_continue() {
+	void Base::do_continue(bool handle_heater) {
 		if (motor_speed) {
 			hw.speed_configuration(*motor_speed, options & STATE_OPTION_WASHING);
 			hw.run_motor();
 		}
-		if (options & STATE_OPTION_HEATER) {
+		if (handle_heater && options & STATE_OPTION_HEATER) {
 			hw.run_heater();
 		}
 		if (continue_after) {
@@ -161,10 +163,10 @@ namespace States {
 
 	float Base::get_temperature() {
 		if (options & STATE_OPTION_CHAMB_TEMP) {
-			return hw.chamber_temp;
+			return hw.chamber_temp_celsius;
 		}
 		if (options & STATE_OPTION_UVLED_TEMP) {
-			return hw.uvled_temp;
+			return hw.uvled_temp_celsius;
 		}
 		return -40.0;
 	}
@@ -247,7 +249,7 @@ namespace States {
 	{}
 
 	Base* Warmup::loop() {
-		if (!config.heat_to_target_temp || hw.chamber_temp >= *target_temp) {
+		if (!config.heat_to_target_temp || round_short(get_configured_temp(hw.chamber_temp_celsius)) >= *target_temp) {
 			return continue_to;
 		}
 		return Base::loop();
@@ -255,13 +257,14 @@ namespace States {
 
 
 	// States::Cooldown
-	Cooldown::Cooldown(Base* continue_to, uint8_t* continue_after) :
-		Base(pgmstr_cooldown, STATE_OPTION_CONTROLS, continue_to, continue_after)
+	Cooldown::Cooldown(Base* continue_to) :
+		Base(pgmstr_cooldown, STATE_OPTION_CONTROLS, continue_to, &cooldown_time),
+		cooldown_time(COOLDOWN_RUNTIME)
 	{}
 
-	void Cooldown::start() {
+	void Cooldown::start(bool handle_heater) {
 		hw.force_fan_speed(100, 100);
-		Base::start();
+		Base::start(handle_heater);
 	}
 
 
@@ -270,7 +273,7 @@ namespace States {
 		Base(pgmstr_emptystr, STATE_OPTION_SHORT_CANCEL), force_wait(force_wait), quit(false)
 	{}
 
-	void Confirm::start() {
+	void Confirm::start(__attribute__((unused)) bool handle_heater) {
 		canceled = false;
 		quit = true;
 		ms_last = 1;				// beep
@@ -278,6 +281,7 @@ namespace States {
 		uint8_t mode = config.finish_beep_mode;
 		if (force_wait) {
 			mode = 2;
+			hw.disable_controls = true;
 		}
 		switch(mode) {
 			case 2:
@@ -325,7 +329,7 @@ namespace States {
 		old_state(false)
 	{}
 
-	void Test_switch::start() {
+	void Test_switch::start(__attribute__((unused)) bool handle_heater) {
 		canceled = false;
 		old_state = value_getter();
 		message = old_state ? message_on : message_off;
@@ -365,12 +369,12 @@ namespace States {
 		draw(false)
 	{}
 
-	void Test_rotation::start() {
+	void Test_rotation::start(bool handle_heater) {
 		test_speed = 10;
 		old_seconds = 60 * ROTATION_TEST_TIME;
 		fast_mode = true;
 		draw = true;
-		Base::start();
+		Base::start(handle_heater);
 		hw.speed_configuration(test_speed, fast_mode);
 	}
 
@@ -417,7 +421,7 @@ namespace States {
 		draw2(false)
 	{}
 
-	void Test_fans::start() {
+	void Test_fans::start(bool handle_heater) {
 		fans_speed[0] = 0;
 		fans_speed[1] = 100;
 		old_fan_rpm[0] = 0;
@@ -426,7 +430,7 @@ namespace States {
 		draw1 = true;
 		draw2 = true;
 		hw.force_fan_speed(fans_speed[0], fans_speed[1]);
-		Base::start();
+		Base::start(handle_heater);
 	}
 
 	Base* Test_fans::loop() {
@@ -498,19 +502,20 @@ namespace States {
 		Base* continue_to)
 	:
 		Base(title, STATE_OPTION_UVLED | STATE_OPTION_UVLED_TEMP, continue_to, &test_time),
-		test_time(UVLED_TEST_TIME),
-		old_uvled_temp(0.0)
+		test_time(UVLED_TEST_MAX_TIME)
 	{}
 
-	void Test_uvled::start() {
-		old_uvled_temp = hw.uvled_temp_celsius;
-		hw.force_fan_speed(0, 0);	// automatic fan control
-		Base::start();
+	void Test_uvled::start(bool handle_heater) {
+		hw.force_fan_speed(30, 30);
+		Base::start(handle_heater);
 	}
 
 	Base* Test_uvled::loop() {
+		if (round_short(hw.uvled_temp_celsius) >= TEST_TEMP) {
+			return continue_to;
+		}
 		uint16_t seconds = timer.getCurrentTimeInSeconds() - 1;
-		if (!seconds && old_uvled_temp + UVLED_TEST_GAIN > hw.uvled_temp_celsius) {
+		if (!seconds) {
 			error.new_text(pgmstr_led_failure, pgmstr_nopower_error);
 			return &error;
 		}
@@ -521,34 +526,28 @@ namespace States {
 	// States::Test_heater
 	Test_heater::Test_heater(
 		const char* title,
-		Base* continue_to)
+		Base* continue_to,
+		uint8_t* continue_after)
 	:
-		Base(title, STATE_OPTION_HEATER | STATE_OPTION_CHAMB_TEMP, continue_to, &test_time),
-		test_time(HEATER_TEST_TIME),
-		old_chamb_temp(0.0),
+		Base(title, STATE_OPTION_HEATER | STATE_OPTION_CHAMB_TEMP, continue_to, continue_after, nullptr, &temp),
+		temp(0),
 		old_seconds(0),
 		draw(false)
 	{}
 
-	void Test_heater::start() {
-		old_chamb_temp = hw.chamber_temp_celsius;
-		new_chamb_temp = int(2 * HEATER_TEST_GAIN + old_chamb_temp);
-		USB_PRINTP("actual: ");
-		USB_PRINTLN(old_chamb_temp);
-		USB_PRINTP("target: ");
-		USB_PRINTLN(new_chamb_temp);
-		target_temp = &new_chamb_temp;
+	void Test_heater::start(bool handle_heater) {
+		temp = get_configured_temp(TEST_TEMP);
+		hw.force_fan_speed(0, 0);
 		draw = true;
-		Base::start();
+		Base::start(handle_heater);
 	}
 
 	Base* Test_heater::loop() {
-		if (old_chamb_temp < 0.0 || hw.chamber_temp_celsius < 0.0) {
-			error.new_text(pgmstr_heater_failure, pgmstr_read_temp_error);
-			return &error;
+		if (round_short(get_configured_temp(hw.chamber_temp_celsius)) >= temp) {
+			return continue_to;
 		}
 		uint16_t seconds = timer.getCurrentTimeInSeconds() - 1;
-		if (!seconds && old_chamb_temp + HEATER_TEST_GAIN > hw.chamber_temp_celsius) {
+		if (!seconds) {
 			error.new_text(pgmstr_heater_failure, pgmstr_nopower_error);
 			return &error;
 		}

@@ -37,6 +37,10 @@
 // various constants
 #define LED_DELAY			2000
 #define LONG_PRESS_TIME		1000
+#define MIN_TARGET_TEMP_C	20
+#define MAX_TARGET_TEMP_C	60
+#define MIN_TARGET_TEMP_F	MIN_TARGET_TEMP_C * 1.8 + 32
+#define MAX_TARGET_TEMP_F	MAX_TARGET_TEMP_C * 1.8 + 32
 #define MAX_WARMUP_RUNTIME	15		// minutes
 #define MAX_CURING_RUNTIME	60		// minutes
 #define MAX_DRYING_RUNTIME	60		// minutes
@@ -50,17 +54,14 @@
 #define SWITCH_TEST_COUNT	10
 #define ROTATION_TEST_TIME	3		// minutes
 #define FANS_TEST_TIME		2		// minutes
-#define UVLED_TEST_TIME		10		// minutes
-#define UVLED_TEST_GAIN		10.0	// celsius
-#define UVLED_MAX_TEMP		70.0	// celsius
+#define UVLED_TEST_MAX_TIME	10		// minutes
+#define UVLED_MAX_TEMP		70		// celsius
 #define OPTIMAL_TEMP		35.0	// celsius
-#define HEATER_TEST_TIME	10		// minutes
-#define HEATER_TEST_GAIN	5.0		// celsius
+#define TEST_TEMP			50		// celsius
 #define HEATER_CHECK_DELAY	2500	// microseconds
 #define SN_ADDRESS			0x7fe0
 #define SN_LENGTH			15
 #define MAX_MENU_DEPTH		5
-#define MENU_REDRAW_US		1000
 #define ADC_OVRSAMPL		4
 // motor speeds (smaller is faster)
 #define FAST_SPEED_START	200

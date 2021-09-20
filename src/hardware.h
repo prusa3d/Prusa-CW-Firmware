@@ -13,8 +13,10 @@
 #define EVENT_CONTROL_UP			64
 #define EVENT_CONTROL_DOWN			128
 
-float celsius2fahrenheit(float);
-float fahrenheit2celsius(float);
+float celsius2fahrenheit(float celsius);
+float fahrenheit2celsius(float fahrenheit);
+uint8_t round_short(float);
+float get_configured_temp(float temp);
 
 
 class Hardware {
@@ -51,10 +53,9 @@ public:
 	volatile uint8_t fan_tacho_count[3];
 	volatile uint8_t microstep_control;
 	float chamber_temp_celsius;
-	float chamber_temp;
 	float uvled_temp_celsius;
-	float uvled_temp;
 	bool heater_error;
+	bool disable_controls;
 
 protected:
 	MCP outputchip;
@@ -65,9 +66,10 @@ protected:
 	void cooling();
 	void fans_rpm();
 	void set_fan_speed(uint8_t fan, uint8_t speed);
-	virtual void heating();
-	virtual bool handle_heater();
-	virtual void set_cooling_speed(uint8_t speed);
+	virtual void heating() = 0;
+	virtual bool handle_heater() = 0;
+	virtual void set_cooling_speed(uint8_t speed) = 0;
+	virtual float adjust_chamber_temp(int16_t temp) = 0;
 
 	uint8_t lcd_encoder_bits;
 	volatile int8_t rotary_diff;
@@ -78,8 +80,9 @@ protected:
 
 	unsigned long accel_ms_last;
 	unsigned long one_second_ms_last;
-	unsigned long heater_ms_last;
+	unsigned long heating_started_ms;
 	unsigned long button_timer;
+	bool heating_in_progress;
 	bool do_acceleration;
 	bool cover_closed;
 	bool tank_inserted;

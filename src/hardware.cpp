@@ -12,6 +12,15 @@ float fahrenheit2celsius(float fahrenheit) {
 	return (fahrenheit - 32) / 1.8;
 }
 
+uint8_t round_short(float temp) {
+	return (uint8_t)round(temp);
+}
+
+float get_configured_temp(float temp) {
+	return config.SI_unit_system ? temp : celsius2fahrenheit(temp);
+}
+
+
 const int16_t chamber_temp_table_raw[34] PROGMEM = {
 	25, 29, 34, 40, 46, 54, 64, 75, 88, 105, 124, 146, 173, 204, 241, 282, 330, 382, 439, 500,
 	563, 625, 687, 744, 796, 842, 882, 915, 941, 963, 979, 992, 1001, 1008
@@ -29,11 +38,10 @@ Hardware::Hardware(uint16_t model_magic)
 	fan_rpm{0, 0, 0},
 	fan_tacho_count{0, 0, 0},
 	microstep_control(FAST_SPEED_START),
-	chamber_temp_celsius(-40.0),
-	chamber_temp(-40.0),
-	uvled_temp_celsius(-40.0),
-	uvled_temp(-40.0),
+	chamber_temp_celsius(0.0),
+	uvled_temp_celsius(0.0),
 	heater_error(false),
+	disable_controls(false),
 	outputchip(0, 8),
 	stepper(CS_PIN),
 	lcd_encoder_bits(0),
@@ -43,8 +51,9 @@ Hardware::Hardware(uint16_t model_magic)
 	chamber_target_temp(0),
 	accel_ms_last(0),
 	one_second_ms_last(0),
-	heater_ms_last(0),
+	heating_started_ms(0),
 	button_timer(0),
+	heating_in_progress(false),
 	do_acceleration(false),
 	cover_closed(false),
 	tank_inserted(false),
@@ -98,12 +107,10 @@ Hardware::Hardware(uint16_t model_magic)
 void Hardware::read_adc() {
 	if (adc_channel) {
 		uvled_temp_celsius = interpolate_i16_ylin_P(read_adc_raw(THERM_READ_PIN) >> 2, 34, uvled_temp_table_raw, 1250, -50) / 10.0;
-		uvled_temp = config.SI_unit_system ? uvled_temp_celsius : celsius2fahrenheit(uvled_temp_celsius);
 		USB_PRINTP("UV: ");
 		USB_PRINTLN(uvled_temp_celsius);
 	} else {
-		chamber_temp_celsius = interpolate_i16_ylin_P(read_adc_raw(THERM_READ_PIN) >> 2, 34, chamber_temp_table_raw, 1250, -50) / 10.0;
-		chamber_temp = config.SI_unit_system ? chamber_temp_celsius : celsius2fahrenheit(chamber_temp_celsius);
+		chamber_temp_celsius = adjust_chamber_temp(interpolate_i16_ylin_P(read_adc_raw(THERM_READ_PIN) >> 2, 34, chamber_temp_table_raw, 1250, -50));
 		USB_PRINTP("CH: ");
 		USB_PRINTLN(chamber_temp_celsius);
 	}
@@ -216,12 +223,14 @@ void Hardware::acceleration() {
 }
 
 void Hardware::run_heater() {
-	heater_ms_last = millis();
+	chamber_temp_celsius = 0.0;
+	heating_started_ms = millis();
+	heating_in_progress = true;
 	wdt_enable(WDTO_4S);
 }
 
 void Hardware::stop_heater() {
-	heater_ms_last = 0;
+	heating_in_progress = false;
 	wdt_disable();
 }
 
@@ -301,7 +310,7 @@ void Hardware::set_fan_speed(uint8_t fan, uint8_t speed) {
 
 void Hardware::cooling() {
 	float error = uvled_temp_celsius - OPTIMAL_TEMP;
-	uint8_t new_speed = error > 0.0 ? round((error < 10.0 ? error : 10.0) * 10) : 0;
+	uint8_t new_speed = error > 0.0 ? round_short((error < 10.0 ? error : 10.0) * 10) : 0;
 /*
 	USB_PRINTP("actual t.: ");
 	USB_PRINTLN(uvled_temp_celsius);
@@ -312,7 +321,7 @@ void Hardware::cooling() {
 	USB_PRINTP("new_speed: ");
 	USB_PRINTLN(new_speed);
 */
-	if (new_speed < MIN_FAN_SPEED) {
+	if (new_speed < MIN_FAN_SPEED || heating_in_progress) {
 		new_speed = MIN_FAN_SPEED;
 	}
 	set_cooling_speed(new_speed);
@@ -328,16 +337,6 @@ void Hardware::fans_rpm() {
 //		USB_PRINTLN(fan_rpm[i]);
 		fan_tacho_count[i] = 0;
 	}
-}
-
-void Hardware::heating() {
-}
-
-bool Hardware::handle_heater() {
-	return false;
-}
-
-void Hardware::set_cooling_speed(__attribute__((unused)) uint8_t speed) {
 }
 
 uint8_t Hardware::loop() {
@@ -358,12 +357,11 @@ uint8_t Hardware::loop() {
 	}
 
 	uint8_t events = 0;
-	// failed once, failed every time
-	if (heater_error) {
+	if (disable_controls) {
 		return events;
 	}
 
-	heater_error = heater_ms_last && !handle_heater() && ms_now - heater_ms_last > HEATER_CHECK_DELAY;
+	heater_error = heating_in_progress && handle_heater();
 	if (heater_error) {
 		stop_heater();
 	}

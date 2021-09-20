@@ -72,28 +72,6 @@ namespace UI {
 	}
 
 
-	// UI:Live_value
-	template<class T>
-	Live_value<T>::Live_value(const char* label, T& value) :
-		Text(label), value(value)
-	{}
-
-	template<class T>
-	char* Live_value<T>::get_menu_label(char* buffer, uint8_t buffer_size) {
-		char* end = Base::get_menu_label(buffer, buffer_size);
-		int8_t size = buffer + buffer_size - end;
-		if (size < 0) {
-			size = 0;
-		}
-		buffer_init(end, size);
-		print(value);
-		return get_position();
-	}
-
-	template class Live_value<uint16_t>;
-	template class Live_value<float>;
-
-
 	// UI::Menu
 	Menu::Menu(const char* label, Base* const* items, uint8_t items_count) :
 		Base(label), items(items), long_press_ui_item(nullptr), items_count(items_count), menu_offset(0), cursor_position(0)
@@ -191,26 +169,6 @@ namespace UI {
 	}
 
 
-	// UI::Menu_self_redraw
-	Menu_self_redraw::Menu_self_redraw(const char* label, Base* const* items, uint8_t items_count, uint16_t redraw_us) :
-		Menu(label, items, items_count), redraw_us(redraw_us), ms_last(0)
-	{}
-
-	void Menu_self_redraw::show() {
-		ms_last = millis();
-		Menu::show();
-	}
-
-	void Menu_self_redraw::loop() {
-		unsigned long ms_now = millis();
-		if (ms_now - ms_last > redraw_us) {
-			ms_last = ms_now;
-			show();
-		}
-		Menu::loop();
-	}
-
-
 	// UI::Value
 	Value::Value(const char* label, uint8_t& value, const char* units, uint8_t max, uint8_t min) :
 		Base(label), units(units), value(value), max_value(max), min_value(min)
@@ -280,9 +238,9 @@ namespace UI {
 	void Temperature::units_change(bool SI) {
 		init(SI);
 		if (SI) {
-			value = round(fahrenheit2celsius(value));
+			value = round_short(fahrenheit2celsius(value));
 		} else {
-			value = round(celsius2fahrenheit(value));
+			value = round_short(celsius2fahrenheit(value));
 		}
 	}
 
@@ -455,8 +413,12 @@ namespace UI {
 				lcd.printTime(time, LAYOUT_TIME_X, LAYOUT_TIME_Y);
 				// temperature
 				float temp = States::active_state->get_temperature();
-				if (temp > 0) {
-					lcd.print(temp, LAYOUT_INFO1_X, LAYOUT_INFO1_Y);
+				if (temp > -0.1) {
+					if (temp > 0.0) {
+						lcd.print(round_short(get_configured_temp(temp)), LAYOUT_INFO1_X, LAYOUT_INFO1_Y);
+					} else {
+						lcd.print_P(pgmstr_doubledash, LAYOUT_INFO1_X+1, LAYOUT_INFO1_Y);
+					}
 					lcd.print_P(config.SI_unit_system ? pgmstr_celsius : pgmstr_fahrenheit);
 				}
 			}

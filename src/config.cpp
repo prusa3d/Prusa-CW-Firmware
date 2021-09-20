@@ -67,8 +67,8 @@ void read_config() {
 		if (config.SI_unit_system) {
 			config.resin_target_temp = tmp;
 		} else {
-			config.target_temp = round(celsius2fahrenheit(config.target_temp));
-			config.resin_target_temp = round(celsius2fahrenheit(tmp));
+			config.target_temp = round_short(celsius2fahrenheit(config.target_temp));
+			config.resin_target_temp = round_short(celsius2fahrenheit(tmp));
 		}
 	}
 }

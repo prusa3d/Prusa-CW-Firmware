@@ -1,6 +1,7 @@
 #include "states.h"
 #include "defines.h"
 #include "wrappers.h"
+#include "ui.h"
 
 namespace States {
 
@@ -14,7 +15,6 @@ namespace States {
 		&confirm,
 		&config.washing_run_time,
 		&config.washing_speed);
-	// FIXME - would be better to set PI regulator and manage heater for drying/curing?
 	Base drying(
 		pgmstr_drying,
 		STATE_OPTION_CONTROLS | STATE_OPTION_HEATER | STATE_OPTION_CHAMB_TEMP,
@@ -23,7 +23,7 @@ namespace States {
 		&config.curing_speed);
 	Base curing(
 		pgmstr_curing,
-		STATE_OPTION_CONTROLS | STATE_OPTION_UVLED | STATE_OPTION_CHAMB_TEMP,
+		STATE_OPTION_CONTROLS | STATE_OPTION_UVLED,
 		&confirm,
 		&config.curing_run_time,
 		&config.curing_speed);
@@ -47,14 +47,12 @@ namespace States {
 		&max_warmup_run_time,
 		&config.curing_speed,
 		&config.resin_target_temp);
-	uint8_t cooldown_time = COOLDOWN_RUNTIME;
-	Cooldown cooldown(
-		&confirm,
-		&cooldown_time);
+	Cooldown cooldown(&confirm);
 
 	Test_heater selftest_heater(
 		pgmstr_heater_test,
-		&confirm);
+		&confirm,
+		&max_warmup_run_time);
 	Test_uvled selftest_uvled(
 		pgmstr_led_test,
 		&selftest_heater);
@@ -89,14 +87,20 @@ namespace States {
 		active_state->process_events(events);
 		Base* new_state = active_state->loop();
 		if (new_state) {
-			change(new_state);
+			if (active_state == &menu && new_state == &error) {
+				UI::set_menu(&UI::error);
+			} else {
+				change(new_state);
+			}
 		}
 	}
 
 	void change(Base* new_state) {
-		active_state->do_pause();
+		bool handle_heater = new_state->options & STATE_OPTION_HEATER;
+		active_state->do_pause(!handle_heater);
+		handle_heater = active_state->options & STATE_OPTION_HEATER;
 		active_state = new_state;
-		active_state->start();
+		active_state->start(!handle_heater);
 	}
 
 }

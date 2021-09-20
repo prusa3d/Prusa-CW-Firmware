@@ -39,17 +39,6 @@ namespace UI {
 	};
 
 
-	// UI:Live_value
-	template<class T>
-	class Live_value : public Text, public SimplePrint {
-	public:
-		Live_value(const char* label, T& value);
-		char* get_menu_label(char* buffer, uint8_t buffer_size);
-	private:
-		T& value;
-	};
-
-
 	// UI::Menu
 	class Menu : public Base {
 	public:
@@ -77,18 +66,6 @@ namespace UI {
 		Hold_platform(const char* label, Base* const* items, uint8_t items_count);
 		void show();
 		void leave();
-	};
-
-
-	// UI::Menu_self_redraw
-	class Menu_self_redraw : public Menu {
-	public:
-		Menu_self_redraw(const char* label, Base* const* items, uint8_t items_count, uint16_t redraw_us);
-		void show();
-		void loop();
-	private:
-		uint16_t redraw_us;
-		unsigned long ms_last;
 	};
 
 

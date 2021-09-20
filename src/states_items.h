@@ -29,13 +29,13 @@ namespace States {
 			uint8_t* motor_speed = nullptr,
 			uint8_t* target_temp = nullptr);
 
-		virtual void start();
+		virtual void start(bool handle_heater = true);
 		virtual Base* loop();
 		virtual bool get_info1(char* buffer, uint8_t size);
 		virtual bool get_info2(char* buffer, uint8_t size);
 
-		void do_pause();
-		void do_continue();
+		void do_pause(bool handle_heater = true);
+		void do_continue(bool handle_heater = true);
 		void pause_continue();
 		void cancel();
 		void process_events(uint8_t events);
@@ -50,6 +50,7 @@ namespace States {
 		bool is_finished();
 		void set_continue_to(Base* to);
 		void new_text(const char* new_title, const char* new_message);
+		uint8_t const options;
 	protected:
 		Base* continue_to;
 		const char* message;
@@ -61,7 +62,6 @@ namespace States {
 		const char* title;
 		uint8_t* const continue_after;
 		uint8_t* const motor_speed;
-		uint8_t const options;
 	};
 
 
@@ -81,8 +81,10 @@ namespace States {
 	// States::Cooldown
 	class Cooldown : public Base {
 	public:
-		Cooldown(Base* continue_to, uint8_t* continue_after);
-		void start();
+		Cooldown(Base* continue_to);
+		void start(bool handle_heater = true);
+	private:
+		uint8_t cooldown_time;
 	};
 
 
@@ -90,7 +92,7 @@ namespace States {
 	class Confirm : public Base {
 	public:
 		Confirm(bool force_wait);
-		void start();
+		void start(bool handle_heater = true);
 		Base* loop();
 	private:
 		bool force_wait;
@@ -107,7 +109,7 @@ namespace States {
 			const char* message_on,
 			const char* message_off,
 			bool (*value_getter)());
-		void start();
+		void start(bool handle_heater = true);
 		Base* loop();
 	private:
 		const char* const message_on;
@@ -124,7 +126,7 @@ namespace States {
 		Test_rotation(
 			const char* title,
 			Base* continue_to);
-		void start();
+		void start(bool handle_heater = true);
 		Base* loop();
 		bool get_info1(char* buffer, uint8_t size);
 	private:
@@ -142,7 +144,7 @@ namespace States {
 		Test_fans(
 			const char* title,
 			Base* continue_to);
-		void start();
+		void start(bool handle_heater = true);
 		Base* loop();
 		bool get_info1(char* buffer, uint8_t size);
 		bool get_info2(char* buffer, uint8_t size);
@@ -161,12 +163,11 @@ namespace States {
 	public:
 		Test_uvled(
 			const char* title,
-			Base* to);
-		void start();
+			Base* continue_to);
+		void start(bool handle_heater = true);
 		Base* loop();
 	private:
 		uint8_t test_time;
-		float old_uvled_temp;
 	};
 
 
@@ -175,14 +176,13 @@ namespace States {
 	public:
 		Test_heater(
 			const char* title,
-			Base* to);
-		void start();
+			Base* continue_to,
+			uint8_t* continue_after);
+		void start(bool handle_heater = true);
 		Base* loop();
 		bool get_info2(char* buffer, uint8_t size);
 	private:
-		uint8_t test_time;
-		uint8_t new_chamb_temp;
-		float old_chamb_temp;
+		uint8_t temp;
 		uint16_t old_seconds;
 		bool draw;
 	};

@@ -1,3 +1,5 @@
+# TODO CS1S!
+
 # Prusa-CW1-Firmware
 Original Prusa Curing and Washing machine firmware
 

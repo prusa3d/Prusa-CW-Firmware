@@ -1,5 +1,6 @@
 # CW1S is the default, use `make DEVICE=CW1` for CW1
 DEVICE = CW1S
+#DEVICE = CW1
 PROJECT = Prusa-${DEVICE}-Firmware
 DIRS = lib src
 DEVICES_DIR = devices
@@ -32,7 +33,7 @@ INCLUDE = $(foreach dir, ${DIRS}, -I${dir}) -I${DEVICES_DIR} -I${BUILD_DIR}
 
 CFLAGS = ${OPT} ${WARN} ${CSTANDARD} ${MCU} ${INCLUDE} ${DEFS}
 CPPFLAGS = ${OPT} ${WARN} ${CPPSTANDARD} ${CPPTUNING} ${MCU} ${INCLUDE} ${DEFS}
-LINKFLAGS = -fuse-linker-plugin -Wl,--relax,--gc-sections,--defsym=__TEXT_REGION_LENGTH__=28k
+LINKFLAGS = -fuse-linker-plugin -Wl,--relax,--gc-sections,--defsym=__TEXT_REGION_LENGTH__=28k,--defsym=__DATA_REGION_LENGTH__=2560,--print-memory-usage
 
 DEVICE_LOWER := $(shell echo ${DEVICE} | tr '[:upper:]' '[:lower:]')
 CSRCS := $(foreach dir, ${DIRS}, $(wildcard ${dir}/*.c))

@@ -9,6 +9,7 @@ namespace UI {
 	/*** menu definitions ***/
 	Base back(pgmstr_back, BACK_CHAR);
 	Base stop(pgmstr_stop, STOP_CHAR);
+	State error(pgmstr_emptystr, &States::error, nullptr);
 
 	// move all following definitions to init() to save RAM instead of PROGMEM
 
@@ -58,7 +59,6 @@ namespace UI {
 	// config menu
 	const char* const curing_machine_mode_options[] PROGMEM = {pgmstr_drying_curing, pgmstr_curing, pgmstr_drying};
 	Option curing_machine_mode(pgmstr_run_mode, config.curing_machine_mode, curing_machine_mode_options, COUNT_ITEMS(curing_machine_mode_options));
-	Percent led_intensity(pgmstr_led_intensity, config.led_intensity, MIN_LED_INTENSITY);
 	Percent_with_action lcd_brightness(pgmstr_lcd_brightness, config.lcd_brightness, MIN_LCD_BRIGHTNESS, lcd.setBrightness);
 	Base* const config_items[] PROGMEM = {&back, &speed_menu, &curing_machine_mode, &temperature_menu, &sound_menu, &lcd_brightness, &info_menu};
 	Menu config_menu(pgmstr_settings, config_items, COUNT_ITEMS(config_items));
@@ -78,24 +78,9 @@ namespace UI {
 	Base* const home_items[] PROGMEM = {&do_it, &resin_preheat, &run_time_menu, &hold_platform_menu, &config_menu};
 	Menu home_menu(pgmstr_emptystr, home_items, COUNT_ITEMS(home_items));
 
-	// hw menu
-	Live_value<uint16_t> fan1_rpm(pgmstr_fan1_rpm, hw.fan_rpm[0]);
-	Live_value<uint16_t> fan2_rpm(pgmstr_fan2_rpm, hw.fan_rpm[1]);
-#ifdef CW1_HW
-	Live_value<uint16_t> fan3_rpm(pgmstr_fan2_rpm, hw.fan_rpm[2]);
-#endif
-	Live_value<float> chamber_temp(pgmstr_chamber_temp, hw.chamber_temp);
-	Live_value<float> uvled_temp(pgmstr_uvled_temp, hw.uvled_temp);
-#ifdef CW1_HW
-	Base* const hw_items[] PROGMEM = {&back, &fan1_rpm, &fan2_rpm, &fan3_rpm, &chamber_temp, &uvled_temp};
-#endif
-#ifdef CW1S_HW
-	Base* const hw_items[] PROGMEM = {&back, &fan1_rpm, &fan2_rpm, &chamber_temp, &uvled_temp};
-#endif
-	Menu_self_redraw hw_menu(pgmstr_emptystr, hw_items, COUNT_ITEMS(hw_items), MENU_REDRAW_US);
-
 	// advanced menu
-	State cooldown(pgmstr_cooldown, &States::cooldown, &hw_menu);
+	Percent led_intensity(pgmstr_led_intensity, config.led_intensity, MIN_LED_INTENSITY);
+	State cooldown(pgmstr_cooldown, &States::cooldown, nullptr);
 	State selftest(pgmstr_selftest, &States::selftest_cover, nullptr);
 	Base* const advanced_items[] PROGMEM = {&back, &led_intensity, &cooldown, &selftest};
 	Menu advanced_menu(pgmstr_emptystr, advanced_items, COUNT_ITEMS(advanced_items));
@@ -111,11 +96,21 @@ namespace UI {
 			SI_changed[i]->init(config.SI_unit_system);
 		}
 		home_menu.set_long_press_ui_item(&curing_machine_mode);
-		info_menu.set_long_press_ui_item(&hw_menu);
-		run_menu.set_long_press_ui_item(&hw_menu);
 		config_menu.set_long_press_ui_item(&advanced_menu);
 		active_menu->invoke();
 		active_menu->show();
+	}
+
+	void set_menu(Base* new_menu) {
+		if (menu_depth < MAX_MENU_DEPTH) {
+			menu_stack[menu_depth++] = active_menu;
+			active_menu = new_menu;
+			lcd.clear();
+			active_menu->invoke();
+			active_menu->show();
+		} else {
+			USB_PRINTLNP("ERROR: MAX_MENU_DEPTH reached!");
+		}
 	}
 
 	void loop(uint8_t events) {
@@ -133,15 +128,7 @@ namespace UI {
 				USB_PRINTLNP("ERROR: back at menu depth 0!");
 			}
 		} else if (new_menu) {
-			if (menu_depth < MAX_MENU_DEPTH) {
-				menu_stack[menu_depth++] = active_menu;
-				active_menu = new_menu;
-				lcd.clear();
-				active_menu->invoke();
-				active_menu->show();
-			} else {
-				USB_PRINTLNP("ERROR: MAX_MENU_DEPTH reached!");
-			}
+			set_menu(new_menu);
 		}
 	}
 

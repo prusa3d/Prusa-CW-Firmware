@@ -9,3 +9,6 @@ bool is_tank_inserted() {
 	return hw.is_tank_inserted();
 }
 
+extern "C" void __cxa_pure_virtual() {
+	USB_PRINTLNP("ERROR: pure virtual");
+}
