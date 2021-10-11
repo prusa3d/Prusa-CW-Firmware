@@ -58,7 +58,8 @@ void read_config() {
 		EEPROM.get(CONFIG_START + MAGIC_SIZE, reinterpret_cast<uint8_t*>(&config), sizeof(config));
 	} else if (!strncmp_P(test_magic, legacy_magic2, MAGIC_SIZE)) {
 		// legacy magic
-		EEPROM.get(CONFIG_START + MAGIC_SIZE, reinterpret_cast<uint8_t*>(&config), sizeof(eeprom_v2_t));
+		EEPROM.get(CONFIG_START + MAGIC_SIZE, reinterpret_cast<uint8_t*>(&config), sizeof(eeprom_v2_t) - 9);
+		EEPROM.get(CONFIG_START + MAGIC_SIZE + sizeof(eeprom_v2_t) - 1, reinterpret_cast<uint8_t*>(&config.lcd_brightness), 1);
 	} else if (!strncmp_P(test_magic, legacy_magic1, MAGIC_SIZE)) {
 		// legacy magic
 		uint8_t tmp = config.resin_target_temp;	// remember default
