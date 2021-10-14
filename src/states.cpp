@@ -15,46 +15,44 @@ namespace States {
 		&config.wash_cycles,
 		&confirm,
 		&config.washing_run_time,
+		MAX_WASHING_RUNTIME,
 		&config.washing_speed);
 	Base drying(
 		pgmstr_drying,
 		STATE_OPTION_CONTROLS | STATE_OPTION_HEATER | STATE_OPTION_CHAMB_TEMP,
 		&confirm,
 		&config.drying_run_time,
+		MAX_DRYING_RUNTIME,
 		&config.curing_speed);
 	Base curing(
 		pgmstr_curing,
 		STATE_OPTION_CONTROLS | STATE_OPTION_UVLED,
 		&confirm,
 		&config.curing_run_time,
+		MAX_CURING_RUNTIME,
 		&config.curing_speed);
 	Base resin(
 		pgmstr_heating,
 		STATE_OPTION_CONTROLS | STATE_OPTION_HEATER | STATE_OPTION_CHAMB_TEMP,
 		&confirm,
 		&config.resin_preheat_run_time,
+		MAX_PREHEAT_RUNTIME,
 		&config.curing_speed,
 		&config.resin_target_temp);
-	uint8_t max_warmup_run_time = MAX_WARMUP_RUNTIME;
 	Warmup warmup_print(
 		pgmstr_warmup,
 		nullptr,
-		&max_warmup_run_time,
-		&config.curing_speed,
 		&config.target_temp);
 	Warmup warmup_resin(
 		pgmstr_warmup,
 		&resin,
-		&max_warmup_run_time,
-		&config.curing_speed,
 		&config.resin_target_temp);
 	Cooldown cooldown(&confirm);
 	Reset reset;
 
 	Test_heater selftest_heater(
 		pgmstr_heater_test,
-		&confirm,
-		&max_warmup_run_time);
+		&confirm);
 	Test_uvled selftest_uvled(
 		pgmstr_led_test,
 		&selftest_heater);

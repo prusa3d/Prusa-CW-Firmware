@@ -26,6 +26,7 @@ namespace States {
 			uint8_t options = 0,
 			Base* continue_to = nullptr,
 			uint8_t* continue_after = nullptr,
+			uint8_t max_runtime = 10,
 			uint8_t* motor_speed = nullptr,
 			uint8_t* target_temp = nullptr);
 
@@ -62,6 +63,7 @@ namespace States {
 		bool motor_direction;
 	private:
 		const char* get_hw_pause_reason();
+		uint16_t max_runtime;
 		const char* title;
 	};
 
@@ -75,6 +77,7 @@ namespace States {
 			uint8_t* direction_cycles,
 			Base* continue_to = nullptr,
 			uint8_t* continue_after = nullptr,
+			uint8_t max_runtime = 10,
 			uint8_t* motor_speed = nullptr,
 			uint8_t* target_temp = nullptr);
 		void start(bool handle_heater = true);
@@ -93,10 +96,10 @@ namespace States {
 		Warmup(
 			const char* title,
 			Base* continue_to,
-			uint8_t* continue_after,
-			uint8_t* motor_speed,
 			uint8_t* target_temp);
 		Base* loop();
+	private:
+		uint8_t continue_after;
 	};
 
 
@@ -206,12 +209,12 @@ namespace States {
 	public:
 		Test_heater(
 			const char* title,
-			Base* continue_to,
-			uint8_t* continue_after);
+			Base* continue_to);
 		void start(bool handle_heater = true);
 		Base* loop();
 		bool get_info2(char* buffer, uint8_t size);
 	private:
+		uint8_t test_time;
 		uint8_t temp;
 		uint16_t old_seconds;
 		bool draw;

@@ -9,6 +9,7 @@
 * Change motor direction while washing
 * Factory reset
 * Improved self-test
+* Allow to extend the run time to a defined maximum
 * Updated documentation
 
 ## Detailed description
@@ -58,6 +59,10 @@ available, which applies the default settings of all configurable values.
 ### Improved self-test
 The UV LED and heater test run only for the necessary time instead of a fixed
 time.
+
+### Allow to extend the run time to a defined maximum.
+The increase of run time during the ongoing operation was limited to 10
+minutes. Newly, this value is the maximum for each operation (60 minutes).
 
 ### Updated documentation
 The README has been updated and a CHANGELOG has been created.

@@ -14,6 +14,7 @@ namespace States {
 		uint8_t options,
 		Base* continue_to,
 		uint8_t* continue_after,
+		uint8_t max_runtime,
 		uint8_t* motor_speed,
 		uint8_t* target_temp)
 	:
@@ -23,6 +24,7 @@ namespace States {
 		target_temp(target_temp),
 		motor_speed(motor_speed),
 		continue_after(continue_after),
+		max_runtime(60 * max_runtime - INC_DEC_TIME_STEP),
 		title(title)
 	{}
 
@@ -190,7 +192,7 @@ namespace States {
 	const char* Base::increase_time() {
 		if (continue_after && options & STATE_OPTION_CONTROLS) {
 			uint16_t secs = timer.getCurrentTimeInSeconds();
-			if (secs > 10 * 60 - INC_DEC_TIME_STEP) {
+			if (secs > max_runtime) {
 				return pgmstr_max_symb;
 			} else {
 				timer.setCounterInSeconds(secs + INC_DEC_TIME_STEP);
@@ -247,10 +249,11 @@ namespace States {
 		uint8_t* direction_cycles,
 		Base* continue_to,
 		uint8_t* continue_after,
+		uint8_t max_runtime,
 		uint8_t* motor_speed,
 		uint8_t* target_temp)
 	:
-		Base(title, options, continue_to, continue_after, motor_speed, target_temp),
+		Base(title, options, continue_to, continue_after, max_runtime, motor_speed, target_temp),
 		direction_cycles(direction_cycles)
 	{}
 
@@ -288,11 +291,10 @@ namespace States {
 	Warmup::Warmup(
 		const char* title,
 		Base* continue_to,
-		uint8_t* continue_after,
-		uint8_t* motor_speed,
 		uint8_t* target_temp)
 	:
-		Base(title, STATE_OPTION_TIMER_UP | STATE_OPTION_HEATER | STATE_OPTION_CHAMB_TEMP, continue_to, continue_after, motor_speed, target_temp)
+		Base(title, STATE_OPTION_TIMER_UP | STATE_OPTION_HEATER | STATE_OPTION_CHAMB_TEMP, continue_to, &continue_after, MAX_WARMUP_RUNTIME, &config.curing_speed, target_temp),
+		continue_after(MAX_WARMUP_RUNTIME)
 	{}
 
 	Base* Warmup::loop() {
@@ -305,11 +307,11 @@ namespace States {
 
 	// States::Cooldown
 	Cooldown::Cooldown(Base* continue_to) :
-		Base(pgmstr_cooldown, STATE_OPTION_CONTROLS, continue_to, &cooldown_time),
-		cooldown_time(COOLDOWN_RUNTIME)
+		Base(pgmstr_cooldown, STATE_OPTION_CONTROLS, continue_to, &cooldown_time)
 	{}
 
 	void Cooldown::start(bool handle_heater) {
+		cooldown_time = COOLDOWN_RUNTIME;
 		hw.force_fan_speed(100, 100);
 		Base::start(handle_heater);
 	}
@@ -419,7 +421,7 @@ namespace States {
 		const char* title,
 		Base* continue_to)
 	:
-		Base(title, 0, continue_to, &test_time, &test_speed)
+		Base(title, 0, continue_to, &test_time, 10, &test_speed)
 	{}
 
 	void Test_rotation::start(bool handle_heater) {
@@ -575,13 +577,13 @@ namespace States {
 	// States::Test_heater
 	Test_heater::Test_heater(
 		const char* title,
-		Base* continue_to,
-		uint8_t* continue_after)
+		Base* continue_to)
 	:
-		Base(title, STATE_OPTION_HEATER | STATE_OPTION_CHAMB_TEMP, continue_to, continue_after, nullptr, &temp)
+		Base(title, STATE_OPTION_HEATER | STATE_OPTION_CHAMB_TEMP, continue_to, &test_time, 10, nullptr, &temp)
 	{}
 
 	void Test_heater::start(bool handle_heater) {
+		test_time = MAX_WARMUP_RUNTIME;
 		old_seconds = 0;
 		temp = get_configured_temp(TEST_TEMP);
 		hw.force_fan_speed(0, 0);
