@@ -26,7 +26,6 @@ inline bool CW1::handle_heater() {
 void CW1::heating() {
 	if (heating_in_progress and round_short(get_configured_temp(chamber_temp_celsius)) < chamber_target_temp) {
 		set_heater_pin_state(true);
-		heater_on_ms = millis();
 	} else {
 		set_heater_pin_state(false);
 	}
@@ -38,6 +37,9 @@ void CW1::set_heater_pin_state(bool value) {
 		USB_PRINTLN(value);
 		outputchip.digitalWrite(FAN_HEAT_PIN, value);
 		heater_pin_state = value;
+		if (value) {
+			heater_on_ms = millis();
+		}
 	}
 }
 
