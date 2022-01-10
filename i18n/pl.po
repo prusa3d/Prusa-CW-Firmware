@@ -7,14 +7,15 @@ msgstr ""
 "Plural-Forms: nplurals=4; plural=(n == 1) ? 0 : ((n%10 >= 2 && n%10 <=4 && (n"
 "%100 < 12 || n%100 > 14)) ? 1 : ((n%10 == 0 || n%10 == 1 || (n%10 >= 5 && n"
 "%10 <=9)) || (n%100 >= 12 && n%100 <= 14)) ? 2 : 3);\n"
+"X-Generator: Phrase (phrase.com)\n"
 
 #: i18n/en.h:142
 msgid "  F2:"
-msgstr "  W2:"
+msgstr "W2:"
 
 #: i18n/en.h:9
 msgid " min."
-msgstr " min."
+msgstr "min."
 
 #: i18n/en.h:2
 msgid "Back"
@@ -22,7 +23,7 @@ msgstr "Wstecz"
 
 #: i18n/en.h:70
 msgid "Build: "
-msgstr "Build: "
+msgstr "Kompilacja: "
 
 #: i18n/en.h:98
 msgid "Cham. temp.:"
@@ -72,6 +73,10 @@ msgstr "Czas suszenia"
 msgid "Drying warm-up t."
 msgstr "Temp. suszenia"
 
+#: i18n/en.h:31
+msgid "Drying/Warm-up t."
+msgstr "Temp. suszenia/podgrzewania"
+
 #: i18n/en.h:79
 msgid "Drying/curing"
 msgstr "Suszenie/utwardz."
@@ -86,11 +91,15 @@ msgstr "W3:"
 
 #: i18n/en.h:68
 msgid "FW: "
-msgstr "FW: "
+msgstr "FW:"
+
+#: i18n/en.h:76
+msgid "Factory reset"
+msgstr "Przywr. ust. fabrycznych"
 
 #: i18n/en.h:95
 msgid "Fan1 RPM: "
-msgstr "Obroty w1: "
+msgstr "Obroty went. 1:"
 
 #: i18n/en.h:45
 msgid "Fan1 curing speed"
@@ -114,7 +123,7 @@ msgstr "Predk. myc. went 1"
 
 #: i18n/en.h:96
 msgid "Fan2 RPM: "
-msgstr "Obroty w2: "
+msgstr "Obroty went. 2:"
 
 #: i18n/en.h:46
 msgid "Fan2 curing speed"
@@ -138,7 +147,7 @@ msgstr "Predk. myc. went 2"
 
 #: i18n/en.h:97
 msgid "Fan3 RPM: "
-msgstr "Obroty w3: "
+msgstr "Obroty went. 3:"
 
 #: i18n/en.h:64
 msgid "Fans"
@@ -188,7 +197,7 @@ msgstr "Test grzalki"
 msgid "Heating"
 msgstr "Podgrzewanie"
 
-#: i18n/en.h:152
+#: i18n/en.h:125
 msgid "Hold the platform"
 msgstr "Trzymaj platforme"
 
@@ -196,9 +205,9 @@ msgstr "Trzymaj platforme"
 msgid "IPA tank test"
 msgstr "Test zbiornika IPA"
 
-#: i18n/en.h:153
+#: i18n/en.h:126
 msgid "Incorrect firmware!"
-msgstr "Bledne firmware!"
+msgstr "Niewlasciwe firmware!"
 
 #: i18n/en.h:67
 msgid "Information"
@@ -248,6 +257,10 @@ msgstr "Nacisnij, aby kont"
 msgid "Read temper. error"
 msgstr "Blad odczytu temp."
 
+#: i18n/en.h:77
+msgid "Really reset all?"
+msgstr "Zresetowac wsz.?"
+
 #: i18n/en.h:116
 msgid "Remove IPA tank"
 msgstr "Wyc. zbiornik IPA"
@@ -263,6 +276,10 @@ msgstr "Temp. podg. zywicy"
 #: i18n/en.h:19
 msgid "Resin preheat time"
 msgstr "Czas podg. zywicy"
+
+#: i18n/en.h:23
+msgid "Rotation settings"
+msgstr "Ustawienia obrotow"
 
 #: i18n/en.h:22
 msgid "Rotation speed"
@@ -318,7 +335,7 @@ msgstr "Intensywnosc UVLED"
 
 #: i18n/en.h:99
 msgid "UVLED temp.:"
-msgstr "Temp. UVLED:"
+msgstr "Temperatura UVLED:"
 
 #: i18n/en.h:138
 msgid "UVLED test"
@@ -327,6 +344,10 @@ msgstr "Test UVLED"
 #: i18n/en.h:28
 msgid "Warm-up"
 msgstr "Nagrzewanie"
+
+#: i18n/en.h:26
+msgid "Wash cycles"
+msgstr "Cykle mycia"
 
 #: i18n/en.h:91
 msgid "Washing"

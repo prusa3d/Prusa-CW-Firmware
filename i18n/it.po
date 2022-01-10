@@ -5,6 +5,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Phrase (phrase.com)\n"
 
 #: i18n/en.h:142
 msgid "  F2:"
@@ -24,7 +25,7 @@ msgstr "Build: "
 
 #: i18n/en.h:98
 msgid "Cham. temp.:"
-msgstr "Temp. alloggio:"
+msgstr "Temp. alloggio"
 
 #: i18n/en.h:115
 msgid "Close the cover"
@@ -70,6 +71,10 @@ msgstr "Durata asciugatura"
 msgid "Drying warm-up t."
 msgstr "T. riscal. asciug"
 
+#: i18n/en.h:31
+msgid "Drying/Warm-up t."
+msgstr "Asciugatura/Riscaldamento t."
+
 #: i18n/en.h:79
 msgid "Drying/curing"
 msgstr "Asciugat./Indurim."
@@ -84,11 +89,15 @@ msgstr "F3:"
 
 #: i18n/en.h:68
 msgid "FW: "
-msgstr "FW: "
+msgstr "FW:"
+
+#: i18n/en.h:76
+msgid "Factory reset"
+msgstr "Reset di fabbrica"
 
 #: i18n/en.h:95
 msgid "Fan1 RPM: "
-msgstr "RPM Ventola1: "
+msgstr "RPM Ventola1:"
 
 #: i18n/en.h:45
 msgid "Fan1 curing speed"
@@ -104,7 +113,7 @@ msgstr "Guasto Ventola1"
 
 #: i18n/en.h:60
 msgid "Fan1 menu speed"
-msgstr "Menu vel. ventola1"
+msgstr "Menù vel. ventola1"
 
 #: i18n/en.h:55
 msgid "Fan1 washing speed"
@@ -112,7 +121,7 @@ msgstr "Vel. lavagg. Vent1"
 
 #: i18n/en.h:96
 msgid "Fan2 RPM: "
-msgstr "RPM Ventola2: "
+msgstr "RPM Ventola2:"
 
 #: i18n/en.h:46
 msgid "Fan2 curing speed"
@@ -128,7 +137,7 @@ msgstr "Guasto Ventola2"
 
 #: i18n/en.h:61
 msgid "Fan2 menu speed"
-msgstr "Menu vel. ventola2"
+msgstr "Menù vel. ventola2"
 
 #: i18n/en.h:56
 msgid "Fan2 washing speed"
@@ -136,7 +145,7 @@ msgstr "Vel. lavagg. Vent2"
 
 #: i18n/en.h:97
 msgid "Fan3 RPM: "
-msgstr "RPM Vent3: "
+msgstr "RPM Vent3:"
 
 #: i18n/en.h:64
 msgid "Fans"
@@ -152,7 +161,7 @@ msgstr "Vel asciug Vent.le"
 
 #: i18n/en.h:59
 msgid "Fans menu speed"
-msgstr "Menu vel. ventole"
+msgstr "Menù vel. ventole"
 
 #: i18n/en.h:140
 msgid "Fans test"
@@ -186,17 +195,17 @@ msgstr "Test riscaldam."
 msgid "Heating"
 msgstr "Riscaldamento"
 
-#: i18n/en.h:152
+#: i18n/en.h:125
 msgid "Hold the platform"
-msgstr "Tieni la piattaf."
+msgstr "Tenere la piattaforma"
 
 #: i18n/en.h:149
 msgid "IPA tank test"
 msgstr "Test serb. IPA"
 
-#: i18n/en.h:153
+#: i18n/en.h:126
 msgid "Incorrect firmware!"
-msgstr "Firmware incorretto!"
+msgstr "Firmware non corretto!"
 
 #: i18n/en.h:67
 msgid "Information"
@@ -208,7 +217,7 @@ msgstr "Inserire serb. IPA"
 
 #: i18n/en.h:83
 msgid "LCD brightness"
-msgstr "Luminosita LCD"
+msgstr "Luminosità LCD"
 
 #: i18n/en.h:139
 msgid "No/low power"
@@ -246,6 +255,10 @@ msgstr "Premi per contin."
 msgid "Read temper. error"
 msgstr "Err. lettura temp."
 
+#: i18n/en.h:77
+msgid "Really reset all?"
+msgstr "Si vuole davvero resettare tutto?"
+
 #: i18n/en.h:116
 msgid "Remove IPA tank"
 msgstr "Rimuovi serb. IPA"
@@ -261,6 +274,10 @@ msgstr "T. prerisc. resina"
 #: i18n/en.h:19
 msgid "Resin preheat time"
 msgstr "D. prerisc. resina"
+
+#: i18n/en.h:23
+msgid "Rotation settings"
+msgstr "Impostazioni di rotazione"
 
 #: i18n/en.h:22
 msgid "Rotation speed"
@@ -300,7 +317,7 @@ msgstr "Stop"
 
 #: i18n/en.h:31
 msgid "Temp. units"
-msgstr "Unita temperatura"
+msgstr "Unità temperatura"
 
 #: i18n/en.h:27
 msgid "Temperatures"
@@ -312,7 +329,7 @@ msgstr "Guasto UVLED"
 
 #: i18n/en.h:82
 msgid "UVLED intensity"
-msgstr "Intensita UVLED"
+msgstr "Intensità UVLED"
 
 #: i18n/en.h:99
 msgid "UVLED temp.:"
@@ -325,6 +342,10 @@ msgstr "Test UVLED"
 #: i18n/en.h:28
 msgid "Warm-up"
 msgstr "Riscalda"
+
+#: i18n/en.h:26
+msgid "Wash cycles"
+msgstr "Cicli di lavaggio"
 
 #: i18n/en.h:91
 msgid "Washing"

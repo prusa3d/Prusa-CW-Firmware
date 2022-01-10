@@ -4,7 +4,10 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+"Plural-Forms: nplurals=4; plural=(n == 1) ? 0 : ((n%10 >= 2 && n%10 <=4 && (n"
+"%100 < 12 || n%100 > 14)) ? 1 : ((n%10 == 0 || n%10 == 1 || (n%10 >= 5 && n"
+"%10 <=9)) || (n%100 >= 12 && n%100 <= 14)) ? 2 : 3);\n"
+"X-Generator: Phrase (phrase.com)\n"
 
 #: i18n/en.h:142
 msgid "  F2:"
@@ -70,6 +73,10 @@ msgstr "Doba suseni"
 msgid "Drying warm-up t."
 msgstr "T. pro suseni"
 
+#: i18n/en.h:31
+msgid "Drying/Warm-up t."
+msgstr "Tep. suseni/zahrati"
+
 #: i18n/en.h:79
 msgid "Drying/curing"
 msgstr "Tvrzeni/suseni"
@@ -85,6 +92,10 @@ msgstr "V3:"
 #: i18n/en.h:68
 msgid "FW: "
 msgstr "FW: "
+
+#: i18n/en.h:76
+msgid "Factory reset"
+msgstr "Tovarni reset"
 
 #: i18n/en.h:95
 msgid "Fan1 RPM: "
@@ -186,17 +197,17 @@ msgstr "Test nahrivani"
 msgid "Heating"
 msgstr "Nahrivani"
 
-#: i18n/en.h:152
+#: i18n/en.h:125
 msgid "Hold the platform"
-msgstr "Podrzet platformu"
+msgstr "Drzte platformu"
 
 #: i18n/en.h:149
 msgid "IPA tank test"
 msgstr "Test IPA nadoby"
 
-#: i18n/en.h:153
+#: i18n/en.h:126
 msgid "Incorrect firmware!"
-msgstr "Nespravny firmware!"
+msgstr "Nespravny firmware"
 
 #: i18n/en.h:67
 msgid "Information"
@@ -246,6 +257,10 @@ msgstr "Potvrdte stiskem"
 msgid "Read temper. error"
 msgstr "Chyba cteni t."
 
+#: i18n/en.h:77
+msgid "Really reset all?"
+msgstr "Vyresetovat vse?"
+
 #: i18n/en.h:116
 msgid "Remove IPA tank"
 msgstr "Vyjmete IPA nadobu"
@@ -261,6 +276,10 @@ msgstr "T. ohrati resinu"
 #: i18n/en.h:19
 msgid "Resin preheat time"
 msgstr "Doba ohrati resinu"
+
+#: i18n/en.h:23
+msgid "Rotation settings"
+msgstr "Nastaveni rotace"
 
 #: i18n/en.h:22
 msgid "Rotation speed"
@@ -325,6 +344,10 @@ msgstr "Test UVLED"
 #: i18n/en.h:28
 msgid "Warm-up"
 msgstr "Predehrev"
+
+#: i18n/en.h:26
+msgid "Wash cycles"
+msgstr "Myci cykly"
 
 #: i18n/en.h:91
 msgid "Washing"

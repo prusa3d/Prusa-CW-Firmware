@@ -5,6 +5,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Phrase (phrase.com)\n"
 
 #: i18n/en.h:142
 msgid "  F2:"
@@ -16,7 +17,7 @@ msgstr " min."
 
 #: i18n/en.h:2
 msgid "Back"
-msgstr "Atras"
+msgstr "Atrás"
 
 #: i18n/en.h:70
 msgid "Build: "
@@ -24,7 +25,7 @@ msgstr "Build: "
 
 #: i18n/en.h:98
 msgid "Cham. temp.:"
-msgstr "Temp. camara:"
+msgstr "Temp. cámara:"
 
 #: i18n/en.h:115
 msgid "Close the cover"
@@ -70,6 +71,10 @@ msgstr "Tiempo de secado"
 msgid "Drying warm-up t."
 msgstr "Temp. de presecado"
 
+#: i18n/en.h:31
+msgid "Drying/Warm-up t."
+msgstr "Temp. Secado/Calent"
+
 #: i18n/en.h:79
 msgid "Drying/curing"
 msgstr "Secado/curado"
@@ -84,11 +89,15 @@ msgstr "F3:"
 
 #: i18n/en.h:68
 msgid "FW: "
-msgstr "FW: "
+msgstr "FW:"
+
+#: i18n/en.h:76
+msgid "Factory reset"
+msgstr "Restablecimiento de Fábrica"
 
 #: i18n/en.h:95
 msgid "Fan1 RPM: "
-msgstr "RPM Vent1: "
+msgstr "RPM Vent1:"
 
 #: i18n/en.h:45
 msgid "Fan1 curing speed"
@@ -112,7 +121,7 @@ msgstr "Vel. curado Vent1"
 
 #: i18n/en.h:96
 msgid "Fan2 RPM: "
-msgstr "RPM Vent2: "
+msgstr "RPM Vent2:"
 
 #: i18n/en.h:46
 msgid "Fan2 curing speed"
@@ -136,7 +145,7 @@ msgstr "Vel. curado Vent2"
 
 #: i18n/en.h:97
 msgid "Fan3 RPM: "
-msgstr "RPM Vent3: "
+msgstr "RPM Vent3:"
 
 #: i18n/en.h:64
 msgid "Fans"
@@ -186,21 +195,21 @@ msgstr "Test calentador"
 msgid "Heating"
 msgstr "Calentando"
 
-#: i18n/en.h:152
+#: i18n/en.h:125
 msgid "Hold the platform"
-msgstr "Sujeta la plat."
+msgstr "Sujeta la plataforma"
 
 #: i18n/en.h:149
 msgid "IPA tank test"
 msgstr "Test tanque IPA"
 
-#: i18n/en.h:153
+#: i18n/en.h:126
 msgid "Incorrect firmware!"
 msgstr "Firmware incorrecto!"
 
 #: i18n/en.h:67
 msgid "Information"
-msgstr "Informacion"
+msgstr "Información"
 
 #: i18n/en.h:133
 msgid "Insert IPA tank"
@@ -246,6 +255,10 @@ msgstr "Presiona para cont."
 msgid "Read temper. error"
 msgstr "Error lect. temp."
 
+#: i18n/en.h:77
+msgid "Really reset all?"
+msgstr "¿Reiniciar todo?"
+
 #: i18n/en.h:116
 msgid "Remove IPA tank"
 msgstr "Retira tanq. IPA"
@@ -261,6 +274,10 @@ msgstr "Temp. precal. res."
 #: i18n/en.h:19
 msgid "Resin preheat time"
 msgstr "Tiempo precal. res."
+
+#: i18n/en.h:23
+msgid "Rotation settings"
+msgstr "Ajustes de rotación"
 
 #: i18n/en.h:22
 msgid "Rotation speed"
@@ -292,7 +309,7 @@ msgstr "Sonido"
 
 #: i18n/en.h:146
 msgid "Spinning turned off"
-msgstr "Rotacion apagada"
+msgstr "Rotación apagada"
 
 #: i18n/en.h:88
 msgid "Stop"
@@ -325,6 +342,10 @@ msgstr "Test LED UV"
 #: i18n/en.h:28
 msgid "Warm-up"
 msgstr "Precalent."
+
+#: i18n/en.h:26
+msgid "Wash cycles"
+msgstr "Ciclos de lavado"
 
 #: i18n/en.h:91
 msgid "Washing"

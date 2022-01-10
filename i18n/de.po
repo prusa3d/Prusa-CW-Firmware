@@ -5,6 +5,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Phrase (phrase.com)\n"
 
 #: i18n/en.h:142
 msgid "  F2:"
@@ -16,7 +17,7 @@ msgstr " min."
 
 #: i18n/en.h:2
 msgid "Back"
-msgstr "Zuruck"
+msgstr "zurück"
 
 #: i18n/en.h:70
 msgid "Build: "
@@ -24,7 +25,7 @@ msgstr "Build: "
 
 #: i18n/en.h:98
 msgid "Cham. temp.:"
-msgstr "Gehausetemp.:"
+msgstr "Gehäusetemp."
 
 #: i18n/en.h:115
 msgid "Close the cover"
@@ -32,7 +33,7 @@ msgstr "Abdeckung zumachen"
 
 #: i18n/en.h:87
 msgid "Continue"
-msgstr "Fortfahren"
+msgstr "fortfahren"
 
 #: i18n/en.h:37
 msgid "Control echo"
@@ -40,7 +41,7 @@ msgstr "Steuerung Echo"
 
 #: i18n/en.h:102
 msgid "Cooldown"
-msgstr "Abkuhlen"
+msgstr "Abkühlen"
 
 #: i18n/en.h:150
 msgid "Cover test"
@@ -48,15 +49,15 @@ msgstr "Abdeckungstest"
 
 #: i18n/en.h:80
 msgid "Curing"
-msgstr "Harte"
+msgstr "Härte"
 
 #: i18n/en.h:16
 msgid "Curing run-time"
-msgstr "Hartelaufzeit"
+msgstr "Härtelaufzeit"
 
 #: i18n/en.h:23
 msgid "Curing speed"
-msgstr "Hartetempo"
+msgstr "Härtetempo"
 
 #: i18n/en.h:81
 msgid "Drying"
@@ -68,11 +69,15 @@ msgstr "Trockenlaufzeit"
 
 #: i18n/en.h:29
 msgid "Drying warm-up t."
-msgstr "Trocknen Aufwarmz."
+msgstr "Trocknen Aufwärmz."
+
+#: i18n/en.h:31
+msgid "Drying/Warm-up t."
+msgstr "Trocken/Aufwärmz."
 
 #: i18n/en.h:79
 msgid "Drying/curing"
-msgstr "Trockne/Harte"
+msgstr "Trockne/Härte"
 
 #: i18n/en.h:141
 msgid "F1:"
@@ -84,83 +89,87 @@ msgstr "F3:"
 
 #: i18n/en.h:68
 msgid "FW: "
-msgstr "FW: "
+msgstr "FW:"
+
+#: i18n/en.h:76
+msgid "Factory reset"
+msgstr "Werkseinstellungen"
 
 #: i18n/en.h:95
 msgid "Fan1 RPM: "
-msgstr "Lufter1 UPM: "
+msgstr "Lüfter1 UPM:"
 
 #: i18n/en.h:45
 msgid "Fan1 curing speed"
-msgstr "Lufter1 Hartetempo"
+msgstr "Lüfter1 Härtetempo"
 
 #: i18n/en.h:50
 msgid "Fan1 drying speed"
-msgstr "Lufter1 Trocktempo"
+msgstr "Lüfter1 Trocktempo"
 
 #: i18n/en.h:144
 msgid "Fan1 failure"
-msgstr "Lufter1 Fehler"
+msgstr "Lüfter1 Fehler"
 
 #: i18n/en.h:60
 msgid "Fan1 menu speed"
-msgstr "Lufter1 Menutempo"
+msgstr "Lüfter1 Menütempo"
 
 #: i18n/en.h:55
 msgid "Fan1 washing speed"
-msgstr "Lufter1 Waschtempo"
+msgstr "Lüfter1 Waschtempo"
 
 #: i18n/en.h:96
 msgid "Fan2 RPM: "
-msgstr "Lufter2 UPM: "
+msgstr "Lüfter2 UPM:"
 
 #: i18n/en.h:46
 msgid "Fan2 curing speed"
-msgstr "Lufter2 Hartetempo"
+msgstr "Lüfter2 Härtetempo"
 
 #: i18n/en.h:51
 msgid "Fan2 drying speed"
-msgstr "Lufter2 Trocktempo"
+msgstr "Lüfter2 Trocktempo"
 
 #: i18n/en.h:145
 msgid "Fan2 failure"
-msgstr "Lufter2 Fehler"
+msgstr "Lüfter2 Fehler"
 
 #: i18n/en.h:61
 msgid "Fan2 menu speed"
-msgstr "Lufter2 Menutempo"
+msgstr "Lüfter2 Menütempo"
 
 #: i18n/en.h:56
 msgid "Fan2 washing speed"
-msgstr "Lufter2 Waschtempo"
+msgstr "Lüfter2 Waschtempo"
 
 #: i18n/en.h:97
 msgid "Fan3 RPM: "
-msgstr "Lufter3 UPM: "
+msgstr "Lüfter3 UPM:"
 
 #: i18n/en.h:64
 msgid "Fans"
-msgstr "Lufter"
+msgstr "Lüfter"
 
 #: i18n/en.h:44
 msgid "Fans curing speed"
-msgstr "Lufter Hartetempo"
+msgstr "Lüfter Härtetempo"
 
 #: i18n/en.h:49
 msgid "Fans drying speed"
-msgstr "Lufter Trocktempo"
+msgstr "Lüfter Trocktempo"
 
 #: i18n/en.h:59
 msgid "Fans menu speed"
-msgstr "Lufter Menutempo"
+msgstr "Lüfter Menütempo"
 
 #: i18n/en.h:140
 msgid "Fans test"
-msgstr "Luftertest"
+msgstr "Lüftertest"
 
 #: i18n/en.h:54
 msgid "Fans washing speed"
-msgstr "Lufter Waschtempo"
+msgstr "Lüfter Waschtempo"
 
 #: i18n/en.h:41
 msgid "Finish beep"
@@ -176,7 +185,7 @@ msgstr "Heizfehler"
 
 #: i18n/en.h:117
 msgid "Heater fan error"
-msgstr "Heizlufterfehler"
+msgstr "Heizlüfterfehler"
 
 #: i18n/en.h:136
 msgid "Heater test"
@@ -186,7 +195,7 @@ msgstr "Heiztest"
 msgid "Heating"
 msgstr "Heize"
 
-#: i18n/en.h:152
+#: i18n/en.h:125
 msgid "Hold the platform"
 msgstr "Plattform halten"
 
@@ -194,9 +203,9 @@ msgstr "Plattform halten"
 msgid "IPA tank test"
 msgstr "IPA Tanktest"
 
-#: i18n/en.h:153
+#: i18n/en.h:126
 msgid "Incorrect firmware!"
-msgstr "Falsche Firmware!"
+msgstr "Ungültige Firmware!"
 
 #: i18n/en.h:67
 msgid "Information"
@@ -216,15 +225,15 @@ msgstr "Keine/gering Power"
 
 #: i18n/en.h:147
 msgid "Not/bad spinning"
-msgstr "Kein/unzur. Ruhren"
+msgstr "Kein/unzur. Rühren"
 
 #: i18n/en.h:151
 msgid "Open the cover"
-msgstr "Abdeckung offnen"
+msgstr "Abdeckung öffnen"
 
 #: i18n/en.h:130
 msgid "Overheat"
-msgstr "Uberhitzt"
+msgstr "Überhitzt"
 
 #: i18n/en.h:86
 msgid "Pause"
@@ -232,7 +241,7 @@ msgstr "Pause"
 
 #: i18n/en.h:114
 msgid "Paused"
-msgstr "Pausiert"
+msgstr "pausiert"
 
 #: i18n/en.h:118
 msgid "Please restart"
@@ -240,11 +249,15 @@ msgstr "Bitte neu starten"
 
 #: i18n/en.h:122
 msgid "Press to continue"
-msgstr "Drucken fur weiter"
+msgstr "Drücken für weiter "
 
 #: i18n/en.h:129
 msgid "Read temper. error"
 msgstr "Temp.-Lesefehler"
+
+#: i18n/en.h:77
+msgid "Really reset all?"
+msgstr "Wirklich alles zurücksetzen?"
 
 #: i18n/en.h:116
 msgid "Remove IPA tank"
@@ -252,15 +265,19 @@ msgstr "IPA Tank entfernen"
 
 #: i18n/en.h:92
 msgid "Resin preheat"
-msgstr "Harz vorwarmen"
+msgstr "Harz vorwärmen"
 
 #: i18n/en.h:30
 msgid "Resin preheat t."
-msgstr "Harz-Vorwarmtemp."
+msgstr "Harz-Vorwärmtemp."
 
 #: i18n/en.h:19
 msgid "Resin preheat time"
-msgstr "Harz-Vorwarmzeit"
+msgstr "Harz-Vorwärmzeit"
+
+#: i18n/en.h:23
+msgid "Rotation settings"
+msgstr "Rotationseinstellungen"
 
 #: i18n/en.h:22
 msgid "Rotation speed"
@@ -292,7 +309,7 @@ msgstr "Sound"
 
 #: i18n/en.h:146
 msgid "Spinning turned off"
-msgstr "Umruhren aus"
+msgstr "Umrühren aus"
 
 #: i18n/en.h:88
 msgid "Stop"
@@ -312,7 +329,7 @@ msgstr "UVLED Fehler"
 
 #: i18n/en.h:82
 msgid "UVLED intensity"
-msgstr "UVLED Intensitat"
+msgstr "UVLED Intensität"
 
 #: i18n/en.h:99
 msgid "UVLED temp.:"
@@ -324,7 +341,11 @@ msgstr "UVLED Test"
 
 #: i18n/en.h:28
 msgid "Warm-up"
-msgstr "Aufwarmen"
+msgstr "Aufwärmen"
+
+#: i18n/en.h:26
+msgid "Wash cycles"
+msgstr "Waschzyklen"
 
 #: i18n/en.h:91
 msgid "Washing"
