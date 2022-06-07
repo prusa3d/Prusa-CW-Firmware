@@ -20,13 +20,13 @@ void Countimer::setCounter(uint8_t hours, uint8_t minutes, uint8_t seconds, bool
 	if (seconds > COUNTIMER_MAX_MINUTES_SECONDS) {
 		seconds = COUNTIMER_MAX_MINUTES_SECONDS;
 	}
-	_countUp = countUp;
-	setCounterInSeconds((hours * 3600L) + (minutes * 60L) + seconds);
+	setCounterInSeconds((hours * 3600L) + (minutes * 60L) + seconds, countUp);
 }
 
-void Countimer::setCounterInSeconds(uint16_t seconds) {
+void Countimer::setCounterInSeconds(uint16_t seconds, bool countUp) {
 	_currentCountTime = seconds * 1000L;
 	_countTime = _currentCountTime;
+	_countUp = countUp;
 
 	if (_countUp) {
 		// if is count up mode, we have to start from 00:00:00;
@@ -77,7 +77,7 @@ void Countimer::stop() {
 	_currentCountTime = _countTime;
 
 	if (_countUp) {
-		_currentCountTime = 0;		
+		_currentCountTime = 0;
 	}
 }
 

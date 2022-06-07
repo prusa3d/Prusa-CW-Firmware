@@ -33,7 +33,7 @@ namespace States {
 		canceled = false;
 		motor_direction = false;
 		if (continue_after) {
-			timer.setCounter(0, *continue_after, 0, options & STATE_OPTION_TIMER_UP);
+			timer.setCounterInSeconds(*continue_after * 60, options & STATE_OPTION_TIMER_UP);
 		}
 		if (target_temp) {
 			hw.set_chamber_target_temp(*target_temp);
@@ -182,7 +182,7 @@ namespace States {
 			if (secs < INC_DEC_TIME_STEP) {
 				return pgmstr_min_symb;
 			} else {
-				timer.setCounterInSeconds(secs - INC_DEC_TIME_STEP);
+				timer.setCounterInSeconds(secs - INC_DEC_TIME_STEP, options & STATE_OPTION_TIMER_UP);
 				return pgmstr_double_lt;
 			}
 		}
@@ -195,7 +195,7 @@ namespace States {
 			if (secs > max_runtime) {
 				return pgmstr_max_symb;
 			} else {
-				timer.setCounterInSeconds(secs + INC_DEC_TIME_STEP);
+				timer.setCounterInSeconds(secs + INC_DEC_TIME_STEP, options & STATE_OPTION_TIMER_UP);
 				return pgmstr_double_gt;
 			}
 		}

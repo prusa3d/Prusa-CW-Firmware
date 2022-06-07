@@ -11,8 +11,8 @@ public:
 	// Set up counter time(hours, minutes, seconds and type) for existing timer.
 	void setCounter(uint8_t hours, uint8_t minutes, uint8_t seconds, bool countUp);
 
-	// Set up counter time in seconds for existing timer.
-	void setCounterInSeconds(uint16_t seconds);
+	// Set up counter time in seconds and type for existing timer.
+	void setCounterInSeconds(uint16_t seconds, bool countUp);
 
 	// Returns timer's current hours.
 	uint8_t getCurrentHours();
@@ -54,7 +54,7 @@ public:
 private:
 	// Counting up timer.
 	void countDown();
-	
+
 	// Counting down timer.
 	void countUp();
 

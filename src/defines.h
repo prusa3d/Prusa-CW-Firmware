@@ -15,9 +15,9 @@
 #define DISPLAY_CHARS		20
 #define DISPLAY_LINES		4
 
-#define LAYOUT_TIME_X		3
+#define LAYOUT_TIME_X		2
 #define LAYOUT_TIME_Y		2
-#define LAYOUT_TIME_LT		1
+#define LAYOUT_TIME_LT		0
 #define LAYOUT_TIME_GT		8
 #define LAYOUT_INFO1_X		12
 #define LAYOUT_INFO1_Y		2
@@ -41,11 +41,11 @@
 #define MAX_TARGET_TEMP_C	60
 #define MIN_TARGET_TEMP_F	MIN_TARGET_TEMP_C * 1.8 + 32
 #define MAX_TARGET_TEMP_F	MAX_TARGET_TEMP_C * 1.8 + 32
-#define MAX_WARMUP_RUNTIME	15		// minutes
-#define MAX_CURING_RUNTIME	60		// minutes
-#define MAX_DRYING_RUNTIME	60		// minutes
-#define MAX_WASHING_RUNTIME	60		// minutes
-#define MAX_PREHEAT_RUNTIME	60		// minutes
+#define MAX_WARMUP_RUNTIME	255		// minutes
+#define MAX_CURING_RUNTIME	255		// minutes
+#define MAX_DRYING_RUNTIME	255		// minutes
+#define MAX_WASHING_RUNTIME	255		// minutes
+#define MAX_PREHEAT_RUNTIME	255		// minutes
 #define COOLDOWN_RUNTIME	10		// minutes
 #define INC_DEC_TIME_STEP	30		// seconds
 #define MIN_LED_INTENSITY	1		// 0-100 %

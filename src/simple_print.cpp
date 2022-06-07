@@ -39,7 +39,7 @@ void SimplePrint::print(float number) {
 void SimplePrint::printTime(uint16_t time) {
 	uint8_t min = time / 60;
 	uint8_t sec = time % 60;
-	print(min, 10, '0');
+	print(min, 100, ' ');
 	write(':');
 	print(sec, 10, '0');
 }
