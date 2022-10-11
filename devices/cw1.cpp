@@ -49,7 +49,7 @@ inline void CW1::set_cooling_speed(uint8_t speed) {
 }
 
 float CW1::adjust_chamber_temp(int16_t temp) {
-	USB_PRINTLN(temp);
+//	USB_PRINTLN(temp);
 	if (temp < 0.0) {
 		return temp;
 	}

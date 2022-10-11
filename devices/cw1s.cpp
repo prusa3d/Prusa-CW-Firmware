@@ -74,7 +74,9 @@ void CW1S::set_cooling_speed(uint8_t speed) {
 }
 
 float CW1S::adjust_chamber_temp(int16_t temp) {
-	USB_PRINTLN(temp);
+//	USB_PRINTLN(temp);
+	return 0.1 * temp;
+/* Denied solution to compensate temperature in chamber:
 	if (temp < 0.0) {
 		return temp;
 	}
@@ -83,6 +85,7 @@ float CW1S::adjust_chamber_temp(int16_t temp) {
 		return 0.06 * temp + 10;
 	}
 	return 0.0;
+*/
 }
 
 

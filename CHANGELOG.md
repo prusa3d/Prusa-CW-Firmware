@@ -3,7 +3,7 @@
 ## Summary
 * Code refactoring and optimizations
 * Automatic fans control
-* New heating algorithm for both devices
+* New heating algorithm for CW1 device
 * Set all timers to max. 60 minutes
 * Do not handle info pages as menus
 * Change motor direction while washing
@@ -26,16 +26,14 @@ controlled according to the cooling demand. In most cases, they can remain at
 the lowest possible speed and increase to the maximum only when the temperature
 rises. This may affect device noise during certain operations.
 
-### New heating algorithm for both devices
-The heating method was unified for both devices. Newly, it tries to maintain
-the set temperature in the chamber. CW1S allows a smooth change of heating and
-the temperature is therefore relatively constant. CW1 can only switch the
-heating on and off and, as a result, the temperature in the chamber fluctuates
-more. These adjustments were necessary for longer heating times, when CW1
-significantly overheated the chamber and CW1S did not heat the chamber
-sufficiently. If you have had your favorite heating temperatures, you need to
-revise these settings. Please note that the maximum allowed temperature of
-60 ˚C (140 ˚F) is the limit and may affect the life of the device.
+### New heating algorithm for CW1 device
+The heating method was changed for original CW1. Newly, it tries to maintain
+the set temperature in the chamber. CW1 can only switch the heating on and off
+and, as a result, the temperature in the chamber fluctuates. These adjustments
+were necessary for longer heating times, when CW1 significantly overheated the
+chamber. If you have had your favorite heating temperatures, you need to revise
+these settings. Please note that the maximum allowed temperature of 60 ˚C
+(140 ˚F) is the limit and may affect the life of the device.
 
 ### Set all timers to max. 60 minutes
 All operations (curing, drying, washing, resin preheating) can now take up to
