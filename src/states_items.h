@@ -45,8 +45,8 @@ namespace States {
 		const char* get_message();
 		uint16_t get_time();
 		float get_temperature();
-		const char* decrease_time();
-		const char* increase_time();
+		virtual const char* decrease_time();
+		virtual const char* increase_time();
 		bool is_paused();
 		bool is_finished();
 		void set_continue_to(Base* to);
@@ -82,11 +82,15 @@ namespace States {
 			uint8_t* target_temp = nullptr);
 		void start(bool handle_heater = true);
 		Base* loop();
+		const char* decrease_time();
+		const char* increase_time();
 	private:
+		void update_direction_change_time();
 		uint8_t* const direction_cycles;
 		uint16_t direction_change_time;
 		uint16_t old_seconds;
 		uint16_t stop_seconds;
+		uint8_t remaining_cycles;
 	};
 
 

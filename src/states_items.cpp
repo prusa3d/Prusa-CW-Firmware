@@ -260,6 +260,7 @@ namespace States {
 	void Direction_change::start(bool handle_heater) {
 		old_seconds = 0;
 		stop_seconds = 0;
+		remaining_cycles = *direction_cycles;
 		if (*direction_cycles) {
 			direction_change_time = *continue_after * 60 / *direction_cycles;
 		} else {
@@ -275,6 +276,9 @@ namespace States {
 				hw.speed_configuration(*motor_speed, options & STATE_OPTION_WASHING);
 				hw.run_motor(motor_direction);
 				stop_seconds = 0;
+				if (remaining_cycles > 1) {
+					remaining_cycles--;
+				}
 			}
 			if (old_seconds && !(seconds % direction_change_time)) {
 				hw.stop_motor();
@@ -284,6 +288,27 @@ namespace States {
 			old_seconds = seconds;
 		}
 		return Base::loop();
+	}
+
+	const char* Direction_change::decrease_time() {
+		const char* symbol = Base::decrease_time();
+		update_direction_change_time();
+		return symbol;
+	}
+
+	const char* Direction_change::increase_time() {
+		const char* symbol = Base::increase_time();
+		update_direction_change_time();
+		return symbol;
+	}
+
+	void Direction_change::update_direction_change_time() {
+		uint16_t seconds = timer.getCurrentTimeInSeconds() - DIR_CHANGE_DELAY;
+		direction_change_time = seconds / remaining_cycles;
+		if (stop_seconds) {
+			stop_seconds = seconds;
+		}
+		old_seconds = seconds;
 	}
 
 
