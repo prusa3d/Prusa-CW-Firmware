@@ -1,3 +1,33 @@
+# 3.3.0
+
+## Summary
+* Max. 255 minutes runtime
+* Fix: wash cycles
+* New filter cleaning mode
+* Travis build was removed
+
+## Detailed description
+### Max. 255 minutes runtime
+The maximum run time was set to 255 minutes for all operations.
+
+### fix: wash cycles
+Wash cycles were not performed correctly after rotator run time changes.
+
+### New filter cleaning mode
+Added a new "cleaning" mode for cleaning the IPA filter. This is another washing
+mode without changes in the direction of rotation with its own speed and
+running time. Value settings are in the usual places. Changing the washing mode
+is available in Settings -> Wash/Clean and simply by a long press in the
+Main Menu if the washing container is inserted (if it is not inserted, a long
+press will call up the Dry/Cure mode setting). See the updated user
+manual for more filter usage.
+
+### Travis build was removed
+Building with Travis is no longer supported and future releases will not be
+released using this system due to the limiting of terms of use on the Travis
+side.
+
+
 # 3.2.0
 
 ## Summary
@@ -64,6 +94,7 @@ minutes. Newly, this value is the maximum for each operation (60 minutes).
 
 ### Updated documentation
 The README has been updated and a CHANGELOG has been created.
+
 
 # 3.1.0
 
