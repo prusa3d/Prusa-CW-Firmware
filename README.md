@@ -5,7 +5,6 @@ Original Prusa Curing and Washing machine firmware
 
 <!--ts-->
    * [Building with make](#building-with-make)
-       * [Automatic, remote, using travis-ci](#automatic-remote-using-travis-ci)
        * [Automatic, local, using script and prepared tools package](#automatic-local-using-script-and-prepared-tools-package)
        * [Manually with installed tools](#manually-with-installed-tools)
    * [Flashing](#flashing)
@@ -14,14 +13,6 @@ Original Prusa Curing and Washing machine firmware
 <!--te-->
 
 ## Building with make
-### Automatic, remote, using travis-ci
-
-Create new github user, eg. your_user_name-your_repository_name-travis. This step is not mandatory, only recomended to limit access rights for travis to single repository. Grant this user access to your repository. Register this user on https://www.travis-ci.com/. Create API key for this user. In Github click on this user, settings, Developer settings, Personal access tokens, Generate new token, select public_repo, click on Generate token and copy this token.
-
-Login into https://www.travis-ci.com/ enable build of your repository, click on repository setting, add environment variable `ACCESS_TOKEN` and paste your token.
-
-Each commit is build, but only for tagged commits `Prusa-DEVICE-Firmware-LANG-GIT_TAG.hex` files are attached to your release by travis.
-
 ### Automatic, local, using script and prepared tools package
 
 You need to install unzip, wget and make tools, next run the following command:
