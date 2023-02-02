@@ -17,6 +17,13 @@ namespace States {
 		&config.washing_run_time,
 		MAX_WASHING_RUNTIME,
 		&config.washing_speed);
+	Base cleaning(
+		pgmstr_cleaning,
+		STATE_OPTION_CONTROLS | STATE_OPTION_WASHING,
+		&confirm,
+		&config.cleaning_run_time,
+		MAX_CLEAN_RUNTIME,
+		&config.cleaning_speed);
 	Base drying(
 		pgmstr_drying,
 		STATE_OPTION_CONTROLS | STATE_OPTION_HEATER | STATE_OPTION_CHAMB_TEMP,

@@ -11,6 +11,7 @@ namespace States {
 	extern Confirm confirm;
 	extern Confirm error;
 	extern Direction_change washing;
+	extern Base cleaning;
 	extern Base drying;
 	extern Base curing;
 	extern Base resin;

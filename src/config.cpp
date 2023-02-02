@@ -7,7 +7,8 @@ static_assert(sizeof(eeprom_v2_t) <= EEPROM_OFFSET, "eeprom_t doesn't fit in it'
 
 const char legacy_magic1[MAGIC_SIZE] PROGMEM = "CURWA";
 const char legacy_magic2[MAGIC_SIZE] PROGMEM = "CW1v2";
-const char config_magic[MAGIC_SIZE]  PROGMEM = "CW1v3";
+const char legacy_magic3[MAGIC_SIZE] PROGMEM = "CW1v3";
+const char config_magic[MAGIC_SIZE]  PROGMEM = "CW1v4";
 
 //! @brief configuration
 //!
@@ -15,7 +16,7 @@ const char config_magic[MAGIC_SIZE]  PROGMEM = "CW1v3";
 //! it can be overridden by user and stored to
 //! and restored from permanent storage.
 
-eeprom_v3_t config = {
+eeprom_v4_t config = {
 	10,			// washing_speed
 	1,			// curing_speed
 	4,			// washing_run_time
@@ -33,6 +34,10 @@ eeprom_v3_t config = {
 	100,		// led_intensity
 	100,		// lcd_brightness
 	1,			// wash_cycles
+
+	0,			// washing_mode (0=washing, 1=cleaning)
+	10,			// cleaning_speed
+	45,			// cleaning_run_time
 };
 
 void write_config() {
@@ -56,6 +61,9 @@ void read_config() {
 	if (!strncmp_P(test_magic, config_magic, MAGIC_SIZE)) {
 		// latest magic
 		EEPROM.get(CONFIG_START + MAGIC_SIZE, reinterpret_cast<uint8_t*>(&config), sizeof(config));
+	} else if (!strncmp_P(test_magic, legacy_magic3, MAGIC_SIZE)) {
+		// legacy magic
+		EEPROM.get(CONFIG_START + MAGIC_SIZE, reinterpret_cast<uint8_t*>(&config), sizeof(eeprom_v3_t));
 	} else if (!strncmp_P(test_magic, legacy_magic2, MAGIC_SIZE)) {
 		// legacy magic
 		EEPROM.get(CONFIG_START + MAGIC_SIZE, reinterpret_cast<uint8_t*>(&config), sizeof(eeprom_v2_t) - 9);

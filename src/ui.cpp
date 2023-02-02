@@ -18,14 +18,16 @@ namespace UI {
 	Minutes drying_run_time(pgmstr_drying_run_time, config.drying_run_time, MAX_DRYING_RUNTIME);
 	Minutes washing_run_time(pgmstr_washing_run_time, config.washing_run_time, MAX_WASHING_RUNTIME);
 	Minutes resin_preheat_run_time(pgmstr_resin_preheat_time, config.resin_preheat_run_time, MAX_PREHEAT_RUNTIME);
-	Base* const run_time_items[] PROGMEM = {&back, &curing_run_time, &drying_run_time, &washing_run_time, &resin_preheat_run_time};
+	Minutes cleaning_run_time(pgmstr_cleaning_run_time, config.cleaning_run_time, MAX_CLEAN_RUNTIME);
+	Base* const run_time_items[] PROGMEM = {&back, &curing_run_time, &drying_run_time, &washing_run_time, &resin_preheat_run_time, &cleaning_run_time};
 	Menu run_time_menu(pgmstr_run_time, run_time_items, COUNT_ITEMS(run_time_items));
 
 	// rotation menu
 	X_of_ten curing_speed(pgmstr_curing_speed, config.curing_speed);
 	X_of_ten washing_speed(pgmstr_washing_speed, config.washing_speed);
 	X_of_ten wash_dir_changes(pgmstr_wash_dir_changes, config.wash_cycles);
-	Base* const speed_items[] PROGMEM = {&back, &curing_speed, &washing_speed, &wash_dir_changes};
+	X_of_ten cleaning_speed(pgmstr_cleaning_changes, config.cleaning_speed);
+	Base* const speed_items[] PROGMEM = {&back, &curing_speed, &washing_speed, &wash_dir_changes, &cleaning_speed};
 	Menu speed_menu(pgmstr_rotation_settings, speed_items, COUNT_ITEMS(speed_items));
 
 	// temperatore menu
@@ -60,8 +62,10 @@ namespace UI {
 	// config menu
 	const char* const curing_machine_mode_options[] PROGMEM = {pgmstr_drying_curing, pgmstr_curing, pgmstr_drying};
 	Option curing_machine_mode(pgmstr_run_mode, config.curing_machine_mode, curing_machine_mode_options, COUNT_ITEMS(curing_machine_mode_options));
+	const char* const washing_machine_mode_options[] PROGMEM = {pgmstr_washing, pgmstr_cleaning};
+	Option washing_mode(pgmstr_wash_mode, config.washing_mode, washing_machine_mode_options, COUNT_ITEMS(washing_machine_mode_options));
 	Percent_with_action lcd_brightness(pgmstr_lcd_brightness, config.lcd_brightness, MIN_LCD_BRIGHTNESS, lcd.setBrightness);
-	Base* const config_items[] PROGMEM = {&back, &speed_menu, &curing_machine_mode, &temperature_menu, &sound_menu, &lcd_brightness, &system_info};
+	Base* const config_items[] PROGMEM = {&back, &speed_menu, &curing_machine_mode, &washing_mode, &temperature_menu, &sound_menu, &lcd_brightness, &system_info};
 	Menu config_menu(pgmstr_settings, config_items, COUNT_ITEMS(config_items));
 
 	// run menu
@@ -74,7 +78,7 @@ namespace UI {
 	Hold_platform hold_platform_menu(pgmstr_hold_platform, hold_platform_items, COUNT_ITEMS(hold_platform_items));
 
 	// home menu
-	Do_it do_it(config.curing_machine_mode, &run_menu);
+	Do_it do_it(config.curing_machine_mode, config.washing_mode, &run_menu);
 	State resin_preheat(pgmstr_resin_preheat, &States::warmup_resin, &run_menu);
 	Base* const home_items[] PROGMEM = {&do_it, &resin_preheat, &run_time_menu, &hold_platform_menu, &config_menu};
 	Menu home_menu(pgmstr_emptystr, home_items, COUNT_ITEMS(home_items));
@@ -101,7 +105,6 @@ namespace UI {
 		for (uint8_t i = 0; i < COUNT_ITEMS(SI_changed); ++i) {
 			SI_changed[i]->init(config.SI_unit_system);
 		}
-		home_menu.set_long_press_ui_item(&curing_machine_mode);
 		config_menu.set_long_press_ui_item(&advanced_menu);
 		active_menu->invoke();
 		active_menu->show();

@@ -18,12 +18,14 @@ static const char pgmstr_curing_run_time[] PROGMEM = _("Curing run-time");
 static const char pgmstr_drying_run_time[] PROGMEM = _("Drying run-time");
 static const char pgmstr_washing_run_time[] PROGMEM = _("Washing run-time");
 static const char pgmstr_resin_preheat_time[] PROGMEM = _("Resin preheat time");
+static const char pgmstr_cleaning_run_time[] PROGMEM = _("Cleaning run-time");
 
 // rotation menu
 static const char pgmstr_rotation_settings[] PROGMEM = _("Rotation settings");
 static const char pgmstr_curing_speed[] PROGMEM = _("Curing speed");
 static const char pgmstr_washing_speed[] PROGMEM = _("Washing speed");
 static const char pgmstr_wash_dir_changes[] PROGMEM = _("Wash cycles");
+static const char pgmstr_cleaning_changes[] PROGMEM = _("Cleaning speed");
 
 // temperatore menu
 static const char pgmstr_temperatures[] PROGMEM = _("Temperatures");
@@ -54,10 +56,13 @@ static const char pgmstr_workspace_dirty[] PROGMEM = "(modified sources)";
 
 // config menu
 static const char pgmstr_settings[] PROGMEM = _("Settings");
-static const char pgmstr_run_mode[] PROGMEM = _("Run mode");
+static const char pgmstr_run_mode[] PROGMEM = _("Dry/Cure mode");
 static const char pgmstr_drying_curing[] PROGMEM = _("Drying/curing");
 static const char pgmstr_curing[] PROGMEM = _("Curing");
 static const char pgmstr_drying[] PROGMEM = _("Drying");
+static const char pgmstr_wash_mode[] PROGMEM = _("Wash/Clean mode");
+static const char pgmstr_washing[] PROGMEM = _("Washing");
+static const char pgmstr_cleaning[] PROGMEM = _("Cleaning");
 static const char pgmstr_led_intensity[] PROGMEM = _("UVLED intensity");
 static const char pgmstr_lcd_brightness[] PROGMEM = _("LCD brightness");
 
@@ -67,7 +72,6 @@ static const char pgmstr_continue[] PROGMEM = _("Continue");
 static const char pgmstr_stop[] PROGMEM = _("Stop");
 
 // home menu
-static const char pgmstr_washing[] PROGMEM = _("Washing");
 static const char pgmstr_resin_preheat[] PROGMEM = _("Resin preheat");
 
 // advanced menu

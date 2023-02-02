@@ -54,6 +54,29 @@ typedef struct {
 //! @brief configuration store structure
 //!
 //! It is restored when magic read from eeprom equals magic "CW1v3"
+//! Do not change.
+typedef struct {
+	uint8_t washing_speed;
+	uint8_t curing_speed;
+	uint8_t washing_run_time;
+	uint8_t curing_run_time;
+	uint8_t finish_beep_mode;
+	uint8_t drying_run_time;
+	uint8_t sound_response;
+	uint8_t curing_machine_mode;
+	uint8_t heat_to_target_temp;
+	uint8_t target_temp;
+	uint8_t resin_target_temp;
+	uint8_t SI_unit_system;
+	uint8_t resin_preheat_run_time;
+	uint8_t led_intensity;
+	uint8_t lcd_brightness;
+	uint8_t wash_cycles;
+} eeprom_v3_t;
+
+//! @brief configuration store structure
+//!
+//! It is restored when magic read from eeprom equals magic "CW1v4"
 //! Do not change. If new items needs to be stored, magic needs to be
 //! changed, this struct needs to be made legacy and new structure needs
 //! to be created.
@@ -74,9 +97,12 @@ typedef struct {
 	uint8_t led_intensity;
 	uint8_t lcd_brightness;
 	uint8_t wash_cycles;
-} eeprom_v3_t;
+	uint8_t washing_mode;
+	uint8_t cleaning_speed;
+	uint8_t cleaning_run_time;
+} eeprom_v4_t;
 
-extern eeprom_v3_t config;
+extern eeprom_v4_t config;
 
 void read_config();
 void write_config();
