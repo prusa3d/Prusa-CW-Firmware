@@ -14,13 +14,11 @@ The maximum run time was set to 255 minutes for all operations.
 Wash cycles were not performed correctly after rotator run time changes.
 
 ### New filter cleaning mode
-Added a new "cleaning" mode for cleaning the IPA filter. This is another washing
-mode without changes in the direction of rotation with its own speed and
-running time. Value settings are in the usual places. Changing the washing mode
-is available in Settings -> Wash/Clean and simply by a long press in the
-Main Menu if the washing container is inserted (if it is not inserted, a long
-press will call up the Dry/Cure mode setting). See the updated user
-manual for more filter usage.
+Added a new "filtering" mode for cleaning IPA with a filter. This is another
+washing mode without changing the direction of rotation with its own speed and
+running time. Value settings are in the usual places. There is a new item "IPA
+Filtering" in the main menu. Please refer to the updated user manual for
+further use of the filter.
 
 ### Travis build was removed
 Building with Travis is no longer supported and future releases will not be

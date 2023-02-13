@@ -97,9 +97,8 @@ typedef struct {
 	uint8_t led_intensity;
 	uint8_t lcd_brightness;
 	uint8_t wash_cycles;
-	uint8_t washing_mode;
-	uint8_t cleaning_speed;
-	uint8_t cleaning_run_time;
+	uint8_t filtering_speed;
+	uint8_t filtering_run_time;
 } eeprom_v4_t;
 
 extern eeprom_v4_t config;

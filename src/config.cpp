@@ -35,9 +35,8 @@ eeprom_v4_t config = {
 	100,		// lcd_brightness
 	1,			// wash_cycles
 
-	0,			// washing_mode (0=washing, 1=cleaning)
-	10,			// cleaning_speed
-	45,			// cleaning_run_time
+	10,			// filtering_speed
+	45,			// filtering_run_time
 };
 
 void write_config() {

@@ -2,7 +2,6 @@
 #include "defines.h"
 #include "config.h"
 #include "ui_items.h"
-#include "ui.h"
 #include "states.h"
 #include "device.h"
 
@@ -581,23 +580,14 @@ namespace UI {
 
 
 	// UI::Do_it
-	Do_it::Do_it(uint8_t& curing_machine_mode, uint8_t& washing_mode, Base* state_menu) :
+	Do_it::Do_it(uint8_t& curing_machine_mode, Base* state_menu) :
 		State(nullptr, nullptr, state_menu),
-		curing_machine_mode(curing_machine_mode),
-		washing_mode(washing_mode)
+		curing_machine_mode(curing_machine_mode)
 	{}
 
 	char* Do_it::get_menu_label(char* buffer, uint8_t buffer_size) {
 		if (hw.is_tank_inserted()) {
-			switch (washing_mode) {
-				case 1:
-					label = pgmstr_cleaning;
-					break;
-				default:
-					label = pgmstr_washing;
-					break;
-			}
-			home_menu.set_long_press_ui_item(&UI::washing_mode);
+			label = pgmstr_washing;
 		} else {
 			switch (curing_machine_mode) {
 				case 2:
@@ -610,21 +600,13 @@ namespace UI {
 					label = pgmstr_drying_curing;
 					break;
 			}
-			home_menu.set_long_press_ui_item(&UI::curing_machine_mode);
 		}
 		return State::get_menu_label(buffer, buffer_size);
 	}
 
 	void Do_it::invoke() {
 		if (hw.is_tank_inserted()) {
-			switch (washing_mode) {
-				case 1:
-					state = &States::cleaning;
-					break;
-				default:
-					state = &States::washing;
-					break;
-			}
+			state = &States::washing;
 		} else {
 			switch (curing_machine_mode) {
 				case 2:

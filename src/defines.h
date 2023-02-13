@@ -46,7 +46,7 @@
 #define MAX_DRYING_RUNTIME	255		// minutes
 #define MAX_WASHING_RUNTIME	255		// minutes
 #define MAX_PREHEAT_RUNTIME	255		// minutes
-#define MAX_CLEAN_RUNTIME	255		// minutes
+#define MAX_FILTER_RUNTIME	255		// minutes
 #define COOLDOWN_RUNTIME	10		// minutes
 #define INC_DEC_TIME_STEP	30		// seconds
 #define MIN_LED_INTENSITY	1		// 0-100 %

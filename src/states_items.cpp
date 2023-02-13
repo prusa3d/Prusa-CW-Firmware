@@ -38,7 +38,8 @@ namespace States {
 		if (target_temp) {
 			hw.set_chamber_target_temp(*target_temp);
 		}
-		if (options & (STATE_OPTION_UVLED | STATE_OPTION_HEATER) && (!hw.is_cover_closed() || hw.is_tank_inserted())) {
+		if ((options & (STATE_OPTION_UVLED | STATE_OPTION_HEATER) && (!hw.is_cover_closed() || hw.is_tank_inserted()))
+				|| (options & STATE_OPTION_WASHING && !hw.is_tank_inserted())) {
 			if (continue_after) {
 				timer.start();
 			}
