@@ -4,6 +4,12 @@ Original Prusa Curing and Washing machine firmware
 ## Table of contents
 
 <!--ts-->
+   * [Function notes](#function-notes)
+       * [Hidden menu](#hidden-menu)
+       * [Selftest](#selftest)
+       * [Cooling](#cooling)
+       * [Temperature display on CW1](#temperature-display-on-cw1)
+       * [Hold the platform](#hold-the-platform)
    * [Building with make](#building-with-make)
        * [Automatic, local, using script and prepared tools package](#automatic-local-using-script-and-prepared-tools-package)
        * [Manually with installed tools](#manually-with-installed-tools)
@@ -11,6 +17,43 @@ Original Prusa Curing and Washing machine firmware
    * [Building documentation](#building-documentation)
 
 <!--te-->
+
+## Function notes
+### Hidden menu
+
+You can get to the “hidden” settings menu by long pressing the rotator in the
+settings menu. Contains UVLED intensity, Factory reset, Cooldown and Selftest.
+
+### Selftest
+
+You can use the self-test to test the functionality of your device. The
+semi-automatic tests require your cooperation and are the lid switch test, the
+IPA container detection test, and the motor test (which visually assesses that
+the platform is moving). This is followed by fan, UV LED and heating tests.
+They will run by themselves, all you have to do is close the lid.
+
+### Cooling
+
+The fans are controlled in such a way that the device is cooled as best as
+possible. In some cases, the fans can run at full power, which can cause more
+noise. That's normal.
+
+### Temperature display on CW1
+
+Due to the location of the thermistor in CW1 (not applicable to CW1S), the
+temperature measurement inside the device is relatively imprecise and is
+subsequently compensated. For this reason, the temperature is shown on the
+display after 2 minutes from the start of heating. Until then, “-- ˚C” is
+displayed.
+
+### Hold the platform
+
+Original Prusa CW1S or CW1 platform upgrade brings a removable platform
+protected with an FEP film. To help align the platform back to its original
+position, the user can activate “Hold the platform” from the menu. The motor
+gets “locked” (rotation is disabled) by the system, temporarily allowing the
+user to align the platform properly. Once the platform is properly seated, exit
+the menu to “unlock” the motor.
 
 ## Building with make
 ### Automatic, local, using script and prepared tools package

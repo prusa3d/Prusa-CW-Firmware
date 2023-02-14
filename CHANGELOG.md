@@ -14,10 +14,10 @@ The maximum run time was set to 255 minutes for all operations.
 Wash cycles were not performed correctly after rotator run time changes.
 
 ### New filter cleaning mode
-Added a new "filtering" mode for cleaning IPA with a filter. This is another
+Added a new “filtering” mode for cleaning IPA with a filter. This is another
 washing mode without changing the direction of rotation with its own speed and
-running time. Value settings are in the usual places. There is a new item "IPA
-Filtering" in the main menu. Please refer to the updated user manual for
+running time. Value settings are in the usual places. There is a new item “IPA
+Filtering” in the main menu. Please refer to the updated user manual for
 further use of the filter.
 
 ### Travis build was removed
@@ -100,7 +100,7 @@ The README has been updated and a CHANGELOG has been created.
 * Support for CW1S
 * Drying temperature increased (CW1S)
 * Drying session extended
-* Hold platform (new feature)
+* Hold the platform (new feature)
 * Improved translations
 
 ## Detailed description
@@ -122,11 +122,11 @@ the target temperature up to 60 °C. Note that the limit for CW1 is 40 °C.
 Previously, the system allowed for a 10 minutes drying session. This is now
 extended to 60 minutes for both CW1 and CW1S.
 
-### Hold platform (new feature)
+### Hold the platform (new feature)
 Original Prusa CW1S brings a removable platform protected with an FEP film.
 Once there is a bigger amount of residue on the film, it might be necessary to
 replace it with a new one. To help align the platform back to its original
-position, the user can activate “Hold platform” from the menu.
+position, the user can activate “Hold the platform” from the menu.
 
 The motor gets “locked” (rotation is disabled) by the system, temporarily
 allowing the user to align the platform properly. Once the platform is properly
@@ -179,7 +179,7 @@ model won't be exposed to the UV light properly.
 
 Based on the feedback from our customers, we have added this preheat feature to
 the CW1. Insert the resin in a bottle in the CW1, close the cover and from the
-menu select "Resin preheat". Based on the requirements of your resin, you can
+menu select “Resin preheat“. Based on the requirements of your resin, you can
 adjust the time in the range of 1 - 30 minutes and the temperature 20 - 40 °C.
 
 ### Extended curing time
