@@ -264,6 +264,7 @@ namespace States {
 		remaining_cycles = *direction_cycles;
 		if (*direction_cycles) {
 			direction_change_time = *continue_after * 60 / *direction_cycles;
+			direction_change_time++;
 		} else {
 			direction_change_time = *continue_after * 60;
 		}
@@ -304,8 +305,9 @@ namespace States {
 	}
 
 	void Direction_change::update_direction_change_time() {
-		uint16_t seconds = timer.getCurrentTimeInSeconds() - DIR_CHANGE_DELAY;
+		uint16_t seconds = timer.getCurrentTimeInSeconds();
 		direction_change_time = seconds / remaining_cycles;
+		direction_change_time++;
 		if (stop_seconds) {
 			stop_seconds = seconds;
 		}
