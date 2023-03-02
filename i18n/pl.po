@@ -4,383 +4,307 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=4; plural=(n == 1) ? 0 : ((n%10 >= 2 && n%10 <=4 && (n"
-"%100 < 12 || n%100 > 14)) ? 1 : ((n%10 == 0 || n%10 == 1 || (n%10 >= 5 && n"
-"%10 <=9)) || (n%100 >= 12 && n%100 <= 14)) ? 2 : 3);\n"
-"X-Generator: Phrase (phrase.com)\n"
-
-#: i18n/en.h:142
-msgid "  F2:"
-msgstr "W2:"
-
-#: i18n/en.h:9
-msgid " min."
-msgstr "min."
+"Plural-Forms: nplurals=4; plural=(n == 1) ? 0 : ((n%10 >= 2 && n%10 <=4 && (n%100 < 12 || n%100 > 14)) ? 1 : ((n%10 == 0 || n%10 == 1 || (n%10 >= 5 && n%10 <=9)) || (n%100 >= 12 && n%100 <= 14)) ? 2 : 3);\n"
+"X-Generator: Prusalator\n"
 
 #: i18n/en.h:2
 msgid "Back"
 msgstr "Wstecz"
 
-#: i18n/en.h:70
+#: i18n/en.h:51
 msgid "Build: "
-msgstr "Kompilacja: "
+msgstr "Build: "
 
-#: i18n/en.h:98
-msgid "Cham. temp.:"
-msgstr "Temp. wewn.:"
-
-#: i18n/en.h:115
+#: i18n/en.h:92
 msgid "Close the cover"
 msgstr "Zamknij pokrywe"
 
-#: i18n/en.h:87
+#: i18n/en.h:68
 msgid "Continue"
 msgstr "Kontynuuj"
 
-#: i18n/en.h:37
-msgid "Control echo"
-msgstr "Inf. zwr. pokretla"
+#: i18n/en.h:44
+msgid "continuous"
+msgstr "ciagle"
 
-#: i18n/en.h:102
+#: i18n/en.h:41
+msgid "Control echo"
+msgstr "Inf. zwrotna pok."
+
+#: i18n/en.h:77
 msgid "Cooldown"
 msgstr "Chlodzenie"
 
-#: i18n/en.h:150
+#: i18n/en.h:126
 msgid "Cover test"
 msgstr "Test pokrywy"
 
-#: i18n/en.h:80
+#: i18n/en.h:61
 msgid "Curing"
 msgstr "Utwardzanie"
 
-#: i18n/en.h:16
+#: i18n/en.h:17
 msgid "Curing run-time"
 msgstr "Czas utwardzania"
 
-#: i18n/en.h:23
+#: i18n/en.h:25
 msgid "Curing speed"
-msgstr "Predk. utwardzania"
+msgstr "Szyb. utwardzania"
 
-#: i18n/en.h:81
+#: i18n/en.h:62
 msgid "Drying"
 msgstr "Suszenie"
 
-#: i18n/en.h:17
-msgid "Drying run-time"
-msgstr "Czas suszenia"
-
-#: i18n/en.h:29
-msgid "Drying warm-up t."
-msgstr "Temp. suszenia"
-
-#: i18n/en.h:31
-msgid "Drying/Warm-up t."
-msgstr "Temp. suszenia/podgrzewania"
-
-#: i18n/en.h:79
+#: i18n/en.h:60
 msgid "Drying/curing"
 msgstr "Suszenie/utwardz."
 
-#: i18n/en.h:141
+#: i18n/en.h:18
+msgid "Drying run-time"
+msgstr "Czas suszenia"
+
+#: i18n/en.h:33
+msgid "Drying/Warm-up t."
+msgstr "Czas Susz./Nagrz."
+
+#: i18n/en.h:117
 msgid "F1:"
-msgstr "W1:"
+msgstr "F1:"
 
-#: i18n/en.h:143
+#: i18n/en.h:118
+msgid "  F2:"
+msgstr "  F2:"
+
+#: i18n/en.h:119
 msgid "F3:"
-msgstr "W3:"
+msgstr "F3:"
 
-#: i18n/en.h:68
-msgid "FW: "
-msgstr "FW:"
-
-#: i18n/en.h:76
+#: i18n/en.h:79
 msgid "Factory reset"
-msgstr "Przywr. ust. fabrycznych"
+msgstr "Ustaw. fabryczne"
 
-#: i18n/en.h:95
-msgid "Fan1 RPM: "
-msgstr "Obroty went. 1:"
-
-#: i18n/en.h:45
-msgid "Fan1 curing speed"
-msgstr "Predk. utw. went 1"
-
-#: i18n/en.h:50
-msgid "Fan1 drying speed"
-msgstr "Predk. susz. went1"
-
-#: i18n/en.h:144
+#: i18n/en.h:120
 msgid "Fan1 failure"
-msgstr "Blad wentylatora 1"
-
-#: i18n/en.h:60
-msgid "Fan1 menu speed"
-msgstr "Pr. jalowa went. 1"
-
-#: i18n/en.h:55
-msgid "Fan1 washing speed"
-msgstr "Predk. myc. went 1"
-
-#: i18n/en.h:96
-msgid "Fan2 RPM: "
-msgstr "Obroty went. 2:"
-
-#: i18n/en.h:46
-msgid "Fan2 curing speed"
-msgstr "Predk. utw. went 2"
-
-#: i18n/en.h:51
-msgid "Fan2 drying speed"
-msgstr "Predk. susz. went2"
-
-#: i18n/en.h:145
-msgid "Fan2 failure"
-msgstr "Blad wentylatora 2"
-
-#: i18n/en.h:61
-msgid "Fan2 menu speed"
-msgstr "Pr. jalowa went. 2"
-
-#: i18n/en.h:56
-msgid "Fan2 washing speed"
-msgstr "Predk. myc. went 2"
-
-#: i18n/en.h:97
-msgid "Fan3 RPM: "
-msgstr "Obroty went. 3:"
-
-#: i18n/en.h:64
-msgid "Fans"
-msgstr "Wentylatory"
-
-#: i18n/en.h:44
-msgid "Fans curing speed"
-msgstr "Predk. went. utw."
-
-#: i18n/en.h:49
-msgid "Fans drying speed"
-msgstr "Predk. went. susz."
-
-#: i18n/en.h:59
-msgid "Fans menu speed"
-msgstr "Pr. jalowa went."
-
-#: i18n/en.h:140
-msgid "Fans test"
-msgstr "Test wentylatorow"
-
-#: i18n/en.h:54
-msgid "Fans washing speed"
-msgstr "Predk. went. myc."
-
-#: i18n/en.h:41
-msgid "Finish beep"
-msgstr "Powiadom. o zakon."
+msgstr "Blad went.1"
 
 #: i18n/en.h:121
+msgid "Fan2 failure"
+msgstr "Blad went.2"
+
+#: i18n/en.h:116
+msgid "Fans test"
+msgstr "Test went."
+
+#: i18n/en.h:21
+msgid "Filtering run-time"
+msgstr "Czas filtrowania"
+
+#: i18n/en.h:28
+msgid "Filtering speed"
+msgstr "Szyb. filtrowania"
+
+#: i18n/en.h:45
+msgid "Finish beep"
+msgstr "Dzwiek na koniec"
+
+#: i18n/en.h:97
 msgid "Finished"
 msgstr "Zakonczono"
 
-#: i18n/en.h:137
+#: i18n/en.h:49
+msgid "FW: "
+msgstr "FW: "
+
+#: i18n/en.h:113
 msgid "Heater failure"
 msgstr "Blad grzalki"
 
-#: i18n/en.h:117
+#: i18n/en.h:94
 msgid "Heater fan error"
 msgstr "Blad went. grzalki"
 
-#: i18n/en.h:136
+#: i18n/en.h:112
 msgid "Heater test"
 msgstr "Test grzalki"
 
-#: i18n/en.h:125
+#: i18n/en.h:101
 msgid "Heating"
-msgstr "Podgrzewanie"
+msgstr "Nagrzewanie"
+
+#: i18n/en.h:128
+msgid "Hold the platform"
+msgstr "Przytrzymaj platf."
+
+#: i18n/en.h:129
+msgid "Incorrect firmware!"
+msgstr "Niewlasciwe FW!"
+
+#: i18n/en.h:48
+msgid "Information"
+msgstr "Informacje"
+
+#: i18n/en.h:109
+msgid "Insert IPA tank"
+msgstr "Wloz zbiornik IPA"
+
+#: i18n/en.h:73
+msgid "IPA Filtering"
+msgstr "Filtrowanie IPA"
 
 #: i18n/en.h:125
-msgid "Hold the platform"
-msgstr "Trzymaj platforme"
-
-#: i18n/en.h:149
 msgid "IPA tank test"
 msgstr "Test zbiornika IPA"
 
-#: i18n/en.h:126
-msgid "Incorrect firmware!"
-msgstr "Niewlasciwe firmware!"
-
-#: i18n/en.h:67
-msgid "Information"
-msgstr "Informacja"
-
-#: i18n/en.h:133
-msgid "Insert IPA tank"
-msgstr "Wsun zbiornik IPA"
-
-#: i18n/en.h:83
+#: i18n/en.h:64
 msgid "LCD brightness"
 msgstr "Jasnosc LCD"
 
-#: i18n/en.h:139
+#: i18n/en.h:9
+msgid " min."
+msgstr "min."
+
+#: i18n/en.h:115
 msgid "No/low power"
 msgstr "Brak/niska moc"
 
-#: i18n/en.h:147
-msgid "Not/bad spinning"
-msgstr "Nie/nie obraca sie"
+#: i18n/en.h:42
+msgid "none"
+msgstr "brak"
 
-#: i18n/en.h:151
+#: i18n/en.h:123
+msgid "Not/bad spinning"
+msgstr "Nie/blad obrotu"
+
+#: i18n/en.h:4
+msgid "[off]"
+msgstr "[wyl.]"
+
+#: i18n/en.h:3
+msgid "[on]"
+msgstr "[wl.]"
+
+#: i18n/en.h:43
+msgid "once"
+msgstr "raz"
+
+#: i18n/en.h:127
 msgid "Open the cover"
 msgstr "Otworz pokrywe"
 
-#: i18n/en.h:130
+#: i18n/en.h:106
 msgid "Overheat"
 msgstr "Przegrzanie"
 
-#: i18n/en.h:86
+#: i18n/en.h:67
 msgid "Pause"
 msgstr "Pauza"
 
-#: i18n/en.h:114
+#: i18n/en.h:91
 msgid "Paused"
-msgstr "Wstrzymane"
+msgstr "Pauza"
 
-#: i18n/en.h:118
-msgid "Please restart"
-msgstr "Zrestartuj"
-
-#: i18n/en.h:122
+#: i18n/en.h:98
 msgid "Press to continue"
-msgstr "Nacisnij, aby kont"
+msgstr "Nacisnij aby kont."
 
-#: i18n/en.h:129
+#: i18n/en.h:105
 msgid "Read temper. error"
 msgstr "Blad odczytu temp."
 
-#: i18n/en.h:77
+#: i18n/en.h:80
 msgid "Really reset all?"
-msgstr "Zresetowac wsz.?"
+msgstr "Zreset. wszystko?"
 
-#: i18n/en.h:116
+#: i18n/en.h:93
 msgid "Remove IPA tank"
 msgstr "Wyc. zbiornik IPA"
 
-#: i18n/en.h:92
+#: i18n/en.h:74
 msgid "Resin preheat"
 msgstr "Podgrzew. zywicy"
 
-#: i18n/en.h:30
+#: i18n/en.h:34
 msgid "Resin preheat t."
-msgstr "Temp. podg. zywicy"
+msgstr "Czas podgrz. zyw."
 
-#: i18n/en.h:19
+#: i18n/en.h:20
 msgid "Resin preheat time"
-msgstr "Czas podg. zywicy"
+msgstr "Czas podgrz. zyw."
 
-#: i18n/en.h:23
+#: i18n/en.h:24
 msgid "Rotation settings"
-msgstr "Ustawienia obrotow"
+msgstr "Ustawienia obrotu"
 
-#: i18n/en.h:22
-msgid "Rotation speed"
-msgstr "Predkosc obrotowa"
-
-#: i18n/en.h:148
+#: i18n/en.h:124
 msgid "Rotation test"
-msgstr "Test obracania"
+msgstr "Test obrotu"
 
-#: i18n/en.h:78
+#: i18n/en.h:59
 msgid "Run mode"
 msgstr "Tryb pracy"
 
-#: i18n/en.h:15
+#: i18n/en.h:16
 msgid "Run-time"
 msgstr "Czasy"
 
-#: i18n/en.h:103
+#: i18n/en.h:78
 msgid "Selftest"
 msgstr "Selftest"
 
-#: i18n/en.h:77
+#: i18n/en.h:58
 msgid "Settings"
 msgstr "Ustawienia"
 
-#: i18n/en.h:36
+#: i18n/en.h:40
 msgid "Sound"
 msgstr "Dzwiek"
 
-#: i18n/en.h:146
+#: i18n/en.h:122
 msgid "Spinning turned off"
-msgstr "Obracanie wyl."
+msgstr "Obracanie wylacz."
 
-#: i18n/en.h:88
+#: i18n/en.h:69
 msgid "Stop"
 msgstr "Stop"
 
 #: i18n/en.h:31
-msgid "Temp. units"
-msgstr "Jednostki temp."
-
-#: i18n/en.h:27
 msgid "Temperatures"
 msgstr "Temperatury"
 
-#: i18n/en.h:128
+#: i18n/en.h:35
+msgid "Temp. units"
+msgstr "Jednostki temp."
+
+#: i18n/en.h:104
 msgid "UVLED failure"
-msgstr "Blad UVLED"
+msgstr "Blad UV LED"
 
-#: i18n/en.h:82
+#: i18n/en.h:63
 msgid "UVLED intensity"
-msgstr "Intensywnosc UVLED"
+msgstr "Intens. UV LED"
 
-#: i18n/en.h:99
-msgid "UVLED temp.:"
-msgstr "Temperatura UVLED:"
-
-#: i18n/en.h:138
+#: i18n/en.h:114
 msgid "UVLED test"
-msgstr "Test UVLED"
+msgstr "Test UV LED"
 
-#: i18n/en.h:28
+#: i18n/en.h:32
 msgid "Warm-up"
-msgstr "Nagrzewanie"
+msgstr "Nagrzew."
 
-#: i18n/en.h:26
+#: i18n/en.h:27
 msgid "Wash cycles"
 msgstr "Cykle mycia"
 
-#: i18n/en.h:91
+#: i18n/en.h:72
 msgid "Washing"
 msgstr "Mycie"
 
-#: i18n/en.h:18
+#: i18n/en.h:19
 msgid "Washing run-time"
 msgstr "Czas mycia"
 
-#: i18n/en.h:24
+#: i18n/en.h:26
 msgid "Washing speed"
-msgstr "Predkosc mycia"
+msgstr "Szybkosc mycia"
 
-#: i18n/en.h:73
-msgid "Workspace dirty"
-msgstr "Wykr. zm. w kodzie"
 
-#: i18n/en.h:4
-msgid "[off]"
-msgstr "[wyl]"
-
-#: i18n/en.h:3
-msgid "[on]"
-msgstr "[wl]"
-
-#: i18n/en.h:40
-msgid "continuous"
-msgstr "ciagle"
-
-#: i18n/en.h:38
-msgid "none"
-msgstr "brak"
-
-#: i18n/en.h:39
-msgid "once"
-msgstr "raz"
