@@ -133,7 +133,7 @@ msgstr "Chauffe"
 
 #: i18n/en.h:128
 msgid "Hold the platform"
-msgstr "Tenez plate-forme"
+msgstr "Bloquer plateforme"
 
 #: i18n/en.h:129
 msgid "Incorrect firmware!"

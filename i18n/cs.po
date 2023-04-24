@@ -70,7 +70,7 @@ msgstr "Doba suseni"
 
 #: i18n/en.h:33
 msgid "Drying/Warm-up t."
-msgstr "Cas suseni/zahrati"
+msgstr "T. suseni/vyhrevu"
 
 #: i18n/en.h:117
 msgid "F1:"
@@ -230,7 +230,7 @@ msgstr "Ohrati resinu"
 
 #: i18n/en.h:34
 msgid "Resin preheat t."
-msgstr "Doba ohrati res."
+msgstr "Tep. ohrati res."
 
 #: i18n/en.h:20
 msgid "Resin preheat time"

@@ -70,7 +70,7 @@ msgstr "Trocknungslaufzeit"
 
 #: i18n/en.h:33
 msgid "Drying/Warm-up t."
-msgstr "Trocknen/Aufwaermz."
+msgstr "Tmp. trocknen/aufw"
 
 #: i18n/en.h:117
 msgid "F1:"
@@ -230,7 +230,7 @@ msgstr "Harz Vorwaermen"
 
 #: i18n/en.h:34
 msgid "Resin preheat t."
-msgstr "Harz Vorwaermz."
+msgstr "Harz-Vorwarmtemp."
 
 #: i18n/en.h:20
 msgid "Resin preheat time"

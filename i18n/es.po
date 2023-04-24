@@ -29,7 +29,7 @@ msgstr "continuo"
 
 #: i18n/en.h:41
 msgid "Control echo"
-msgstr "Control de eco"
+msgstr "Cont. de eco"
 
 #: i18n/en.h:77
 msgid "Cooldown"

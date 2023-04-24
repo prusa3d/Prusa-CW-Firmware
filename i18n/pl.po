@@ -29,7 +29,7 @@ msgstr "ciagle"
 
 #: i18n/en.h:41
 msgid "Control echo"
-msgstr "Inf. zwrotna pok."
+msgstr "Ust. dzwieku"
 
 #: i18n/en.h:77
 msgid "Cooldown"
@@ -65,7 +65,7 @@ msgstr "Czas suszenia"
 
 #: i18n/en.h:33
 msgid "Drying/Warm-up t."
-msgstr "Czas Susz./Nagrz."
+msgstr "Temp. Susz./Nagrz."
 
 #: i18n/en.h:117
 msgid "F1:"
@@ -225,7 +225,7 @@ msgstr "Podgrzew. zywicy"
 
 #: i18n/en.h:34
 msgid "Resin preheat t."
-msgstr "Czas podgrz. zyw."
+msgstr "Temp. podgrz. zyw."
 
 #: i18n/en.h:20
 msgid "Resin preheat time"
@@ -273,7 +273,7 @@ msgstr "Temperatury"
 
 #: i18n/en.h:35
 msgid "Temp. units"
-msgstr "Jednostki temp."
+msgstr "Jednost. temp."
 
 #: i18n/en.h:104
 msgid "UVLED failure"

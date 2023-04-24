@@ -61,7 +61,7 @@ msgstr "Asciug./indurim."
 
 #: i18n/en.h:18
 msgid "Drying run-time"
-msgstr "Durata asciug."
+msgstr "Dur. asciugamento"
 
 #: i18n/en.h:33
 msgid "Drying/Warm-up t."
@@ -145,7 +145,7 @@ msgstr "Informazioni"
 
 #: i18n/en.h:109
 msgid "Insert IPA tank"
-msgstr "Ins. serb. IPA."
+msgstr "Inser. serbatoio IPA."
 
 #: i18n/en.h:73
 msgid "IPA Filtering"
@@ -241,7 +241,7 @@ msgstr "Test rotazione"
 
 #: i18n/en.h:59
 msgid "Run mode"
-msgstr "Mod. funzionam."
+msgstr "Mod. funzionamento"
 
 #: i18n/en.h:16
 msgid "Run-time"
