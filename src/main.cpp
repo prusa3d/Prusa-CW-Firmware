@@ -1,12 +1,12 @@
 #include <avr/wdt.h>
 
-#include "hardware.h"
+#include "device.h"
 #include "config.h"
 #include "ui.h"
 #include "states.h"
 #include "LiquidCrystal_Prusa.h"
 
-const char* pgmstr_serial_number = reinterpret_cast<const char*>(0x7fe0); // see SN_LENGTH!!!
+const char* pgmstr_serial_number = reinterpret_cast<const char*>(SN_ADDRESS);
 volatile uint16_t* const bootKeyPtr = (volatile uint16_t *)(RAMEND - 1);
 static volatile uint16_t bootKeyPtrVal __attribute__ ((section (".noinit")));
 
@@ -74,9 +74,7 @@ void setupTimer0() {
 
 ISR(TIMER0_COMPA_vect) {
 	hw.encoder_read();
-	#ifdef CW1S
-		hw.slow_pwm_tick();
-	#endif
+	hw.one_ms_tick();
 }
 
 // timer for stepper move
@@ -111,13 +109,19 @@ void fan_tacho2() {
 	hw.fan_tacho_count[1]++;
 }
 
-#ifndef CW1S
-	void fan_tacho3() {
-		hw.fan_tacho_count[2]++;
-	}
-#endif
+void fan_tacho3() {
+	hw.fan_tacho_count[2]++;
+}
 
 void setup() {
+	uint16_t model_magic = pgm_read_word_near(SN_ADDRESS);
+	if (hw.model_magic != model_magic) {
+		lcd.clear();
+		lcd.print_P(pgmstr_wrong_model, (20 - strlen_P(pgmstr_wrong_model)) / 2, 1);
+		while(true) {
+			delay(1000);
+		}
+	}
 
 	read_config();
 
@@ -130,33 +134,20 @@ void setup() {
 
 	// FAN tachos
 	pinMode(FAN1_TACHO_PIN, INPUT_PULLUP);
-	pinMode(FAN2_TACHO_PIN, INPUT_PULLUP);
 	attachInterrupt(digitalPinToInterrupt(FAN1_TACHO_PIN), fan_tacho1, RISING);
+
+	pinMode(FAN2_TACHO_PIN, INPUT_PULLUP);
 	attachInterrupt(digitalPinToInterrupt(FAN2_TACHO_PIN), fan_tacho2, RISING);
-	#ifndef CW1S
-		pinMode(FAN_HEAT_TACHO_PIN, INPUT_PULLUP);
-		attachInterrupt(digitalPinToInterrupt(FAN_HEAT_TACHO_PIN), fan_tacho3, RISING);
-	#endif
+
+	pinMode(FAN_HEAT_TACHO_PIN, INPUT_PULLUP);
+	attachInterrupt(digitalPinToInterrupt(FAN_HEAT_TACHO_PIN), fan_tacho3, RISING);
 
 	noInterrupts();
 	setupTimer0();
 	setupTimer3();
 	interrupts();
-
 	States::init();
 	UI::init();
-
-	#ifdef CW1S
-		hw.set_heater_pwm_duty(0);
-		static const char model_cmp[] = "02_";
-	#else
-		static const char model_cmp[] = "01_";
-	#endif
-	if(memcmp_P(model_cmp, pgmstr_serial_number, 3) != 0) {
-		lcd.clear();
-		lcd.print_P(pgmstr_wrong_model, (20 - strlen_P(pgmstr_wrong_model)) / 2, 1);
-		while(1);
-	}
 }
 
 void loop() {
@@ -167,23 +158,8 @@ void loop() {
 	uint8_t events = hw.loop();
 	States::loop(events);
 	UI::loop(events);
-
 }
 
-/*
-	// FIXME is this needed to fix ESD shock? Any better solution?
-	TODO
-	if (millis() > time_now + 5500) {
-		time_now = millis();
-		lcd.reinit();
-		lcd.createChar(BACKSLASH_CHAR, Backslash);
-		lcd.createChar(BACK_CHAR, Back);
-		lcd.createChar(RIGHT_CHAR, Right);
-		lcd.createChar(PLAY_CHAR, Play);
-		lcd.createChar(STOP_CHAR, Stop);
-		// REDRAW!
-	}
-*/
 
 #if 0
 //! @brief Get reset flags

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "hardware.h"
 #include "i18n.h"
 #include "states_items.h"
 #include "simple_print.h"
@@ -40,17 +39,6 @@ namespace UI {
 	};
 
 
-	// UI:Live_value
-	template<class T>
-	class Live_value : public Text, public SimplePrint {
-	public:
-		Live_value(const char* label, T& value);
-		char* get_menu_label(char* buffer, uint8_t buffer_size);
-	private:
-		T& value;
-	};
-
-
 	// UI::Menu
 	class Menu : public Base {
 	public:
@@ -81,13 +69,23 @@ namespace UI {
 	};
 
 
-	// UI::Menu_self_redraw
-	class Menu_self_redraw : public Menu {
+	// UI::Info
+	class Info : public Base {
 	public:
-		Menu_self_redraw(const char* label, Base* const* items, uint8_t items_count, uint16_t redraw_us);
+		Info(const char* label, Base* const* items, uint8_t items_count, uint16_t redraw_us = 0);
 		void show();
 		void loop();
+		void invoke();
+		Base* process_events(uint8_t events);
+		void set_long_press_ui_item(Base *ui_item);
 	private:
+		void event_control_up();
+		void event_control_down();
+		Base* const* const items;
+		Base* long_press_ui_item;
+		uint8_t const items_count;
+		uint8_t info_offset;
+		uint8_t max_items;
 		uint16_t redraw_us;
 		unsigned long us_last;
 	};
@@ -202,8 +200,8 @@ namespace UI {
 		const char* old_title;
 		const char* old_message;
 		uint16_t old_time;
-		unsigned long spin_us_last;
-		unsigned long bound_us_last;
+		unsigned long spin_ms_last;
+		unsigned long bound_ms_last;
 		uint8_t spin_count;
 	};
 

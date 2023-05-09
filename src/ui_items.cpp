@@ -3,12 +3,14 @@
 #include "config.h"
 #include "ui_items.h"
 #include "states.h"
+#include "device.h"
 
 namespace UI {
 
 	// UI::Base
 	Base::Base(const char* label, uint8_t last_char) :
-		label(label), last_char(last_char)
+		label(label),
+		last_char(last_char)
 	{}
 
 	char* Base::get_menu_label(char* buffer, uint8_t buffer_size) {
@@ -71,31 +73,13 @@ namespace UI {
 	}
 
 
-	// UI:Live_value
-	template<class T>
-	Live_value<T>::Live_value(const char* label, T& value) :
-		Text(label), value(value)
-	{}
-
-	template<class T>
-	char* Live_value<T>::get_menu_label(char* buffer, uint8_t buffer_size) {
-		char* end = Base::get_menu_label(buffer, buffer_size);
-		int8_t size = buffer + buffer_size - end;
-		if (size < 0) {
-			size = 0;
-		}
-		buffer_init(end, size);
-		print(value);
-		return get_position();
-	}
-
-	template class Live_value<uint16_t>;
-	template class Live_value<float>;
-
-
 	// UI::Menu
 	Menu::Menu(const char* label, Base* const* items, uint8_t items_count) :
-		Base(label), items(items), long_press_ui_item(nullptr), items_count(items_count), menu_offset(0), cursor_position(0)
+		Base(label),
+		items(items),
+		long_press_ui_item(nullptr),
+		items_count(items_count),
+		menu_offset(0)
 	{
 		max_items = items_count < DISPLAY_LINES ? items_count : DISPLAY_LINES;
 	}
@@ -190,29 +174,80 @@ namespace UI {
 	}
 
 
-	// UI::Menu_self_redraw
-	Menu_self_redraw::Menu_self_redraw(const char* label, Base* const* items, uint8_t items_count, uint16_t redraw_us) :
-		Menu(label, items, items_count), redraw_us(redraw_us), us_last(0)
-	{}
-
-	void Menu_self_redraw::show() {
-		us_last = millis();
-		Menu::show();
+	// UI::Info
+	Info::Info(const char* label, Base* const* items, uint8_t items_count, uint16_t redraw_us) :
+		Base(label),
+		items(items),
+		long_press_ui_item(nullptr),
+		items_count(items_count),
+		info_offset(0),
+		redraw_us(redraw_us),
+		us_last(0)
+	{
+		max_items = items_count - 1 < DISPLAY_LINES ? items_count - 1 : DISPLAY_LINES;
 	}
 
-	void Menu_self_redraw::loop() {
-		unsigned long us_now = millis();
-		if (us_now - us_last > redraw_us) {
-			us_last = us_now;
+	void Info::loop() {
+		if (redraw_us) {
+			unsigned long us_now = millis();
+			if (us_now - us_last > redraw_us) {
+				us_last = us_now;
+				show();
+			}
+		}
+		Base::loop();
+	}
+
+	void Info::show() {
+		us_last = millis();
+		char buffer[DISPLAY_CHARS + 1];
+		for (uint8_t i = 0; i < max_items; ++i) {
+			lcd.setCursor(0, i);
+			Base* item = (Base*)pgm_read_word(&(items[i + 1 + info_offset]));
+			item->get_menu_label(buffer, sizeof(buffer));
+			lcd.print(buffer);
+		}
+	}
+
+	void Info::invoke() {
+		info_offset = 0;
+		Base::invoke();
+	}
+
+	Base* Info::process_events(uint8_t events) {
+		if (events & EVENT_CONTROL_UP)
+			event_control_up();
+		if (events & EVENT_CONTROL_DOWN)
+			event_control_down();
+		if (events & EVENT_BUTTON_SHORT_PRESS)
+			return (Base*)pgm_read_word(&(items[0]));
+		if (events & EVENT_BUTTON_LONG_PRESS)
+			return long_press_ui_item;
+		return nullptr;
+	}
+
+	void Info::event_control_up() {
+		if (info_offset < items_count - 1 - DISPLAY_LINES) {
+			++info_offset;
 			show();
 		}
-		Menu::loop();
+	}
+
+	void Info::event_control_down() {
+		if (info_offset) {
+			--info_offset;
+			show();
+		}
 	}
 
 
 	// UI::Value
 	Value::Value(const char* label, uint8_t& value, const char* units, uint8_t max, uint8_t min) :
-		Base(label), units(units), value(value), max_value(max), min_value(min)
+		Base(label),
+		units(units),
+		value(value),
+		max_value(max),
+		min_value(min)
 	{}
 
 	void Value::show() {
@@ -279,16 +314,17 @@ namespace UI {
 	void Temperature::units_change(bool SI) {
 		init(SI);
 		if (SI) {
-			value = round(fahrenheit2celsius(value));
+			value = round_short(fahrenheit2celsius(value));
 		} else {
-			value = round(celsius2fahrenheit(value));
+			value = round_short(celsius2fahrenheit(value));
 		}
 	}
 
 
 	// UI::Percent_with_action
 	Percent_with_action::Percent_with_action(const char* label, uint8_t& value, uint8_t min, void (*value_setter)(uint8_t)) :
-		Percent(label, value, min), value_setter(value_setter)
+		Percent(label, value, min),
+		value_setter(value_setter)
 	{}
 
 	void Percent_with_action::event_control_up() {
@@ -304,7 +340,10 @@ namespace UI {
 
 	// UI::Bool
 	Bool::Bool(const char* label, uint8_t& value, const char* true_text, const char* false_text) :
-		Base(label, 0), true_text(true_text), false_text(false_text), value(value)
+		Base(label, 0),
+		true_text(true_text),
+		false_text(false_text),
+		value(value)
 	{}
 
 	char* Bool::get_menu_label(char* buffer, uint8_t buffer_size) {
@@ -327,7 +366,9 @@ namespace UI {
 
 	// UI::SI_switch
 	SI_switch::SI_switch(const char* label, uint8_t& value, Temperature* const* to_change, uint8_t to_change_count) :
-		Bool(label, value, pgmstr_celsius_units, pgmstr_fahrenheit_units), to_change(to_change), to_change_count(to_change_count)
+		Bool(label, value, pgmstr_celsius_units, pgmstr_fahrenheit_units),
+		to_change(to_change),
+		to_change_count(to_change_count)
 	{}
 
 	Base* SI_switch::in_menu_action() {
@@ -342,7 +383,10 @@ namespace UI {
 
 	// UI::Option
 	Option::Option(const char* label, uint8_t& value, const char* const* options, uint8_t options_count) :
-		Base(label), value(value), options(options), options_count(options_count)
+		Base(label),
+		value(value),
+		options(options),
+		options_count(options_count)
 	{
 		if (value > options_count)
 			value = 0;
@@ -400,8 +444,8 @@ namespace UI {
 		old_title(nullptr),
 		old_message(nullptr),
 		old_time(UINT16_MAX),
-		spin_us_last(0),
-		bound_us_last(0),
+		spin_ms_last(0),
+		bound_ms_last(0),
 		spin_count(0)
 	{}
 
@@ -409,8 +453,8 @@ namespace UI {
 		old_title = nullptr;
 		old_message = nullptr;
 		old_time = UINT16_MAX;
-		spin_us_last = 0;
-		bound_us_last = 0;
+		spin_ms_last = 0;
+		bound_ms_last = 0;
 		spin_count = 0;
 		Base::show();
 	}
@@ -430,22 +474,22 @@ namespace UI {
 				lcd.print_P(tmp_str, 1, 2);
 			}
 		} else {
-			unsigned long us_now = millis();
+			unsigned long ms_now = millis();
 			// spinner
 			if (!States::active_state->is_paused()) {
 				lcd.setCursor(19, 0);
 				uint8_t c = pgm_read_byte(pgmstr_progress + spin_count);
 				lcd.write(c);
-				if (us_now - spin_us_last > 100) {
-					spin_us_last = us_now;
+				if (ms_now - spin_ms_last > 100) {
+					spin_ms_last = ms_now;
 					if (++spin_count >= sizeof(pgmstr_progress)) {
 						spin_count = 0;
 					}
 				}
 			}
-			if (bound_us_last && us_now - bound_us_last > 1000) {
+			if (bound_ms_last && ms_now - bound_ms_last > 1000) {
 				clear_time_boundaries();
-				bound_us_last = 0;
+				bound_ms_last = 0;
 			}
 			// time
 			uint16_t time = States::active_state->get_time();
@@ -454,8 +498,12 @@ namespace UI {
 				lcd.printTime(time, LAYOUT_TIME_X, LAYOUT_TIME_Y);
 				// temperature
 				float temp = States::active_state->get_temperature();
-				if (temp > 0) {
-					lcd.print(temp, LAYOUT_INFO1_X, LAYOUT_INFO1_Y);
+				if (temp > -0.1) {
+					if (temp > 0.0) {
+						lcd.print(round_short(get_configured_temp(temp)), LAYOUT_INFO1_X, LAYOUT_INFO1_Y);
+					} else {
+						lcd.print_P(pgmstr_doubledash, LAYOUT_INFO1_X+1, LAYOUT_INFO1_Y);
+					}
 					lcd.print_P(config.SI_unit_system ? pgmstr_celsius : pgmstr_fahrenheit);
 				}
 			}
@@ -509,7 +557,7 @@ namespace UI {
 			const char* symbol = States::active_state->increase_time();
 			if (symbol) {
 				lcd.print_P(symbol, LAYOUT_TIME_GT, LAYOUT_TIME_Y);
-				bound_us_last = millis();
+				bound_ms_last = millis();
 			}
 		}
 	}
@@ -520,7 +568,7 @@ namespace UI {
 			const char* symbol = States::active_state->decrease_time();
 			if (symbol) {
 				lcd.print_P(symbol, LAYOUT_TIME_LT, LAYOUT_TIME_Y);
-				bound_us_last = millis();
+				bound_ms_last = millis();
 			}
 		}
 	}
@@ -533,7 +581,8 @@ namespace UI {
 
 	// UI::Do_it
 	Do_it::Do_it(uint8_t& curing_machine_mode, Base* state_menu) :
-		State(nullptr, nullptr, state_menu), curing_machine_mode(curing_machine_mode)
+		State(nullptr, nullptr, state_menu),
+		curing_machine_mode(curing_machine_mode)
 	{}
 
 	char* Do_it::get_menu_label(char* buffer, uint8_t buffer_size) {
@@ -580,7 +629,8 @@ namespace UI {
 
 	// UI::Pause
 	Pause::Pause(Base* back) :
-		Base(pgmstr_emptystr), back(back)
+		Base(pgmstr_emptystr),
+		back(back)
 	{}
 
 	char* Pause::get_menu_label(char* buffer, uint8_t buffer_size) {

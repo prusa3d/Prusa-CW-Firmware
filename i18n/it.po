@@ -5,342 +5,175 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-
-#: i18n/en.h:142
-msgid "  F2:"
-msgstr "  F2:"
-
-#: i18n/en.h:9
-msgid " min."
-msgstr " min."
+"X-Generator: Prusalator\n"
 
 #: i18n/en.h:2
 msgid "Back"
 msgstr "Indietro"
 
-#: i18n/en.h:70
+#: i18n/en.h:51
 msgid "Build: "
 msgstr "Build: "
 
-#: i18n/en.h:98
-msgid "Cham. temp.:"
-msgstr "Temp. alloggio:"
-
-#: i18n/en.h:115
+#: i18n/en.h:92
 msgid "Close the cover"
-msgstr "Chiudi il coperch."
+msgstr "Chiudi coperchio"
 
-#: i18n/en.h:87
+#: i18n/en.h:68
 msgid "Continue"
 msgstr "Continua"
 
-#: i18n/en.h:37
+#: i18n/en.h:44
+msgid "continuous"
+msgstr "continuo"
+
+#: i18n/en.h:41
 msgid "Control echo"
 msgstr "Controllo Eco"
 
-#: i18n/en.h:102
+#: i18n/en.h:77
 msgid "Cooldown"
 msgstr "Raffreddamento"
 
-#: i18n/en.h:150
+#: i18n/en.h:126
 msgid "Cover test"
 msgstr "Test coperchio"
 
-#: i18n/en.h:80
+#: i18n/en.h:61
 msgid "Curing"
 msgstr "Indurimento"
 
-#: i18n/en.h:16
+#: i18n/en.h:17
 msgid "Curing run-time"
 msgstr "Durata indurimento"
 
-#: i18n/en.h:23
+#: i18n/en.h:25
 msgid "Curing speed"
-msgstr "Vel. indurimento"
+msgstr "Veloc. indurimento"
 
-#: i18n/en.h:81
+#: i18n/en.h:62
 msgid "Drying"
 msgstr "Asciugatura"
 
-#: i18n/en.h:17
-msgid "Drying run-time"
-msgstr "Durata asciugatura"
-
-#: i18n/en.h:29
-msgid "Drying warm-up t."
-msgstr "T. riscal. asciug"
-
-#: i18n/en.h:79
+#: i18n/en.h:60
 msgid "Drying/curing"
-msgstr "Asciugat./Indurim."
+msgstr "Asciug./indurim."
 
-#: i18n/en.h:141
+#: i18n/en.h:18
+msgid "Drying run-time"
+msgstr "Dur. asciugamento"
+
+#: i18n/en.h:33
+msgid "Drying/Warm-up t."
+msgstr "Tmp. Asciug./Risc."
+
+#: i18n/en.h:117
 msgid "F1:"
 msgstr "F1:"
 
-#: i18n/en.h:143
+#: i18n/en.h:118
+msgid "  F2:"
+msgstr "  F2:"
+
+#: i18n/en.h:119
 msgid "F3:"
 msgstr "F3:"
 
-#: i18n/en.h:68
-msgid "FW: "
-msgstr "FW: "
+#: i18n/en.h:79
+msgid "Factory reset"
+msgstr "Ripr. fabbrica"
 
-#: i18n/en.h:95
-msgid "Fan1 RPM: "
-msgstr "RPM Ventola1: "
-
-#: i18n/en.h:45
-msgid "Fan1 curing speed"
-msgstr "Vel. indur. Vent1"
-
-#: i18n/en.h:50
-msgid "Fan1 drying speed"
-msgstr "Vel. asciug. Vent1"
-
-#: i18n/en.h:144
+#: i18n/en.h:120
 msgid "Fan1 failure"
-msgstr "Guasto Ventola1"
-
-#: i18n/en.h:60
-msgid "Fan1 menu speed"
-msgstr "Menu vel. ventola1"
-
-#: i18n/en.h:55
-msgid "Fan1 washing speed"
-msgstr "Vel. lavagg. Vent1"
-
-#: i18n/en.h:96
-msgid "Fan2 RPM: "
-msgstr "RPM Ventola2: "
-
-#: i18n/en.h:46
-msgid "Fan2 curing speed"
-msgstr "Vel. indur. Vent2"
-
-#: i18n/en.h:51
-msgid "Fan2 drying speed"
-msgstr "Vel. asciug. Vent2"
-
-#: i18n/en.h:145
-msgid "Fan2 failure"
-msgstr "Guasto Ventola2"
-
-#: i18n/en.h:61
-msgid "Fan2 menu speed"
-msgstr "Menu vel. ventola2"
-
-#: i18n/en.h:56
-msgid "Fan2 washing speed"
-msgstr "Vel. lavagg. Vent2"
-
-#: i18n/en.h:97
-msgid "Fan3 RPM: "
-msgstr "RPM Vent3: "
-
-#: i18n/en.h:64
-msgid "Fans"
-msgstr "Ventole"
-
-#: i18n/en.h:44
-msgid "Fans curing speed"
-msgstr "Vel. indur. Vent"
-
-#: i18n/en.h:49
-msgid "Fans drying speed"
-msgstr "Vel asciug Vent.le"
-
-#: i18n/en.h:59
-msgid "Fans menu speed"
-msgstr "Menu vel. ventole"
-
-#: i18n/en.h:140
-msgid "Fans test"
-msgstr "Test ventole"
-
-#: i18n/en.h:54
-msgid "Fans washing speed"
-msgstr "Vel. vent. lavagg."
-
-#: i18n/en.h:41
-msgid "Finish beep"
-msgstr "Suono finale"
+msgstr "Guasto Vent1"
 
 #: i18n/en.h:121
+msgid "Fan2 failure"
+msgstr "Guasto Vent2"
+
+#: i18n/en.h:116
+msgid "Fans test"
+msgstr "Test Ventole"
+
+#: i18n/en.h:21
+msgid "Filtering run-time"
+msgstr "Dur. filtraggio"
+
+#: i18n/en.h:28
+msgid "Filtering speed"
+msgstr "Vel. di filtraggio"
+
+#: i18n/en.h:45
+msgid "Finish beep"
+msgstr "Bip finale"
+
+#: i18n/en.h:97
 msgid "Finished"
 msgstr "Completato"
 
-#: i18n/en.h:137
+#: i18n/en.h:49
+msgid "FW: "
+msgstr "FW: "
+
+#: i18n/en.h:113
 msgid "Heater failure"
-msgstr "Guasto Riscald."
+msgstr "Guasto riscald."
 
-#: i18n/en.h:117
+#: i18n/en.h:94
 msgid "Heater fan error"
-msgstr "Err. vent. riscald"
+msgstr "Err. vent. risc."
 
-#: i18n/en.h:136
+#: i18n/en.h:112
 msgid "Heater test"
-msgstr "Test riscaldam."
+msgstr "Test riscald."
 
-#: i18n/en.h:125
+#: i18n/en.h:101
 msgid "Heating"
 msgstr "Riscaldamento"
 
-#: i18n/en.h:152
+#: i18n/en.h:128
 msgid "Hold the platform"
-msgstr "Tieni la piattaf."
+msgstr "Tieni piattaforma"
 
-#: i18n/en.h:149
-msgid "IPA tank test"
-msgstr "Test serb. IPA"
-
-#: i18n/en.h:153
+#: i18n/en.h:129
 msgid "Incorrect firmware!"
-msgstr "Firmware incorretto!"
+msgstr "Firmware errato!"
 
-#: i18n/en.h:67
+#: i18n/en.h:48
 msgid "Information"
 msgstr "Informazioni"
 
-#: i18n/en.h:133
+#: i18n/en.h:109
 msgid "Insert IPA tank"
-msgstr "Inserire serb. IPA"
+msgstr "Inser. serbatoio IPA."
 
-#: i18n/en.h:83
+#: i18n/en.h:73
+msgid "IPA Filtering"
+msgstr "Filtraggio IPA"
+
+#: i18n/en.h:125
+msgid "IPA tank test"
+msgstr "Test serbatoio IPA"
+
+#: i18n/en.h:64
 msgid "LCD brightness"
 msgstr "Luminosita LCD"
 
-#: i18n/en.h:139
+#: i18n/en.h:9
+msgid " min."
+msgstr "min."
+
+#: i18n/en.h:115
 msgid "No/low power"
-msgstr "No/poca energia"
+msgstr "Nessuna/bassa pot."
 
-#: i18n/en.h:147
+#: i18n/en.h:42
+msgid "none"
+msgstr "nessuno"
+
+#: i18n/en.h:123
 msgid "Not/bad spinning"
-msgstr "No/scarsa rotazione"
-
-#: i18n/en.h:151
-msgid "Open the cover"
-msgstr "Apri il coperchio"
-
-#: i18n/en.h:130
-msgid "Overheat"
-msgstr "Surriscaldamento"
-
-#: i18n/en.h:86
-msgid "Pause"
-msgstr "Pausa"
-
-#: i18n/en.h:114
-msgid "Paused"
-msgstr "In pausa"
-
-#: i18n/en.h:118
-msgid "Please restart"
-msgstr "Riavviare"
-
-#: i18n/en.h:122
-msgid "Press to continue"
-msgstr "Premi per contin."
-
-#: i18n/en.h:129
-msgid "Read temper. error"
-msgstr "Err. lettura temp."
-
-#: i18n/en.h:116
-msgid "Remove IPA tank"
-msgstr "Rimuovi serb. IPA"
-
-#: i18n/en.h:92
-msgid "Resin preheat"
-msgstr "Preriscalda resina"
-
-#: i18n/en.h:30
-msgid "Resin preheat t."
-msgstr "T. prerisc. resina"
-
-#: i18n/en.h:19
-msgid "Resin preheat time"
-msgstr "D. prerisc. resina"
-
-#: i18n/en.h:22
-msgid "Rotation speed"
-msgstr "Vel. di rotazione"
-
-#: i18n/en.h:148
-msgid "Rotation test"
-msgstr "Test rotazione"
-
-#: i18n/en.h:78
-msgid "Run mode"
-msgstr "Mod. funzionamento"
-
-#: i18n/en.h:15
-msgid "Run-time"
-msgstr "Durata"
-
-#: i18n/en.h:103
-msgid "Selftest"
-msgstr "Autotest"
-
-#: i18n/en.h:77
-msgid "Settings"
-msgstr "Impostazioni"
-
-#: i18n/en.h:36
-msgid "Sound"
-msgstr "Suono"
-
-#: i18n/en.h:146
-msgid "Spinning turned off"
-msgstr "Rotazione spenta"
-
-#: i18n/en.h:88
-msgid "Stop"
-msgstr "Stop"
-
-#: i18n/en.h:31
-msgid "Temp. units"
-msgstr "Unita temperatura"
-
-#: i18n/en.h:27
-msgid "Temperatures"
-msgstr "Temperature"
-
-#: i18n/en.h:128
-msgid "UVLED failure"
-msgstr "Guasto UVLED"
-
-#: i18n/en.h:82
-msgid "UVLED intensity"
-msgstr "Intensita UVLED"
-
-#: i18n/en.h:99
-msgid "UVLED temp.:"
-msgstr "Temp. UVLED:"
-
-#: i18n/en.h:138
-msgid "UVLED test"
-msgstr "Test UVLED"
-
-#: i18n/en.h:28
-msgid "Warm-up"
-msgstr "Riscalda"
-
-#: i18n/en.h:91
-msgid "Washing"
-msgstr "Lavaggio"
-
-#: i18n/en.h:18
-msgid "Washing run-time"
-msgstr "Durata lavaggio"
-
-#: i18n/en.h:24
-msgid "Washing speed"
-msgstr "Vel. lavaggio"
-
-#: i18n/en.h:73
-msgid "Workspace dirty"
-msgstr "Area sporca"
+msgstr "Non gira/Gira male"
 
 #: i18n/en.h:4
 msgid "[off]"
@@ -350,14 +183,128 @@ msgstr "[off]"
 msgid "[on]"
 msgstr "[on]"
 
-#: i18n/en.h:40
-msgid "continuous"
-msgstr "continuo"
-
-#: i18n/en.h:38
-msgid "none"
-msgstr "nessuno"
-
-#: i18n/en.h:39
+#: i18n/en.h:43
 msgid "once"
-msgstr "una volta"
+msgstr "singolo"
+
+#: i18n/en.h:127
+msgid "Open the cover"
+msgstr "Apri il coperchio"
+
+#: i18n/en.h:106
+msgid "Overheat"
+msgstr "Surriscaldamento"
+
+#: i18n/en.h:67
+msgid "Pause"
+msgstr "Pausa"
+
+#: i18n/en.h:91
+msgid "Paused"
+msgstr "in pausa"
+
+#: i18n/en.h:98
+msgid "Press to continue"
+msgstr "Premi per cont."
+
+#: i18n/en.h:105
+msgid "Read temper. error"
+msgstr "Err. lettura temp."
+
+#: i18n/en.h:80
+msgid "Really reset all?"
+msgstr "Vuoi reset. tutto?"
+
+#: i18n/en.h:93
+msgid "Remove IPA tank"
+msgstr "Rimuovi serb. IPA"
+
+#: i18n/en.h:74
+msgid "Resin preheat"
+msgstr "Riscald. resina"
+
+#: i18n/en.h:34
+msgid "Resin preheat t."
+msgstr "Tmpr. risc. resina"
+
+#: i18n/en.h:20
+msgid "Resin preheat time"
+msgstr "Tempo risc. resina"
+
+#: i18n/en.h:24
+msgid "Rotation settings"
+msgstr "Impostaz. rotaz."
+
+#: i18n/en.h:124
+msgid "Rotation test"
+msgstr "Test rotazione"
+
+#: i18n/en.h:59
+msgid "Run mode"
+msgstr "Mod. funzionamento"
+
+#: i18n/en.h:16
+msgid "Run-time"
+msgstr "Durata"
+
+#: i18n/en.h:78
+msgid "Selftest"
+msgstr "Autotest"
+
+#: i18n/en.h:58
+msgid "Settings"
+msgstr "Impostazioni"
+
+#: i18n/en.h:40
+msgid "Sound"
+msgstr "Suono"
+
+#: i18n/en.h:122
+msgid "Spinning turned off"
+msgstr "Rot. disattivata"
+
+#: i18n/en.h:69
+msgid "Stop"
+msgstr "Stop"
+
+#: i18n/en.h:31
+msgid "Temperatures"
+msgstr "Temperature"
+
+#: i18n/en.h:35
+msgid "Temp. units"
+msgstr "Unita temp."
+
+#: i18n/en.h:104
+msgid "UVLED failure"
+msgstr "guasto LEDUV"
+
+#: i18n/en.h:63
+msgid "UVLED intensity"
+msgstr "Intensita LEDUV"
+
+#: i18n/en.h:114
+msgid "UVLED test"
+msgstr "test LEDUV"
+
+#: i18n/en.h:32
+msgid "Warm-up"
+msgstr "Riscaldamento"
+
+#: i18n/en.h:27
+msgid "Wash cycles"
+msgstr "Cicli lavaggio"
+
+#: i18n/en.h:72
+msgid "Washing"
+msgstr "Lavaggio"
+
+#: i18n/en.h:19
+msgid "Washing run-time"
+msgstr "Durata lavaggio"
+
+#: i18n/en.h:26
+msgid "Washing speed"
+msgstr "Velocita lavaggio"
+
+

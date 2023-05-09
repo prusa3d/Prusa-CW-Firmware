@@ -9,6 +9,7 @@ namespace UI {
 	/*** menu definitions ***/
 	Base back(pgmstr_back, BACK_CHAR);
 	Base stop(pgmstr_stop, STOP_CHAR);
+	State error(pgmstr_emptystr, &States::error, nullptr);
 
 	// move all following definitions to init() to save RAM instead of PROGMEM
 
@@ -16,17 +17,20 @@ namespace UI {
 	Minutes curing_run_time(pgmstr_curing_run_time, config.curing_run_time, MAX_CURING_RUNTIME);
 	Minutes drying_run_time(pgmstr_drying_run_time, config.drying_run_time, MAX_DRYING_RUNTIME);
 	Minutes washing_run_time(pgmstr_washing_run_time, config.washing_run_time, MAX_WASHING_RUNTIME);
+	Minutes filtering_run_time(pgmstr_filtering_run_time, config.filtering_run_time, MAX_FILTER_RUNTIME);
 	Minutes resin_preheat_run_time(pgmstr_resin_preheat_time, config.resin_preheat_run_time, MAX_PREHEAT_RUNTIME);
-	Base* const run_time_items[] PROGMEM = {&back, &curing_run_time, &drying_run_time, &washing_run_time, &resin_preheat_run_time};
+	Base* const run_time_items[] PROGMEM = {&back, &curing_run_time, &drying_run_time, &washing_run_time, &filtering_run_time, &resin_preheat_run_time};
 	Menu run_time_menu(pgmstr_run_time, run_time_items, COUNT_ITEMS(run_time_items));
 
-	// speed menu
+	// rotation menu
 	X_of_ten curing_speed(pgmstr_curing_speed, config.curing_speed);
 	X_of_ten washing_speed(pgmstr_washing_speed, config.washing_speed);
-	Base* const speed_items[] PROGMEM = {&back, &curing_speed, &washing_speed};
-	Menu speed_menu(pgmstr_rotation_speed, speed_items, COUNT_ITEMS(speed_items));
+	X_of_ten wash_dir_changes(pgmstr_wash_dir_changes, config.wash_cycles);
+	X_of_ten filtering_speed(pgmstr_filtering_changes, config.filtering_speed);
+	Base* const speed_items[] PROGMEM = {&back, &curing_speed, &washing_speed, &wash_dir_changes, &filtering_speed};
+	Menu speed_menu(pgmstr_rotation_settings, speed_items, COUNT_ITEMS(speed_items));
 
-	// temperatore menu
+	// temperature menu
 	Bool heat_to_target_temp(pgmstr_warmup, config.heat_to_target_temp);
 	Temperature target_temp(pgmstr_drying_warmup_temp, config.target_temp);
 	Temperature resin_target_temp(pgmstr_resin_preheat_temp, config.resin_target_temp);
@@ -42,47 +46,7 @@ namespace UI {
 	Base* const sound_items[] PROGMEM = {&back, &sound_response, &finish_beep};
 	Menu sound_menu(pgmstr_sound, sound_items, COUNT_ITEMS(sound_items));
 
-	// fans curing speed
-	Percent fan1_curing_speed(pgmstr_fan1_curing_speed, config.fans_curing_speed[0], MIN_FAN_SPEED);
-	Percent fan2_curing_speed(pgmstr_fan2_curing_speed, config.fans_curing_speed[1], MIN_FAN_SPEED);
-	Base* const fans_curing_speed[] PROGMEM = {&back, &fan1_curing_speed, &fan2_curing_speed};
-	Menu fans_curing_menu(pgmstr_fans_curing, fans_curing_speed, COUNT_ITEMS(fans_curing_speed));
-
-	// fans drying speed
-	Percent fan2_drying_speed(pgmstr_fan2_drying_speed, config.fans_drying_speed[1], MIN_FAN_SPEED);
-	#ifdef CW1S
-		Base* const fans_drying_speed[] PROGMEM = {&back, &fan2_drying_speed};
-	#else
-		Percent fan1_drying_speed(pgmstr_fan1_drying_speed, config.fans_drying_speed[0], MIN_FAN_SPEED);
-		Base* const fans_drying_speed[] PROGMEM = {&back, &fan1_drying_speed, &fan2_drying_speed};
-	#endif
-	Menu fans_drying_menu(pgmstr_fans_drying, fans_drying_speed, COUNT_ITEMS(fans_drying_speed));
-
-	// fans washing speed
-	Percent fan2_washing_speed(pgmstr_fan2_washing_speed, config.fans_washing_speed[1], MIN_FAN_SPEED);
-	#ifdef CW1S
-		Base* const fans_washing_speed[] PROGMEM = {&back, &fan2_washing_speed};
-	#else
-		Percent fan1_washing_speed(pgmstr_fan1_washing_speed, config.fans_washing_speed[0], MIN_FAN_SPEED);
-		Base* const fans_washing_speed[] PROGMEM = {&back, &fan1_washing_speed, &fan2_washing_speed};
-	#endif
-	Menu fans_washing_menu(pgmstr_fans_washing, fans_washing_speed, COUNT_ITEMS(fans_washing_speed));
-
-	// fans menu speed
-	Percent_with_action fan2_menu_speed(pgmstr_fan2_menu_speed, config.fans_menu_speed[1], MIN_FAN_SPEED, hw.set_fan2_duty);
-	#ifdef CW1S
-		Base* const fans_menu_speed[] PROGMEM = {&back, &fan2_menu_speed};
-	#else
-		Percent_with_action fan1_menu_speed(pgmstr_fan1_menu_speed, config.fans_menu_speed[0], MIN_FAN_SPEED, hw.set_fan1_duty);
-		Base* const fans_menu_speed[] PROGMEM = {&back, &fan1_menu_speed, &fan2_menu_speed};
-	#endif
-	Menu fans_menu_menu(pgmstr_fans_menu, fans_menu_speed, COUNT_ITEMS(fans_menu_speed));
-
-	// fans menu
-	Base* const fans_items[] PROGMEM = {&back, &fans_curing_menu, &fans_drying_menu, &fans_washing_menu, &fans_menu_menu};
-	Menu fans_menu(pgmstr_fans, fans_items, COUNT_ITEMS(fans_items));
-
-	// info menu
+	// system info
 	SN serial_number(pgmstr_sn);
 	Text fw_version(pgmstr_fw_version);
 	Text build_nr(pgmstr_build_nr);
@@ -93,14 +57,13 @@ namespace UI {
 #else
 	Base* const info_items[] PROGMEM = {&back, &serial_number, &fw_version, &build_nr, &fw_hash};
 #endif
-	Menu info_menu(pgmstr_information, info_items, COUNT_ITEMS(info_items));
+	Info system_info(pgmstr_information, info_items, COUNT_ITEMS(info_items));
 
 	// config menu
 	const char* const curing_machine_mode_options[] PROGMEM = {pgmstr_drying_curing, pgmstr_curing, pgmstr_drying};
 	Option curing_machine_mode(pgmstr_run_mode, config.curing_machine_mode, curing_machine_mode_options, COUNT_ITEMS(curing_machine_mode_options));
-	Percent led_intensity(pgmstr_led_intensity, config.led_intensity, MIN_LED_INTENSITY);
 	Percent_with_action lcd_brightness(pgmstr_lcd_brightness, config.lcd_brightness, MIN_LCD_BRIGHTNESS, lcd.setBrightness);
-	Base* const config_items[] PROGMEM = {&back, &speed_menu, &curing_machine_mode, &temperature_menu, &sound_menu, &lcd_brightness, &info_menu};
+	Base* const config_items[] PROGMEM = {&back, &speed_menu, &curing_machine_mode, &temperature_menu, &sound_menu, &lcd_brightness, &system_info};
 	Menu config_menu(pgmstr_settings, config_items, COUNT_ITEMS(config_items));
 
 	// run menu
@@ -114,27 +77,21 @@ namespace UI {
 
 	// home menu
 	Do_it do_it(config.curing_machine_mode, &run_menu);
+	State filtering(pgmstr_filtering, &States::filtering, &run_menu);
 	State resin_preheat(pgmstr_resin_preheat, &States::warmup_resin, &run_menu);
-	Base* const home_items[] PROGMEM = {&do_it, &resin_preheat, &run_time_menu, &hold_platform_menu, &config_menu};
+	Base* const home_items[] PROGMEM = {&do_it, &filtering, &resin_preheat, &run_time_menu, &hold_platform_menu, &config_menu};
 	Menu home_menu(pgmstr_emptystr, home_items, COUNT_ITEMS(home_items));
 
-	// hw menu
-	Live_value<uint16_t> fan1_rpm(pgmstr_fan1_rpm, hw.fan_rpm[0]);
-	Live_value<uint16_t> fan2_rpm(pgmstr_fan2_rpm, hw.fan_rpm[1]);
-	Live_value<float> chamber_temp(pgmstr_chamber_temp, hw.chamber_temp);
-	Live_value<float> uvled_temp(pgmstr_uvled_temp, hw.uvled_temp);
-	#ifdef CW1S
-		Base* const hw_items[] PROGMEM = {&back, &fan1_rpm, &fan2_rpm, &chamber_temp, &uvled_temp};
-	#else
-		Live_value<uint16_t> fan3_rpm(pgmstr_fan3_rpm, hw.fan_rpm[2]);
-		Base* const hw_items[] PROGMEM = {&back, &fan1_rpm, &fan2_rpm, &fan3_rpm, &chamber_temp, &uvled_temp};
-	#endif
-	Menu_self_redraw hw_menu(pgmstr_emptystr, hw_items, COUNT_ITEMS(hw_items), MENU_REDRAW_US);
+	// factory reset confirm
+	State factory_reset(pgmstr_reset_confirm, &States::reset);
+	Base* const reset_items[] PROGMEM = {&back, &factory_reset};
+	Menu reset(pgmstr_factory_reset, reset_items, COUNT_ITEMS(reset_items));
 
 	// advanced menu
-	State cooldown(pgmstr_cooldown, &States::cooldown, &hw_menu);
+	Percent led_intensity(pgmstr_led_intensity, config.led_intensity, MIN_LED_INTENSITY);
+	State cooldown(pgmstr_cooldown, &States::cooldown, nullptr);
 	State selftest(pgmstr_selftest, &States::selftest_cover, nullptr);
-	Base* const advanced_items[] PROGMEM = {&back, &fans_menu, &led_intensity, &cooldown, &selftest};
+	Base* const advanced_items[] PROGMEM = {&back, &led_intensity, &reset, &cooldown, &selftest};
 	Menu advanced_menu(pgmstr_emptystr, advanced_items, COUNT_ITEMS(advanced_items));
 
 
@@ -148,11 +105,21 @@ namespace UI {
 			SI_changed[i]->init(config.SI_unit_system);
 		}
 		home_menu.set_long_press_ui_item(&curing_machine_mode);
-		info_menu.set_long_press_ui_item(&hw_menu);
-		run_menu.set_long_press_ui_item(&hw_menu);
 		config_menu.set_long_press_ui_item(&advanced_menu);
 		active_menu->invoke();
 		active_menu->show();
+	}
+
+	void set_menu(Base* new_menu) {
+		if (menu_depth < MAX_MENU_DEPTH) {
+			menu_stack[menu_depth++] = active_menu;
+			active_menu = new_menu;
+			lcd.clear();
+			active_menu->invoke();
+			active_menu->show();
+		} else {
+			USB_PRINTLNP("ERROR: MAX_MENU_DEPTH reached!");
+		}
 	}
 
 	void loop(uint8_t events) {
@@ -170,15 +137,7 @@ namespace UI {
 				USB_PRINTLNP("ERROR: back at menu depth 0!");
 			}
 		} else if (new_menu) {
-			if (menu_depth < MAX_MENU_DEPTH) {
-				menu_stack[menu_depth++] = active_menu;
-				active_menu = new_menu;
-				lcd.clear();
-				active_menu->invoke();
-				active_menu->show();
-			} else {
-				USB_PRINTLNP("ERROR: MAX_MENU_DEPTH reached!");
-			}
+			set_menu(new_menu);
 		}
 	}
 

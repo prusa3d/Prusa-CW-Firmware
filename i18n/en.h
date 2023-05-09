@@ -10,6 +10,7 @@ static const char pgmstr_minutes[] PROGMEM = _(" min.");
 static const char pgmstr_gt[] PROGMEM = " >";
 static const char pgmstr_lt[] PROGMEM = "< ";
 static const char pgmstr_emptystr[] PROGMEM = "";
+static const char pgmstr_doubledash[] PROGMEM = "--";
 
 // run-time menu
 static const char pgmstr_run_time[] PROGMEM = _("Run-time");
@@ -17,16 +18,19 @@ static const char pgmstr_curing_run_time[] PROGMEM = _("Curing run-time");
 static const char pgmstr_drying_run_time[] PROGMEM = _("Drying run-time");
 static const char pgmstr_washing_run_time[] PROGMEM = _("Washing run-time");
 static const char pgmstr_resin_preheat_time[] PROGMEM = _("Resin preheat time");
+static const char pgmstr_filtering_run_time[] PROGMEM = _("Filtering run-time");
 
-// speed menu
-static const char pgmstr_rotation_speed[] PROGMEM = _("Rotation speed");
+// rotation menu
+static const char pgmstr_rotation_settings[] PROGMEM = _("Rotation settings");
 static const char pgmstr_curing_speed[] PROGMEM = _("Curing speed");
 static const char pgmstr_washing_speed[] PROGMEM = _("Washing speed");
+static const char pgmstr_wash_dir_changes[] PROGMEM = _("Wash cycles");
+static const char pgmstr_filtering_changes[] PROGMEM = _("Filtering speed");
 
 // temperatore menu
 static const char pgmstr_temperatures[] PROGMEM = _("Temperatures");
 static const char pgmstr_warmup[] PROGMEM = _("Warm-up");
-static const char pgmstr_drying_warmup_temp[] PROGMEM = _("Drying warm-up t.");
+static const char pgmstr_drying_warmup_temp[] PROGMEM = _("Drying/Warm-up t.");
 static const char pgmstr_resin_preheat_temp[] PROGMEM = _("Resin preheat t.");
 static const char pgmstr_units[] PROGMEM = _("Temp. units");
 static const char pgmstr_celsius_units[] PROGMEM = "[\xDF" "C]";
@@ -40,29 +44,6 @@ static const char pgmstr_once[] PROGMEM = _("once");
 static const char pgmstr_continuous[] PROGMEM = _("continuous");
 static const char pgmstr_finish_beep[] PROGMEM = _("Finish beep");
 
-// fans curing speed
-static const char pgmstr_fans_curing[] PROGMEM = _("Fans curing speed");
-static const char pgmstr_fan1_curing_speed[] PROGMEM = _("Fan1 curing speed");
-static const char pgmstr_fan2_curing_speed[] PROGMEM = _("Fan2 curing speed");
-
-// fans drying speed
-static const char pgmstr_fans_drying[] PROGMEM = _("Fans drying speed");
-static const char pgmstr_fan1_drying_speed[] PROGMEM = _("Fan1 drying speed");
-static const char pgmstr_fan2_drying_speed[] PROGMEM = _("Fan2 drying speed");
-
-// fans washing speed
-static const char pgmstr_fans_washing[] PROGMEM = _("Fans washing speed");
-static const char pgmstr_fan1_washing_speed[] PROGMEM = _("Fan1 washing speed");
-static const char pgmstr_fan2_washing_speed[] PROGMEM = _("Fan2 washing speed");
-
-// fans menu speed
-static const char pgmstr_fans_menu[] PROGMEM = _("Fans menu speed");
-static const char pgmstr_fan1_menu_speed[] PROGMEM = _("Fan1 menu speed");
-static const char pgmstr_fan2_menu_speed[] PROGMEM = _("Fan2 menu speed");
-
-// fans menu
-static const char pgmstr_fans[] PROGMEM = _("Fans");
-
 // info menu
 static const char pgmstr_information[] PROGMEM = _("Information");
 static const char pgmstr_fw_version[] PROGMEM = _("FW: ")  FW_VERSION;
@@ -70,7 +51,7 @@ static const char pgmstr_sn[] PROGMEM = "SN: ";
 static const char pgmstr_build_nr[] PROGMEM = _("Build: ") FW_BUILDNR;
 static const char pgmstr_fw_hash[] PROGMEM = FW_HASH;
 #if FW_LOCAL_CHANGES
-static const char pgmstr_workspace_dirty[] PROGMEM = _("Workspace dirty");
+static const char pgmstr_workspace_dirty[] PROGMEM = "(modified sources)";
 #endif
 
 // config menu
@@ -89,18 +70,14 @@ static const char pgmstr_stop[] PROGMEM = _("Stop");
 
 // home menu
 static const char pgmstr_washing[] PROGMEM = _("Washing");
+static const char pgmstr_filtering[] PROGMEM = _("IPA Filtering");
 static const char pgmstr_resin_preheat[] PROGMEM = _("Resin preheat");
-
-// hw menu
-static const char pgmstr_fan1_rpm[] PROGMEM = _("Fan1 RPM: ");
-static const char pgmstr_fan2_rpm[] PROGMEM = _("Fan2 RPM: ");
-static const char pgmstr_fan3_rpm[] PROGMEM = _("Fan3 RPM: ");
-static const char pgmstr_chamber_temp[] PROGMEM = _("Cham. temp.:");
-static const char pgmstr_uvled_temp[] PROGMEM = _("UVLED temp.:");
 
 // advanced menu
 static const char pgmstr_cooldown[] PROGMEM = _("Cooldown");
 static const char pgmstr_selftest[] PROGMEM = _("Selftest");
+static const char pgmstr_factory_reset[] PROGMEM = _("Factory reset");
+static const char pgmstr_reset_confirm[] PROGMEM = _("Really reset all?");
 
 // state menu
 static const char pgmstr_progress[] PROGMEM = { '|', '/', '-', BACKSLASH_CHAR };
@@ -115,7 +92,6 @@ static const char pgmstr_paused[] PROGMEM = _("Paused");
 static const char pgmstr_close_cover[] PROGMEM = _("Close the cover");
 static const char pgmstr_remove_tank[] PROGMEM = _("Remove IPA tank");
 static const char pgmstr_heater_error[] PROGMEM = _("Heater fan error");
-static const char pgmstr_please_restart[] PROGMEM = _("Please restart");
 
 // confirm state
 static const char pgmstr_finished[] PROGMEM = _("Finished");
